@@ -1,0 +1,244 @@
+이름 : 장훈
+
+1. 다음 SELECT 문장에서 화면에 출력되는 컬럼이름은?
+
+  SELECT last_name "Name", salary, salary*12 "Annual Salary"
+  FROM employees;
+
+① Name, salary, Annual Salary
+② NAME, SALARY, ANNUAL SALARY
+③ Name, SALARY, Annual Salary
+④ LAST_NAME, SALARY, SALARY*12 
+
+답 : 3
+
+2. 표현식을 테스트하기 위해서 SELECT 문장의 FROM절에 적어주는 가상테이블은 무엇인가 ?
+
+① TEST
+② DUMMY
+③ DUAL
+④ EMP
+
+답 : 3 
+
+
+
+3. 다음 SELECT명령의 결과는 몇 개의 Column으로 출력 되는가 ?
+
+   SELECT LAST_NAME || ' is a ' || JOB_ID AS "Employees" FROM EMPLOYEES;
+
+① 1
+② 2
+③ 3
+④ 4
+
+답 : 1
+
+
+
+4. 다음 함수를 실행했을 때 출력되는 값은 얼마인가 ?
+   ROUND(45.923)
+
+① 45
+② 47
+③ 46
+④ 46.9
+
+답 : 3
+
+
+
+5. 다음 SELECT문에서 틀린 행번호는?
+
+① SELECT JOB_ID, SALARY "AVG"
+② FROM EMPLOYEES
+③ WHERE SALARY > 1000
+④ ORDER BY AVG;
+
+답 : 4
+
+
+6. 다음 SELECT 문장 수행 결과로 나올 수 있는 LAST_NAME 결과는 ?
+   
+     SELECT LAST_NAME 
+     FROM EMPLOYEES
+     WHERE LAST_NAME LIKE '_e%';
+
+① baer
+② Abel
+③ WEISS
+④ Gee
+
+답 : 4
+
+
+7. 함수 설명이 틀린것은?
+
+① UPPER : 대문자로 변환하는 함수
+② MONTHS_BETWEEN : 달수를 더하는 함수
+③ MOD : 어떤 수를 나누웠을때 나머지값을 반환하는 함수
+④ TO_CHAR : 날짜값을 문자로 변환하는 함수
+
+답 : 2
+
+
+
+8. 다음 SELECT문에서 틀린 행번호는?
+
+①  SELECT DEPARTMENT_ID, JOB_ID, SUM(SALARY) SUM
+②  FROM EMPLOYEES 
+③  WHERE SUM(SALARY) > 4500
+④  GROUP BY DEPARTMENT_ID, JOB_ID;
+
+답 : 3
+
+
+
+9. 문자를 숫자로 변환해주는 함수는?
+
+① TO_CHAR 함수
+② TO_DATE 함수
+③ TO_NUMBER 함수
+④ TO_TIMESTAMP 함수
+
+답 : 3
+
+
+10. 날짜 연산이 틀린것은?
+
+① DATE + NUMBER
+② DATE - NUMBER
+③ DATE - DATE
+④ DATE + DATE
+
+답 : 4 
+
+11. 그룹함수 설명으로 틀린것은?
+
+① 그룹함수는 null값을 무시한다.
+② avg,sum,variance,stddev 함수는 인수값으로 숫자데이터만 사용할수있다.
+③ WHERE절을 이용해서 그룹함수의 결과를 제한한다.
+④ GROUP BY절을 사용해서 테이블의 행을 그룹으로 나눌수있다.
+
+답 : 3
+
+12. 다음 SQL문에서 틀린 곳은?
+
+① SELECT department_id dept_id, avg(salary)
+② FROM employees
+③ GROUP BY dept_id
+④ ORDER BY dept_id
+
+답 : 3
+
+13. 카티시안곱의 설명의 옳은것은? 
+
+① 조인조건이 잘만들어 졌다.
+② 키값이 일치되는 데이터를 조인한다.
+③ m대 1을 조인하면 m처럼 나온다.
+④ 조인조건이 생략된 경우이다.
+
+답 : 4 
+
+14. 조인 SQL문 틀린곳은?
+
+① SELECT e.last_name, d.department_name
+② FROM employees e, departments d
+③ WHERE department_id = department_id
+④ AND e.last_name like '%a%';
+
+답 : 3
+
+15. 조인 SQL문 틀린곳은 ?
+
+① SELECT l.city, d.department_name
+② FROM locations l JOIN departments d
+③ USING (location_id)
+④ WHERE d.location_id = 1400;
+
+답 : 4
+
+16. natural join의 설명이 틀린것은?
+
+① 두 테이블에서 이름이 같은 모든 컬럼을 기반으로 조인한다.
+② 동일한 이름을 가진 열이 서로 다른 데이터 유형을 가져도  조인이 수행 된다.
+③ equi join의 문법이다.
+④ ANSI  표준 조인 유형이다.
+
+답 : 2
+
+17. outer join의 유형이 아닌것은?
+
+① left outer join
+② right outer join
+③ full outer join
+④ inner join
+
+답 : 4
+
+18.  using 절 사용한 조인 문법을 join on절로 조인문을 작성하세요.
+
+SELECT e.employee_id, l.city, d.department_name
+FROM employees e JOIN departments d
+USING (department_id)
+JOIN locations l
+USING (location_id);
+
+답 :
+
+SELECT e.employee_id, l.city, d.department_name
+FROM employees e JOIN departments d
+on e.department_id = d.department_id
+JOIN locations l
+on d.location_id = l.location_id;
+
+
+
+
+
+
+
+19. 자신의 관리자보다 먼저 채용된  사원들의 last_name, hire_date,  관리자의 last_name, 관리자의 hire_date을 출력하는 쿼리문을 작성하세요.
+
+
+답 :
+--ANSI표준
+select e.last_name, e.hire_date, m.last_name, m.hire_date
+from employees e join employees m
+on e.manager_id = m.employee_id
+where e.hire_date < m.hire_date;
+
+--오라클
+select e.last_name, e.hire_date, m.last_name, m.hire_date
+from employees e, employees m
+where e.hire_date < m.hire_date
+and e.manager_id = m.employee_id;
+
+
+
+
+
+20.  2006년도 입사한 사원 중에 급여는 8000 ~ 10000 이고 부서는 60번 또는 80번 부서에 있는 사원들의 last_name, salary, hire_date, department_name, city를  출력하는 쿼리문을 작성하세요.
+
+
+답 :
+--ANSI 표준
+select last_name, salary, hire_date, department_name, city
+from employees e join departments d
+on e.department_id = d.department_id
+join locations l
+on d.location_id = l.location_id
+where e.salary between 8000 and 10000 
+and e.department_id in (60, 80) 
+and hire_date >= to_date('20060101', 'yyyymmdd') 
+and hire_date < to_date('20070101', 'yyyymmdd');
+
+--오라클
+select last_name, salary, hire_date, department_name, city
+from employees e, departments d, locations l
+where e.department_id = d.department_id
+and d.location_id = l.location_id
+and e.salary between 8000 and 10000 
+and e.department_id in (60, 80) 
+and hire_date >= to_date('20060101', 'yyyymmdd') 
+and hire_date < to_date('20070101', 'yyyymmdd');
