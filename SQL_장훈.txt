@@ -1082,3 +1082,205 @@ FROM (SELECT to_char(hire_date, 'month') hire_month, count(*) cn
 SELECT to_char(hire_date, 'month') hire_month, count(*) cn
 FROM employees
 GROUP BY rollup(to_char(hire_date, 'month'));
+
+--문제 90 새로운 user를 생성하세요
+-- 유저이름: insa default tablespace : users temporary tablespace : temp 	users tablespace 사용량 : 1m
+
+create user insa
+identified by oracle
+default tablespace users
+temporary tablespace temp
+quota 1m on users;
+
+select * from dba_sys_privs where grantee = 'insa';
+
+-- 문제 91 insa유저에게 create session, create table 시스템 권한을 부여해주세요
+grant create session, create table to insa;
+
+-- 문제 92 insa 유저가 사용할 수 있는 users tablespace quota 값을 unlimited로 수정하세요
+alter user insa
+quota unlimited on users;
+
+select * from dba_ts_quotas;
+select * from user_ts_quotas;
+
+-- 문제 93 hr유저가 소유한 employees 테이블의 select 객체 권한을 insa유저에게 부여해 주세요
+grant select on hr.employees to insa;
+
+--회수
+revoke select on hr.employees from insa;
+
+-- 문제 94 hr유저가 소유한 departments 테이블의 select 객체 권한을 insa유저에게 부여해주세요
+grant select on hr.departments to insa;
+
+-- 문제 95  insa 유저는 테이블논리적설계.pdf에 ERD(Entity Relationship Diagram)을 확인 한후 table instance chart를  보면서 테이블을 구성하세요.
+
+create table dept
+(dept_id number(3) constraint dept_id_pk primary key,
+ dept_name varchar2(50) constraint dept_nn not null 
+                        constraint dept_uk unique,
+ mgr number(5));
+ 
+ create table emp
+ (id number(5) constraint emp_id_pk primary key,
+  name varchar2(50) constraint emp_name_nn not null,
+  hire_date date constraint emp_date_nn not null,
+  sal number(8, 2) constraint emp_sal_ck check(sal > 100),
+  mgr number(5),
+  dept_id number(3),
+  constraint emp_dept_id_fk foreign key(dept_id) references dept(dept_id),
+  constraint emp_mgr_fk foreign key(mgr) references emp(id));
+  
+  desc emp;
+  desc dept;
+
+----
+15일 문제 추가 필요
+----
+
+
+-- 문제 100 EMPLOYEES 테이블을 복제 EMP_COPY 이름으로 복제하세요.
+create table emp_copy
+as select * from hr.employees;
+-- CTAS로 복제시 not null 제약조건만 복제된다.
+
+--문제 101 EMP_COPY테이블에 employee_id에 emp_copy_id_pk 이름으로 primary key 제약조건을 추가하세요. 
+alter table emp_copy
+add constraints emp_id_pk primary key(employee_id);
+	
+--문제 102 EMP_COPY 테이블에 department_name varchar2(30) 컬럼을 추가하세요.
+alter table emp_copy
+add department_name varchar2(30);
+
+--문제 103 DEPARTMENTS 테이블에 있는 department_name을 기준으로 EMP_COPY 테이블에 department_name에 값을 수정하세요.
+--단 UPDATE문을 이용해서 해결한 후 수정된 정보를 확인하고 ROLLBACK 하세요.
+update emp_copy e
+set department_name = (select department_name from departments where department_id = e.department_id);
+
+select department_id, department_name from emp_copy;	
+
+rollback;
+
+select department_id, department_name from emp_copy;	
+
+--문제 104 DEPARTMENTS 테이블에 있는 department_name을 기준으로 EMP_COPY 테이블에 department_name에 값을 수정하세요.
+--단 MERGE문을 이용해서 해결한 후  수정된 정보를 영구히 저장하세요.
+merge into emp_copy e
+using (select department_id, department_name from departments) d
+on (e.department_id = d.department_id)
+when matched then
+update set e.department_name = d.department_name;
+
+select department_id, department_name from emp_copy;
+
+commit;
+
+--문제 105 EMP_COPY 테이블에 department_name에 값을 NULL 값으로 수정하세요. 
+--단 MERGE문을 이용해서 해결한 후 ROLLBACK 하세요.
+merge into emp_copy e
+using (select department_id from departments) d
+on (e.department_id = d.department_id)
+when matched then
+update set e.department_name = null;
+
+select department_name from emp_copy;
+
+rollback;
+
+select department_name from emp_copy;
+
+-- 문제 106 사원들의 급여가 5000 미만일 경우 employee_id, salary 정보를 SPECIAL_SAL 테이블에 입력하고 
+--아니면 employee_id, hire_date, salary정보를 SAL_HISTORY 테이블에 입력하고 
+--또는  employee_id, manager_id, salary 정보를  MGR_HISTORY 테이블에 입력한다.
+
+create table special_sal
+(employee_id number,
+ salary number)
+ tablespace users;
+  
+create table sal_history
+(employee_id number,
+ hire_date date,
+ salary number);
+  
+create table mgr_history
+(employee_id number,
+ manager_id number,
+ salary number);
+ 
+insert all
+when sal < 5000 then
+into special_sal(employee_id, salary) values (empid, sal)
+else
+into sal_history(employee_id, hire_date, salary) values (empid, hiredate, sal)
+into mgr_history(employee_id, manager_id, salary) values (empid, mgrid, sal)
+select employee_id as empid, salary as sal, hire_date as hiredate, manager_id as mgrid from employees;
+ 
+select * from special_sal;
+select * from sal_history;
+select * from mgr_history;
+
+--다른 답
+insert first
+when sal < 5000 then
+into special_sal(employee_id, salary) values (empid, sal)
+else
+into sal_history(employee_id, hire_date, salary) values(empid, hiredate, sal)
+into mgr_history(employee_id, manager_id, salary) values(empid, mgrid, sal)
+select employee_id as empid, salary as sal, hire_date as hiredate, manager_id as mgrid from employees;
+
+--문제 107 emp.csv 파일의 데이터를 분석하려고 한다. external table를 생성하세요.
+--권한 확인
+select * from user_tab_privs where table_name = 'DATA_DIR';
+select * from all_directories where directory_name = 'DATA_DIR';
+
+-- external table은 dml사용 불가(읽기 전용) / index 없음
+create table empxt
+(id number,
+ name varchar2(30),
+ hire_date date,
+ job_id varchar2(20),
+ department_id number)
+ organization external
+ (type oracle_loader
+  default directory data_dir
+  access parameters
+   (records delimited by newline -- 한행의 끝은 문서의 끝이 아니라 새로운 줄이 있음.
+    badfile 'empxt.bad'
+    logfile 'empxt.log'
+    fields terminated by ',' -- 필드 구분자
+    missing field values are null -- 빈 값을 대체하여 null 입력
+     (id, name, hire_date char date_format date mask "YYYYMMDD", job_id, department_id))
+  location('emp.csv'))
+reject limit unlimited; --오류 허용 / 거의 필수적
+
+-- 주석이 달려있으면 실행 시 오류 발생
+create table empxt
+(id number,
+ name varchar2(30),
+ hire_date date,
+ job_id varchar2(20),
+ department_id number)
+ organization external
+ (type oracle_loader
+  default directory data_dir
+  access parameters
+   (records delimited by newline
+    badfile 'empxt.bad'
+    logfile 'empxt.log'
+    fields terminated by ','
+    missing field values are null
+     (id, name, hire_date char date_format date mask "YYYYMMDD", job_id, department_id))
+  location('emp.csv'))
+reject limit unlimited;
+
+select * from empxt;
+
+-- 문제 108 부서이름별 총액급여, 평균급여, 최고급여, 최저급여를 출력하는 query문을 작성한 후, dept_sal_vw view를 생성하세요.
+create or replace view dept_sal_vw
+as select d.department_name, sum(e.salary) as sumsal, avg(e.salary) as avgsal, max(e.salary) as maxsal, min(e.salary) as minsal from employees e join departments d on e.department_id = d.department_id group by d.department_name;
+
+create or replace view dept_sal_vw
+as select d.department_name, e.sumsal, e.avgsal, e.maxsal, e.minsal from departments d join (select department_id, sum(salary) as sumsal, avg(salary) as avgsal, max(salary) as maxsal, min(salary) as minsal from employees group by department_id) e on d.department_id = e.department_id;
+
+select * from dept_sal_vw;

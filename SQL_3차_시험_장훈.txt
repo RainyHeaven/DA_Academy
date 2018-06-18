@@ -1,0 +1,97 @@
+이름 : 장훈
+
+1. 집합연산자 설명으로 틀린것은? 4번
+
+① SELECT list의 컬럼의 개수가 일치해야 합니다.
+② 두번째 query에 있는 각 열의 데이터 유형은 첫번째 query에 있는 상응하는 열의 데이터 유형과 일치해야 한다.
+③ UNION ALL은 정렬이 발생하지 않는다.
+④ ORDER BY 절은 처음 SELECT문에 사용한다.
+
+
+
+2. INTERSECT(교집합) 연산자를 사용하면 정렬작업이 수행된다. 1번
+    이 연사자를 사용하지 않고도 해결할수있는 연산자는 ?
+
+① EXISTS
+② NOT EXISTS
+③ NOT IN
+④ <> ALL
+
+
+3. TRANSACTION에 대해 설명으로 틀린것은? 3번
+
+① 논리적으로 INSERT, UPDATE, DELETE 문장을 수행하면 TRANSACTION 시작된다.
+② 명시적으로 COMMIT, ROLLBACK문을 수행하면 TRANSACTION은 종료된다.
+③ DELETE 작업후에 DDL작업을 수행한 후 이전에 수행한 DELETE작업을 ROLLBACK 할 수 있다.
+④ 논리적으로 DML 하나로 묶어서 처리하는 작업단위이다.
+
+
+
+4.테이블을 생성하려고 합니다. 어떤 권한이 있어야 하나요? 2번
+
+① create session
+② create table
+③ create view
+④ create segment
+
+
+
+5. client 시간을 반환하는 함수는? 3번
+
+① sysdate
+② systimestamp
+③ current_timestamp
+④ date
+
+
+
+6. 날짜계산이 틀린 것은? 3번
+
+① sysdate + 10
+② sysdate - 10
+③ sysdate + sysdate
+④ sysdate + to_yminterval('01-11')
+
+
+
+7. 제약조건 설명으로 틀린것은? 4번
+
+① PRIMARY KEY 제약조건은 null, 중복값은 입력될수없다.
+② UNIQUE 제약 조건은 중복값에 대해서 체크한다.null값은 허용한다.
+③ Foreign key 제약조건은 동일한 테이블이나 다른 테이블의 Primary key 또는 Unique key를 참조한다.
+④ CHECK 제약 조건은 조건식의 값이 TRUE인 값을 입력하고 NULL값은 입력못한다.
+
+
+
+8. 소스테이블과 타겟 테이블의 키 값이 일치하면 UPDATE, DELETE 작업을 수행하고 키가 일치하지 않으면 INSERT를 수행하는 SQL문은? 3번
+① create
+② alter
+③ merge
+④ drop
+
+
+
+9. 틀린 SQL문은? 3번 -> 4번
+
+① ALTER TABLE emp ADD (job_id VARCHAR2(9));
+② ALTER TABLE emp MODIFY (last_name VARCHAR2(30));
+③ ALTER TABLE emp DROP COLUMN job_id;
+④ ALTER TABLE emp DELETE COLUMN job_id;
+
+
+
+10. 제약조건을 잘못 정의 한곳은? 1번 -> 1번, 4번
+
+     CREATE TABLE cust (
+     id NUMBER ,  
+     sal NUMBER,
+     mgr NUMBER,
+     comm NUMBER,
+①     CONSTRAINT id_pk PRIMARY KEY
+②     CONSTRAINT mgr_fk FOREIGN KEY (mgr) REFERENCES cust(id),
+③     CONSTRAINT id_sal_ck CHECK (id > 0 and sal > 0),
+④     CONSTRAINT comm_nn NOT NULL(sal)); -- 열레벨 정의로 들어가야 함
+
+
+  
+ 
