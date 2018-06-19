@@ -317,6 +317,4 @@ create table emp_seq
  select emp_id_seq.currval from dual;
  
  -- sequence는 롤백되지 않음
- rollback;
- 
- 
+ rollback; 
