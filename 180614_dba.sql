@@ -26,4 +26,8 @@ grant select on hr.employees to insa;
 revoke select on hr.employees from insa;
 
 -- 문제 94 hr유저가 소유한 departments 테이블의 select 객체 권한을 insa유저에게 부여해주세요
+<<<<<<< HEAD
 grant select on hr.departments to insa;
+=======
+grant select on hr.departments to insa;
+>>>>>>> 6337a0f3f6536bffb695d3f98e9b0425f803ca87

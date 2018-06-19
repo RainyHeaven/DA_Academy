@@ -107,6 +107,10 @@ create table test
  
  -- primary key와 unique 제약조건은 만들 때 부터 disable로 해야함(이후 enable novalidate 불가능)
  -- not null, foreign key, check 제약조건은 enable novalidate 가능
+
+
+ 
+
  alter table test enable constraint test_sal_ck
  exceptions into exceptions;
  

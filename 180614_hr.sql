@@ -74,4 +74,8 @@ else
 into sal_high(employee_id, last_name, salary)
 values(employee_id, last_name, salary)
 select employee_id, last_name, salary
+<<<<<<< HEAD
 from employees;
+=======
+from employees;
+>>>>>>> 6337a0f3f6536bffb695d3f98e9b0425f803ca87
