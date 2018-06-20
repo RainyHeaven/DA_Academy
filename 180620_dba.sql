@@ -20,6 +20,3 @@ show parameter db_file_multiblock_read_count
 
 -- 한번에 읽는 block의 수 설정 (자신의 세션에만 적용)
 alter session set db_file_multiblock_read_count = 128;
-
-
-

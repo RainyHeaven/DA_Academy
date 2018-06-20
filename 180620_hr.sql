@@ -106,4 +106,3 @@ explain plan for
 select *
 from emp
 where employee_id between 100 and 102;
-
