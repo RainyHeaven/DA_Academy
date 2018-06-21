@@ -77,6 +77,7 @@ select * from table(dbms_xplan.display(null, null, 'typical'));
 
 -- index range scan
 -- index leaf block 에서 필요한 범위만 스캔하는 방식
+-- 검색 범위에 따라 index full scan이 될 수 있다
 create index emp_dept_idx
 on emp(department_id);
 
@@ -89,7 +90,7 @@ explain plan for select * from emp where department_id = 10;
 select * from table(dbms_xplan.display(null, null, 'typical'));
 
 -- inlist iterator
--- index에 root, branch, leaf가 반복될 때 
+-- unique index가 있어도 index에 root, branch, leaf가 반복될 때 
 explain plan for 
 select * from emp where employee_id in (100, 200);
 
