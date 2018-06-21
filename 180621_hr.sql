@@ -64,13 +64,6 @@ create index emp_lname_fname_idx on emp(last_name, first_name);
 
 
 
-
-
-
-create table emp 
-as 
-;
-
 select * from user_tables;
 
 select * from user_ind_columns where table_name = 'EMP';
