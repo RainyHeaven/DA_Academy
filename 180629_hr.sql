@@ -1,4 +1,4 @@
--- [문제126] SQL문장의 실행계획을 nested loop join, sort merge join, hash join 방법으로 비교하세요.
+-- [문제127] SQL문장의 실행계획을 nested loop join, sort merge join, hash join 방법으로 비교하세요.
 
 select e.employee_id, e.last_name, e.salary, e.job_id, d.department_name, l.city, l.street_address, c.country_name, r.region_name
 from employees e, departments d, locations l, countries c, regions r

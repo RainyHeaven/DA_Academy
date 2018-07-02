@@ -2297,7 +2297,7 @@ Predicate Information (identified by operation id):
        filter("D"."LOCATION_ID"="L"."LOCATION_ID")
 */
 
--- [문제126] SQL문장의 실행계획을 nested loop join, sort merge join, hash join 방법으로 비교하세요.
+-- [문제127] SQL문장의 실행계획을 nested loop join, sort merge join, hash join 방법으로 비교하세요.
 
 select e.employee_id, e.last_name, e.salary, e.job_id, d.department_name, l.city, l.street_address, c.country_name, r.region_name
 from employees e, departments d, locations l, countries c, regions r
@@ -2616,4 +2616,217 @@ Predicate Information (identified by operation id):
    2 - access("D"."LOCATION_ID"="L"."LOCATION_ID")
    3 - access("L"."COUNTRY_ID"="C"."COUNTRY_ID")
    4 - access("R"."REGION_ID"="C"."REGION_ID")
+*/
+
+-- [문제128] 아래 SQL문을 분석해보세요.
+select *
+FROM employees e
+where exists (select 'x' 	from departments d WHERE department_id = e.department_id	and location_id = 1500);
+/*
+-----------------------------------------------------------------------------------------------------------------------------------------
+| Id  | Operation                      | Name              | Starts | E-Rows | A-Rows |   A-Time   | Buffers |  OMem |  1Mem | Used-Mem |
+-----------------------------------------------------------------------------------------------------------------------------------------
+|   0 | SELECT STATEMENT               |                   |      1 |        |     45 |00:00:00.01 |   11 |          |       |          |
+|   1 |  NESTED LOOPS                  |                   |      1 |        |     45 |00:00:00.01 |   11 |          |       |          |
+|   2 |   NESTED LOOPS                 |                   |      1 |     10 |     45 |00:00:00.01 |    6 |          |       |          |
+|   3 |    SORT UNIQUE                 |                   |      1 |      1 |      1 |00:00:00.01 |    2 |     2048 |  2048 | 2048  (0)|
+|   4 |     TABLE ACCESS BY INDEX ROWID| DEPARTMENTS       |      1 |      1 |      1 |00:00:00.01 |    2 |          |       |          |
+|*  5 |      INDEX RANGE SCAN          | DEPT_LOCATION_IX  |      1 |      1 |      1 |00:00:00.01 |    1 |          |       |          |
+|*  6 |    INDEX RANGE SCAN            | EMP_DEPARTMENT_IX |      1 |     10 |     45 |00:00:00.01 |    4 |          |       |          |
+|   7 |   TABLE ACCESS BY INDEX ROWID  | EMPLOYEES         |     45 |     10 |     45 |00:00:00.01 |    5 |          |       |          |
+-----------------------------------------------------------------------------------------------------------------------------------------
+
+Predicate Information (identified by operation id):
+---------------------------------------------------
+
+   5 - access("LOCATION_ID"=1500)
+   6 - access("DEPARTMENT_ID"="E"."DEPARTMENT_ID")
+*/
+
+-- 3: SORT UNIQUE 발생: driven쪽이 1쪽집합인지 확실하지 않은 상황
+-- 6,7: batch i/o 작동
+
+-- join으로 만들기
+SELECT /*+ leading(d) use_nl(e)*/e.*
+FROM employees e, departments d
+WHERE d.department_id = e.department_id	AND d.location_id = 1500;
+/*
+-------------------------------------------------------------------------------------------------------------
+| Id  | Operation                     | Name              | Starts | E-Rows | A-Rows |   A-Time   | Buffers |
+-------------------------------------------------------------------------------------------------------------
+|   0 | SELECT STATEMENT              |                   |      1 |        |     45 |00:00:00.01 |   12 |
+|   1 |  NESTED LOOPS                 |                   |      1 |        |     45 |00:00:00.01 |   12 |
+|   2 |   NESTED LOOPS                |                   |      1 |     10 |     45 |00:00:00.01 |    7 |
+|   3 |    TABLE ACCESS BY INDEX ROWID| DEPARTMENTS       |      1 |      1 |      1 |00:00:00.01 |    3 |
+|*  4 |     INDEX RANGE SCAN          | DEPT_LOCATION_IX  |      1 |      1 |      1 |00:00:00.01 |    2 |
+|*  5 |    INDEX RANGE SCAN           | EMP_DEPARTMENT_IX |      1 |     10 |     45 |00:00:00.01 |    4 |
+|   6 |   TABLE ACCESS BY INDEX ROWID | EMPLOYEES         |     45 |     10 |     45 |00:00:00.01 |    5 |
+-------------------------------------------------------------------------------------------------------------
+
+Predicate Information (identified by operation id):
+---------------------------------------------------
+
+   4 - access("D"."LOCATION_ID"=1500)
+   5 - access("D"."DEPARTMENT_ID"="E"."DEPARTMENT_ID")
+*/
+
+SELECT /*+ leading(d) use_hash(e)*/e.*
+FROM employees e, departments d
+WHERE d.department_id = e.department_id	AND d.location_id = 1500;
+/*
+--------------------------------------------------------------------------------------------------------------------------------------
+| Id  | Operation                    | Name             | Starts | E-Rows | A-Rows |   A-Time   | Buffers |  OMem |  1Mem | Used-Mem |
+--------------------------------------------------------------------------------------------------------------------------------------
+|   0 | SELECT STATEMENT             |                  |      1 |        |     45 |00:00:00.01 |      11 |       |       |          |
+|*  1 |  HASH JOIN                   |                  |      1 |     10 |     45 |00:00:00.01 |      11 |  1517K|  1517K|  386K (0)|
+|   2 |   TABLE ACCESS BY INDEX ROWID| DEPARTMENTS      |      1 |      1 |      1 |00:00:00.01 |    2 |          |       |          |
+|*  3 |    INDEX RANGE SCAN          | DEPT_LOCATION_IX |      1 |      1 |      1 |00:00:00.01 |    1 |          |       |          |
+|   4 |   TABLE ACCESS FULL          | EMPLOYEES        |      1 |    107 |    107 |00:00:00.01 |    9 |          |       |          |
+--------------------------------------------------------------------------------------------------------------------------------------
+
+Predicate Information (identified by operation id):
+---------------------------------------------------
+
+   1 - access("D"."DEPARTMENT_ID"="E"."DEPARTMENT_ID")
+   3 - access("D"."LOCATION_ID"=1500)
+*/
+SELECT /*+ leading(d) use_merge(e)*/e.*
+FROM employees e, departments d
+WHERE d.department_id = e.department_id	AND d.location_id = 1500;
+/*
+---------------------------------------------------------------------------------------------------------------------------------------
+| Id  | Operation                     | Name             | Starts | E-Rows | A-Rows |   A-Time   | Buffers |  OMem |  1Mem | Used-Mem |
+---------------------------------------------------------------------------------------------------------------------------------------
+|   0 | SELECT STATEMENT              |                  |      1 |        |     45 |00:00:00.01 |    8 |          |       |          |
+|   1 |  MERGE JOIN                   |                  |      1 |     10 |     45 |00:00:00.01 |    8 |          |       |          |
+|   2 |   SORT JOIN                   |                  |      1 |      1 |      1 |00:00:00.01 |    2 |  2048 |  2048 | 2048  (0)|
+|   3 |    TABLE ACCESS BY INDEX ROWID| DEPARTMENTS      |      1 |      1 |      1 |00:00:00.01 |    2 |          |       |          |
+|*  4 |     INDEX RANGE SCAN          | DEPT_LOCATION_IX |      1 |      1 |      1 |00:00:00.01 |    1 |          |       |          |
+|*  5 |   SORT JOIN                   |                  |      1 |    107 |     45 |00:00:00.01 |    6 | 22528 | 22528 |20480  (0)|
+|   6 |    TABLE ACCESS FULL          | EMPLOYEES        |      1 |    107 |    107 |00:00:00.01 |    6 |          |       |          |
+---------------------------------------------------------------------------------------------------------------------------------------
+
+Predicate Information (identified by operation id):
+---------------------------------------------------
+
+   4 - access("D"."LOCATION_ID"=1500)
+   5 - access("D"."DEPARTMENT_ID"="E"."DEPARTMENT_ID")
+       filter("D"."DEPARTMENT_ID"="E"."DEPARTMENT_ID")
+*/
+
+-- [문제129] SQL문을 튜닝하세요.
+select department_name, (select sum(salary)	from employees	where department_id = d.department_id) sumsal,	(select avg(salary)	from employees	WHERE department_id = d.department_id) avgsal
+FROM departments d;
+/*
+------------------------------------------------------------------------------------------------------------
+| Id  | Operation                    | Name              | Starts | E-Rows | A-Rows |   A-Time   | Buffers |
+------------------------------------------------------------------------------------------------------------
+|   0 | SELECT STATEMENT             |                   |      1 |        |     27 |00:00:00.01 |    8 |
+|   1 |  SORT AGGREGATE              |                   |     27 |      1 |     27 |00:00:00.01 |   14 |
+|   2 |   TABLE ACCESS BY INDEX ROWID| EMPLOYEES         |     27 |     10 |    106 |00:00:00.01 |   14 |
+|*  3 |    INDEX RANGE SCAN          | EMP_DEPARTMENT_IX |     27 |     10 |    106 |00:00:00.01 |    4 |
+|   4 |  SORT AGGREGATE              |                   |     27 |      1 |     27 |00:00:00.01 |   14 |
+|   5 |   TABLE ACCESS BY INDEX ROWID| EMPLOYEES         |     27 |     10 |    106 |00:00:00.01 |   14 |
+|*  6 |    INDEX RANGE SCAN          | EMP_DEPARTMENT_IX |     27 |     10 |    106 |00:00:00.01 |    4 |
+|   7 |  TABLE ACCESS FULL           | DEPARTMENTS       |      1 |     27 |     27 |00:00:00.01 |    8 |
+------------------------------------------------------------------------------------------------------------
+
+Predicate Information (identified by operation id):
+---------------------------------------------------
+
+   3 - access("DEPARTMENT_ID"=:B1)
+   6 - access("DEPARTMENT_ID"=:B1)
+*/
+
+
+-- 스칼라서브쿼리가 2개 있어 같은 테이블에 여러번 접근
+
+-- 스칼라서브쿼리 활용
+SELECT department_name, substr(sal, 1, 10) sum_sal, substr(sal, 11) avg_sal
+FROM (SELECT department_name, (SELECT lpad(sum(salary), 10)||lpad(avg(salary), 10) FROM employees WHERE department_id = d.department_id) sal FROM departments d)
+where sal is not null;
+/*
+------------------------------------------------------------------------------------------------------------
+| Id  | Operation                    | Name              | Starts | E-Rows | A-Rows |   A-Time   | Buffers |
+------------------------------------------------------------------------------------------------------------
+|   0 | SELECT STATEMENT             |                   |      1 |        |     11 |00:00:00.01 |   20 |
+|   1 |  SORT AGGREGATE              |                   |     27 |      1 |     27 |00:00:00.01 |   13 |
+|   2 |   TABLE ACCESS BY INDEX ROWID| EMPLOYEES         |     27 |     10 |    106 |00:00:00.01 |   13 |
+|*  3 |    INDEX RANGE SCAN          | EMP_DEPARTMENT_IX |     27 |     10 |    106 |00:00:00.01 |    3 |
+|*  4 |  VIEW                        |                   |      1 |     27 |     11 |00:00:00.01 |   20 |
+|   5 |   TABLE ACCESS FULL          | DEPARTMENTS       |      1 |     27 |     27 |00:00:00.01 |    7 |
+------------------------------------------------------------------------------------------------------------
+
+Predicate Information (identified by operation id):
+---------------------------------------------------
+
+   3 - access("DEPARTMENT_ID"=:B1)
+   4 - filter("SAL" IS NOT NULL)
+*/
+
+-- join 활용
+SELECT /*+ leading(d) use_nl(e)*/d.department_name, e.sumsal, e.avgsal
+FROM departments d, (SELECT department_id, sum(salary) AS sumsal, avg(salary) AS avgsal FROM employees GROUP BY department_id) e
+where e.department_id(+) = d.department_id;
+/*
+----------------------------------------------------------------------------------------------------------------------------------------
+| Id  | Operation                     | Name              | Starts | E-Rows | A-Rows |   A-Time   | Buffers |  OMem |  1Mem | Used-Mem |
+----------------------------------------------------------------------------------------------------------------------------------------
+|   0 | SELECT STATEMENT              |                   |      1 |        |     27 |00:00:00.01 |   18 |          |       |          |
+|   1 |  HASH GROUP BY                |                   |      1 |    106 |     27 |00:00:00.01 |   18 |      806K|   806K| 1347K (0)|
+|   2 |   NESTED LOOPS OUTER          |                   |      1 |    106 |    122 |00:00:00.01 |   18 |          |       |          |
+|   3 |    TABLE ACCESS FULL          | DEPARTMENTS       |      1 |     27 |     27 |00:00:00.01 |    6 |          |       |          |
+|   4 |    TABLE ACCESS BY INDEX ROWID| EMPLOYEES         |     27 |      4 |    106 |00:00:00.01 |   12 |          |       |          |
+|*  5 |     INDEX RANGE SCAN          | EMP_DEPARTMENT_IX |     27 |     10 |    106 |00:00:00.01 |    3 |          |       |          |
+----------------------------------------------------------------------------------------------------------------------------------------
+
+Predicate Information (identified by operation id):
+---------------------------------------------------
+
+   5 - access("DEPARTMENT_ID"="D"."DEPARTMENT_ID")
+*/
+
+SELECT /*+ leading(d) use_merge(e)*/d.department_name, e.sumsal, e.avgsal
+FROM departments d, (SELECT department_id, sum(salary) AS sumsal, avg(salary) AS avgsal FROM employees GROUP BY department_id) e
+where e.department_id(+) = d.department_id;
+/*
+---------------------------------------------------------------------------------------------------------------------------------
+| Id  | Operation                    | Name        | Starts | E-Rows | A-Rows |   A-Time   | Buffers |  OMem |  1Mem | Used-Mem |
+---------------------------------------------------------------------------------------------------------------------------------
+|   0 | SELECT STATEMENT             |             |      1 |        |     27 |00:00:00.01 |      12 |       |       |          |
+|   1 |  MERGE JOIN OUTER            |             |      1 |     27 |     27 |00:00:00.01 |      12 |       |       |          |
+|   2 |   TABLE ACCESS BY INDEX ROWID| DEPARTMENTS |      1 |     27 |     27 |00:00:00.01 |       6 |       |       |          |
+|   3 |    INDEX FULL SCAN           | DEPT_ID_PK  |      1 |     27 |     27 |00:00:00.01 |       3 |       |       |          |
+|*  4 |   SORT JOIN                  |             |     27 |     11 |     11 |00:00:00.01 |       6 |  2048 |  2048 | 2048  (0)|
+|   5 |    VIEW                      |             |      1 |     11 |     12 |00:00:00.01 |       6 |       |       |          |
+|   6 |     HASH GROUP BY            |             |      1 |     11 |     12 |00:00:00.01 |       6 |   894K|   894K| 1718K (0)|
+|   7 |      TABLE ACCESS FULL       | EMPLOYEES   |      1 |    107 |    107 |00:00:00.01 |       6 |       |       |          |
+---------------------------------------------------------------------------------------------------------------------------------
+
+Predicate Information (identified by operation id):
+---------------------------------------------------
+
+   4 - access("E"."DEPARTMENT_ID"="D"."DEPARTMENT_ID")
+       filter("E"."DEPARTMENT_ID"="D"."DEPARTMENT_ID")
+*/
+
+SELECT /*+ leading(d) use_hash(e)*/d.department_name, e.sumsal, e.avgsal
+FROM departments d, (SELECT department_id, sum(salary) AS sumsal, avg(salary) AS avgsal FROM employees GROUP BY department_id) e
+where e.department_id(+) = d.department_id;
+/*
+-------------------------------------------------------------------------------------------------------------------------
+| Id  | Operation            | Name        | Starts | E-Rows | A-Rows |   A-Time   | Buffers |  OMem |  1Mem | Used-Mem |
+-------------------------------------------------------------------------------------------------------------------------
+|   0 | SELECT STATEMENT     |             |      1 |        |     27 |00:00:00.01 |      12 |       |       |          |
+|*  1 |  HASH JOIN OUTER     |             |      1 |     27 |     27 |00:00:00.01 |      12 |  1079K|  1079K| 1280K (0)|
+|   2 |   TABLE ACCESS FULL  | DEPARTMENTS |      1 |     27 |     27 |00:00:00.01 |       6 |       |       |          |
+|   3 |   VIEW               |             |      1 |     11 |     12 |00:00:00.01 |       6 |       |       |          |
+|   4 |    HASH GROUP BY     |             |      1 |     11 |     12 |00:00:00.01 |       6 |   894K|   894K| 1732K (0)|
+|   5 |     TABLE ACCESS FULL| EMPLOYEES   |      1 |    107 |    107 |00:00:00.01 |       6 |       |       |          |
+-------------------------------------------------------------------------------------------------------------------------
+
+Predicate Information (identified by operation id):
+---------------------------------------------------
+
+   1 - access("E"."DEPARTMENT_ID"="D"."DEPARTMENT_ID")
 */
