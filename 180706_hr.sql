@@ -1,94 +1,3 @@
-/*[문제1] 화면의 결과 처럼 프로그램을 작성하세요.
-TODAY'S : 2018-07-04
-TOMORROW'S : 2018-07-05*/
-BEGIN
-dbms_output.put_line('TODAY''S : ' || to_char(SYSDATE, 'YYYY-MM-DD'));
-dbms_output.put_line(q'[TOMORROW'S : ]'|| to_char(sysdate+1, 'YYYY-MM-DD'));
-END;
-/
-
-
--- [문제2] 전체 사원의 평균 급여를 출력 하는 프로그램 만드세요.  프로그램 수행이 끝난 후에도 전체 사원의 평균값을 이용해서 전체 사원의 평균 급여 보다 많이 받는 사원의 정보 select 문장을 작성하세요.
-var b_deptavg number
-
-begin
-  select avg(salary) into :b_deptavg from employees;
-  dbms_output.put_line('전체 사원의 평균 급여: ' || round(:b_deptavg));
-end;
-/
-
-select * from employees where salary > :b_deptavg;
-
-/*[문제3] 사원 번호를 입력값으로 받아서 그사원의 사번, 이름, 급여 정보를 출력하는 프로그램을 작성하세요.
-<화면 결과>
-결과=> 사원번호: 100, 사원이름: King, 사원급여: 24000*/
-
-var b_empid number
-exec :b_empid := 100
-
-declare
-  v_lname employees.last_name%type;
-  v_sal employees.salary%type;
-
-begin
-  select last_name, salary into v_lname, v_sal from employees where employee_id = :b_empid;
-  dbms_output.put_line('결과=> 사원번호: ' || :b_empid || ', 사원이름: ' || v_lname || ', 사원급여: ' || v_sal);
-
-end;
-/
-
-/*[문제4] 사원 번호를 입력값으로 받아서 입사일, 급여 정보를 출력하는 프로그램을 작성하세요.
-<화면 결과>
-hire date is : 2003년 6월 17일
-Salary is : ￦24,000.00 */
-
--- employee_id 확인 : 100번
-select employee_id from employees
-where hire_date = to_date('20030617', 'yyyymmdd')
-and salary = 24000;
-
-var b_empid number
-exec :b_empid := 100
-
-declare
-  v_hdate employees.hire_date%type;
-  v_sal employees.salary%type;
-
-begin
-  select hire_date, salary into v_hdate, v_sal from employees where employee_id = :b_empid;
-  dbms_output.put_line('Hire date is : ' || to_char(v_hdate, 'YYYY"년" fmMM"월" DD"일"'));
-  dbms_output.put_line('Salary is : ' || ltrim(to_char(v_sal, 'l999g999d00'))); -- to_char의 l 때문에 왼쪽 공백이 생겨 ltrim으로 지워줌
-end;
-/
-
-/*<문제5> 부서테이블에 신규 부서를 입력하는 프로그램을 작성하려고 합니다.
-부서 이름만 입력값으로 받고 부서코드는 마지막 부서 코드에 10을 증가해서 부서코드를
-넣고 관리자번호, 부서 위치는 null값으로 입력하는 프로그램을 작성하세요.
-화면출력 처럼 출력하세요.(dept 테이블을 생성한후 프로그램을 만드세요) 
-
-<화면출력>
-신규 부서 번호는 280, 부서 이름 It 입니다. */
-
-drop table dept purge;
-create table dept as select * from departments;
-
-alter table dept add constraint dept_dept_id_pk primary key(department_id);
-
-var b_dname varchar2(10)
-exec :b_dname := 'It'
-
-declare
-  new_deptid departments.department_id%type;
-
-begin
-  select max(department_id)+10 into new_deptid from dept;
-  insert into dept(department_id, department_name)
-  values(new_deptid, :b_dname);
-  dbms_output.put_line('신규 부서 번호는 ' || new_deptid || ', 부서 이름 ' || :b_dname || '입니다.');
-
-end;
-/
-
 /*[문제6]사원번호를 입력값으로 받아서 그 사원의 급여를 10%인상하는 프로그램을 수행하세요.
 화면의 출력되는 결과는 수정 전 월급과 수정 후 월급이 아래와 같이 출력 후 transaction은 rollback 하세요.
 수정 전 월급 : 24000
@@ -489,3 +398,129 @@ begin
 
 end;
 /
+
+
+
+
+
+
+-- 조건제어문: boolean
+declare
+  v_flag boolean := true;
+  
+begin
+  if v_flag then
+    dbms_output.put_line('참');
+  end if;
+
+end;
+/
+
+declare
+  v_flag boolean := true;
+  
+begin
+  if v_flag then
+    dbms_output.put_line('참');
+  else
+    dbms_output.put_line('거짓');
+  end if;
+
+end;
+/
+
+/*if문
+if 조건 then 참값일때 실행할 명령;
+elsif 조건 then 참값일때 실행할 명령;
+else 참이 없을 때 실행할 명령;
+end if;
+
+- 비교연산자
+x > y / x < y / x = y / x <> y / x >= y / x <= y
+- 논리연산자
+and, or, not
+- null 비교
+is null, is not null */
+
+declare
+ v_grade char(1) := upper('c');
+ v_appraisal varchar2(30);
+ 
+begin
+  v_appraisal := case v_grade when 'A' then '참잘했어요' when 'B' then '잘했어요' when 'C' then '다음에 잘해요' else '니가 사람이야!!' end;
+  dbms_output.put_line('등급은 ' || v_grade || ' 평가는 ' || v_appraisal );
+  
+end;
+/
+
+declare
+ v_grade char(1) := upper('c');
+ v_appraisal varchar2(30);
+ 
+begin
+  v_appraisal := case when v_grade = 'A' then '참잘했어요' when v_grade in ('B', 'C') then '잘했어요' when v_grade = 'D' then '다음에 잘해요' else '니가 사람이야!!' end;
+  dbms_output.put_line('등급은 ' || v_grade || ' 평가는 ' || v_appraisal );
+  
+end;
+/
+
+/*case 문
+case
+  when 비교1 then 참값일때 작업
+  when 비교2 then 참값일때 작업
+  else 참값이 없을때 작업
+end case
+*/
+
+-- 반복문
+-- loop문
+declare 
+  i number := 1;
+
+begin
+  loop
+    dbms_output.put_line(i);
+    i := i + 1;
+    if i > 10 then exit;
+    end if;
+  end loop;
+
+end;
+/
+
+-- while loop 문
+declare
+  i number := 1;
+
+begin
+  while i <= 10 loop
+    dbms_output.put_line(i);
+    i := i+1;
+    if i = 5 then exit;
+  end loop;
+
+end;
+/
+
+-- for 문
+begin 
+  for i in 1..10 loop
+    dbms_output.put_line(i);
+    -- i := i + 1; <- 오류: count 변수는 할당 불가
+  end loop;
+  
+end;
+/
+
+declare
+  v_start number := 1;
+  v_end number := 10;
+
+begin
+  for i in reverse v_start..v_end loop -- reverse: 큰수부터 역순으로 loop
+    dbms_output.put_line(i);
+  end loop;
+
+end;
+/
+
