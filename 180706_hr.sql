@@ -388,12 +388,10 @@ end;
 
 declare
   v_dan number := 2;
-  v_result number;
-
+  
 begin
   for i in 1..9 loop
-    v_result := v_dan * i;
-    dbms_output.put_line(v_dan || ' * ' || i || ' = ' || v_result);
+    dbms_output.put_line(v_dan || ' * ' || i || ' = ' || v_dan * i);
   end loop;
 
 end;
