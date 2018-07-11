@@ -904,3 +904,135 @@ begin
   
 end;
 /
+
+/* [문제30] 2006년도에 입사한 사원들의 근무 도시이름별로 급여의 총액, 평균을 출력하세요.
+<화면출력>
+Seattle 도시에 근무하는 사원들의 총액급여는 ￦10,400 이고 평균급여는 ￦5,200 입니다.
+South San Francisco 도시에 근무하는 사원들의 총액급여는 ￦37,800 이고 평균급여는 ￦2,907 입니다.
+Southlake 도시에 근무하는 사원들의 총액급여는 ￦13,800 이고 평균급여는 ￦6,900 입니다.
+oxford 도시에 근무하는 사원들의 총액급여는 ￦59,100 이고 평균급여는 ￦8,442 입니다. */
+
+declare
+  cursor sal2006 is select l.city, sum(e.salary) as sumsal, round(avg(e.salary)) as avgsal
+                    from employees e, departments d, locations l
+                    where e.department_id = d.department_id
+                    and d.location_id = l.location_id
+                    and e.hire_date between to_date('20060101', 'yyyymmdd') and to_date('20061231 235959', 'yyyymmdd hh24miss')
+                    group by l.city;
+
+begin
+  for sal_rec in sal2006 loop
+    dbms_output.put_line(sal_rec.city || ' 도시에 근무하는 사원들의 총액급여는 ' || trim(to_char(sal_rec.sumsal, 'l999g999')) || ' 이고 평균급여는 ' || trim(to_char(sal_rec.avgsal, 'l999g999')) || ' 입니다.');
+  end loop;
+  
+end;
+/
+-- bulk collect into 활용
+declare
+  type rec_type is record(city locations.city%type, sumsal number, avgsal number);
+  type tab_type is table of rec_type;
+  v_tab tab_type;
+
+begin
+  select l.city, sum(e.salary) as sumsal, round(avg(e.salary)) as avgsal
+  bulk collect into v_tab
+  from employees e, departments d, locations l
+  where e.department_id = d.department_id
+  and d.location_id = l.location_id
+  and e.hire_date between to_date('20060101', 'yyyymmdd') and to_date('20061231 235959', 'yyyymmdd hh24miss')
+  group by l.city;
+  
+  for i in v_tab.first..v_tab.last loop
+    dbms_output.put_line(v_tab(i).city || ' 도시에 근무하는 사원들의 총액급여는 ' || trim(to_char(v_tab(i).sumsal, 'l999g999')) || ' 이고 평균급여는 ' || trim(to_char(v_tab(i).avgsal, 'l999g999')) || ' 입니다.');
+  end loop;
+
+end;
+/
+
+-- 커서 선언 없이 for문에 바로 select문을 넣을 시 자동으로 커서 생성됨
+-- 명시적 커서이지만 이름이 없음 -> 커서의 속성을 확인할 수 없음
+begin 
+  for v_rec in (select l.city, sum(e.salary) as sumsal, round(avg(e.salary)) as avgsal
+                    from employees e, departments d, locations l
+                    where e.department_id = d.department_id
+                    and d.location_id = l.location_id
+                    and e.hire_date between to_date('20060101', 'yyyymmdd') and to_date('20061231 235959', 'yyyymmdd hh24miss')
+                    group by l.city;) loop
+    dbms_output.put_line(sal_rec.city || ' 도시에 근무하는 사원들의 총액급여는 ' || trim(to_char(sal_rec.sumsal, 'l999g999')) || ' 이고 평균급여는 ' || trim(to_char(sal_rec.avgsal, 'l999g999')) || ' 입니다.');
+  end loop;
+  
+end;
+/
+
+/*[문제31] 30번 부서 사원들의 이름, 급여, 근무개월수, 부서이름을 출력하고 그 사원들 중에 근무개월수가 150개월 이상인 사원들의 급여를 10%인상하는 프로그램을 작성하세요.
+<화면 출력>
+사원이름 : Raphaely 급여 : 11000 근무개월수 : 172 부서 이름 :  Purchasing
+Raphaely 10%인상 급여로 수정했습니다.
+사원이름 : Khoo 급여 : 3100 근무개월수 : 167 부서 이름 :  Purchasing
+Khoo 10%인상 급여로 수정했습니다.
+사원이름 : Baida 급여 : 2900 근무개월수 : 136 부서 이름 :  Purchasing
+사원이름 : tobias 급여 : 2800 근무개월수 : 141 부서 이름 :  purchasing
+사원이름 : Himuro 급여 : 2600 근무개월수 : 125 부서 이름 :  Purchasing
+사원이름 : Colmenares 급여 : 2500 근무개월수 : 116 부서 이름 :  Purchasing */
+-- rowid 활용
+declare
+  cursor sal_cur is select e.rowid, e.last_name, e.salary, trunc(months_between(sysdate, e.hire_date)) as wmonth, d.department_name from emp e, departments d where e.department_id = 30 and d.department_id = 30;
+  
+begin
+  for sal_rec in sal_cur loop
+    dbms_output.put_line('사원이름 : ' || sal_rec.last_name || ' 급여 : ' || sal_rec.salary || ' 근무개월수 : ' || sal_rec.wmonth || ' 부서 이름 : ' || sal_rec.department_name );
+    if sal_rec.wmonth >= 150 then    
+      update emp set salary = salary * 1.1 where rowid = sal_rec.rowid;
+      if sql%found then
+        dbms_output.put_line(sal_rec.last_name || ' 10%인상 급여로 수정했습니다.');
+      end if;
+    end if;
+  end loop;
+  rollback;
+
+end;
+/
+-- for update & current of 활용
+declare
+  cursor sal_cur is select e.last_name, e.salary, trunc(months_between(sysdate, e.hire_date)) as wmonth, d.department_name from emp e, departments d where e.department_id = 30 and d.department_id = 30
+  for update of e.last_name nowait;
+  v_newsal number
+  
+begin
+  for sal_rec in sal_cur loop
+    dbms_output.put_line('사원이름 : ' || sal_rec.last_name || ' 급여 : ' || sal_rec.salary || ' 근무개월수 : ' || sal_rec.wmonth || ' 부서 이름 : ' || sal_rec.department_name );
+    if sal_rec.wmonth >= 150 then
+      update emp set salary = salary * 1.1 where current of sal_cur; -- current of 를 쓸때는 returning 절 사용 불가
+      if sql%found then
+        dbms_output.put_line(sal_rec.last_name || ' 10%인상 급여인 '|| v_newsal ||'로 수정했습니다.');
+      end if;
+    end if;
+  end loop;
+  rollback;
+
+end;
+/
+
+-- bulk collect into 활용
+declare
+  type rec_type is record(rowid varchar2(18), lname emp.last_name%type, sal emp.salary%type, wmonth number, deptname departments.department_name%type);
+  type tab_type is table of rec_type;
+  v_tab tab_type;
+  v_newsal number;
+  
+begin
+  select e.rowid, e.last_name, e.salary, trunc(months_between(sysdate, e.hire_date)) as wmonth, d.department_name bulk collect into v_tab from emp e, departments d where e.department_id = 30 and d.department_id = 30;
+  
+  for i in v_tab.first..v_tab.last loop
+    dbms_output.put_line('사원이름 : ' || v_tab(i).lname || ' 급여 : ' || v_tab(i).sal || ' 근무개월수 : ' || v_tab(i).wmonth || ' 부서 이름 : ' || v_tab(i).deptname );
+    if v_tab(i).wmonth >= 150 then
+      update emp set salary = salary * 1.1 where rowid = v_tab(i).rowid returning salary into v_newsal;
+      if sql%found then
+        dbms_output.put_line(v_tab(i).lname || ' 10%인상 급여인 '|| v_newsal ||'로 수정했습니다.');
+      end if;
+    end if;
+  end loop;
+  rollback;
+
+end;
+/
