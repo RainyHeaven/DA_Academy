@@ -657,3 +657,32 @@ execute pack_cur.open;
 execute pack_cur.next(50);
 
 execute pack_cur.close;
+
+declare
+  type emp_rec_type is record(jid employees.job_id%type, lname employees.last_name%type);
+  type emp_tab_type is table of emp_rec_type;
+  type emp_result_type is table of varchar2(300) index by varchar2(20);
+  v_emp_tab emp_tab_type;
+  v_result emp_result_type;
+  v_index varchar2(20);
+  
+begin
+  select job_id, last_name bulk collect into v_emp_tab from employees;
+  for i in v_emp_tab.first..v_emp_tab.last loop
+    if v_result.exists(v_emp_tab(i).jid) then
+      v_result(v_emp_tab(i).jid) := v_result(v_emp_tab(i).jid)||', '||v_emp_tab(i).lname;
+    else
+      v_result(v_emp_tab(i).jid) := v_emp_tab(i).lname;
+    end if;
+  end loop;
+  
+  v_index := v_result.first;
+  
+  loop
+    dbms_output.put_line('job_id가 '||v_index||'인 사원 : '||v_result(v_index));
+    v_index := v_result.next(v_index);
+    exit when v_index is null;
+  end loop;
+  
+end;
+/

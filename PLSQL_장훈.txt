@@ -2453,3 +2453,73 @@ begin
   
 end;
 /
+
+-- [문제55] 배열 변수에  20, 9, 8, 200,10, 3, 7, 11,100,101,210,5 값들이 쌓여 있습니다. 최대값을 구하는 프로그램을 작성하세요.
+declare
+  type numlist is table of number;
+  v_nlist numlist;
+  v_max number;
+  
+begin
+  v_nlist := numlist(20, 9, 8, 200,10, 3, 7, 11,100,101,210,5);
+  v_max := v_nlist(1);
+  for i in 2..v_nlist.last loop
+    if v_nlist(i) > v_max then
+      v_max := v_nlist(i);
+    end if;
+  end loop;
+  dbms_output.put_line('최대값은 '||v_max);
+
+end;
+/
+
+-- [문제56] 배열 변수에  20, 9, 8, 200,10, 3, 7, 11,100,101,210,5 값들이 쌓여 있습니다. 최소값을 구하는 프로그램을 작성하세요.
+declare
+  type numlist is table of number;
+  v_nlist numlist;
+  v_min number;
+  
+begin
+  v_nlist := numlist(20, 9, 8, 200,10, 3, 7, 11,100,101,210,5);
+  v_min := v_nlist(1);
+  for i in 2..v_nlist.last loop
+    if v_nlist(i) < v_min then
+      v_min := v_nlist(i);
+    end if;
+  end loop;
+  dbms_output.put_line('최소값은 '||v_min);
+
+end;
+/
+
+-- [문제57] 복제 테이블을 생성한후 emp_source 테이블에 dml이 발생하면 emp_target값도 함께 수행되도록 해주세요.
+drop table emp_target purge;
+drop table emp_source purge;
+
+create table emp_target(id number, name varchar2(10), day timestamp default systimestamp, sal number);
+create table emp_source(id number, name varchar2(10), day timestamp default systimestamp, sal number);
+
+-- 테스트
+select * from emp_source;
+select * from emp_target;
+insert into emp_source(id,name,day,sal) values(100,'ora1',default,1000);
+commit;
+update emp_source set sal = 2000 where id = 100;
+update emp_source set name = 'oracle' where id = 100;
+insert into emp_source(id,name,day,sal) values(2,user,default,3000);
+delete from emp_source where id = 2;
+rollback;
+
+create or replace trigger auto_duplicate_trigger
+after insert or delete or update on emp_source for each row
+declare
+begin
+  if deleting then
+    delete from emp_target where id = :old.id;
+  elsif inserting then
+    insert into emp_target(id, name, day, sal) values(:new.id, :new.name, :new.day, :new.sal);
+  elsif updating then
+    update emp_target set id = :new.id, name = :new.name, day = :new.day, sal = :new.sal;
+  end if;
+end;
+/
