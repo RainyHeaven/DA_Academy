@@ -1,0 +1,54 @@
+# [문제1] x변수에 1,3,5,7,9 값을 입력, y 변수에 1,2,3,4,5 값을 입력하세요.
+x <- c(1,3,5,7,9)
+y <- c(1,2,3,4,5)
+
+# [문제2] x 변수와 y 변수를 중복성 없이 하나로 합친후에 u 변수에 넣어 주세요.
+u <- sort(union(x,y), decreasing = FALSE)
+u
+# [문제3] x 변수와 y 변수의 값들중에 중복성만 추출해서 i 변수에 넣어주세요.
+i <- intersect(x,y)
+
+# [문제4] x 변수의 값과 y 변수의 값중에 순수하게 x 변수에 들어 있는 값만 추출해서 m 변수에 넣어 주세요.
+m <- setdiff(x, y)
+m
+# [문제5] x 변수의 값과 y 변수의 값이 일치가 되면 TRUE 아니면 FALSE를 출력해주세요.
+identical(x, y)
+
+# [문제6] x 변수에 값들을 10을 곱한 결과를 x 변수에 적용하세요.
+x <- x * 10
+
+# [문제7] x 변수에 있는 50을 5로 수정하세요.
+x
+x[3] <- 5
+
+# [문제8]  x 변수에 있는 10 30  5 70 90을  원래의 값으로 1,3,5,7,9로 되돌려 주세요.단 union, 정수 나누기, sort 만 사용하세요
+x <- c(10, 30, 5, 70, 90)
+x <- sort(union((x[-3]%/%10), x[3]))
+
+x[which(5 == x)] <- 50
+x <- x%/%10
+x
+# [문제9] x변수에 11숫자를 제일 뒤에 입력하세요. 단 append와 length를 이용하세요.
+append(x, 11, after=length(x))
+
+# [문제10] x 변수에 제일 뒤에 있는 값을 NA로 수정하세요. 단 length를 이용하세요.
+x[length(x)] <- NA
+
+# [문제11] lst 변수에 name = 'king' , height = 180, weight = 70 값을 넣어 주세요.
+lst <- list(name = 'king', height = 180, weight = 70)
+lst
+
+# [문제12] lst 변수에  blood = 'A' 추가하세요.
+lst$blood <- 'A'
+lst
+
+# [문제13] lst 변수에 name의 값을 'scott'로 수정하세요.
+lst$name <- 'scott'
+
+# [문제14] lst변수에 2번인덱스 값만 출력해주세요.
+lst[[2]]
+
+# [문제15] lst변수에 blood 이름을 blood type 이름으로 수정하세요.
+names(lst) <- c('name', 'height', 'weight', 'blood type')
+names(lst)[4] <- 'blood type'
+lst
