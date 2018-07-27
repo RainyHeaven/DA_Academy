@@ -20,6 +20,7 @@ emp[substr(emp[,"LAST_NAME"],2,2)=='m'|substr(emp[,"LAST_NAME"],2,2)=='g', c("LA
 emp[substr(emp$LAST_NAME, 2, 2)%in%c('m','g'), c("LAST_NAME", "SALARY")]
 emp[c(grep('^.m', emp$LAST_NAME), grep('^.g', emp$LAST_NAME)), c("LAST_NAME", "SALARY")]
 emp[grep('^.m|^.g', emp$LAST_NAME), c("LAST_NAME", "SALARY")]
+emp[grep('^.(m|g)', emp$LAST_NAME), c("LAST_NAME", "SALARY")]
 emp[grepl('^.m', emp$LAST_NAME)|grepl('^.g', emp$LAST_NAME), c("LAST_NAME", "SALARY")]
 
 # [문제59] last_name, salary값을 화면에 출력할때 0은 * 로 출력하세요.
