@@ -1089,3 +1089,87 @@ subset(emp, SALARY >= max(emp[emp$JOB_ID=='SA_REP', "SALARY"]), select=c(LAST_NA
 # [문제133]  KING 에게 보고하는 사원들의 last_name, salary를 출력하세요.
 subset(emp, MANAGER_ID %in% emp[emp$LAST_NAME=='King',"EMPLOYEE_ID"], select=c(LAST_NAME, SALARY))
 # select last_name, salary from emp where manager_id in (select employee_id from emp where last_name = 'King');
+
+# [문제134] 자신의 관리자 보다 더 많은 급여를 받는 사원이름, 사원급여, 관리자이름, 관리자급여를 출력하세요.
+rm(list=ls())
+setwd('c:/data')
+emp <- read.csv('emp_new.csv', stringsAsFactors = F)
+#sqldf
+library(sqldf)
+sqldf('select e.last_name, e.salary, m.last_name as mgrname, m.salary as mgrsal from emp e, (select employee_id, last_name, salary from emp) m  where m.employee_id = e.manager_id and e.salary > m.salary')
+
+# [문제135] 자신의 부서 평균 급여보다 많이 받는 사원들의 정보를 출력하세요.
+#sqldf
+sqldf('select e.* from emp e, (select department_id, round(avg(salary)) as avgsal from emp group by department_id) d where e.department_id = d.department_id and e.salary > d.avgsal')
+sqldf('select e.* from emp e where e.salary > (select round(avg(salary)) as avgsal from emp where department_id = e.department_id)')
+
+# [문제136] fruits_sales.csv file 읽어 들인 후 과일 이름별 판매량, 판매합계를 구하세요.(tapply를 이용하세요)
+# qty price
+# apple   44 66000
+# banana  31 70000
+# berry   52 95100
+# orange  21 83000
+fs <- read.csv('fruits_sales.csv')
+fs
+#개별결과 생성
+x <- tapply(fs$qty, fs$name, sum)
+y <- tapply(fs$price, fs$name, sum)
+#결과셋 만들기
+#rbind
+z <- rbind(x, y)
+t(z)
+#cbind
+z <- cbind(qty=x,price=y)
+z
+#data.frame
+z <- rbind(x, y)
+data.frame(qty=z[1,], price=z[2,], row.names = colnames(z))
+
+# [문제137] fruits_sales.csv file 읽어 들인 후 과일 이름별 판매량, 판매합계를 구하세요.(aggregate를 이용하세요)
+# qty price
+# apple   44 66000
+# banana  31 70000
+# berry   52 95100
+# orange  21 83000
+#개별결과생성
+x <- aggregate(qty~name, fs, sum)
+y <- aggregate(price~name, fs, sum)
+#cbind
+x <- cbind(x,y[2])
+colnames(x)[1] <- ''
+
+#merge
+x <- merge(x,y)
+colnames(x)[1] <- ''
+x
+
+# [문제138] fruits_sales.csv file 읽어 들인 후 과일 이름별 판매량, 판매합계를 구하세요.(sqldf를 이용하세요)
+# qty price
+# apple   44 66000
+# banana  31 70000
+# berry   52 95100
+# orange  21 83000
+sqldf('select name as " ", sum(qty) as qty, sum(price) as price from fs group by name')
+
+# [문제139] fruits_sales.csv file 읽어 들인 후 년도별로 판매량 중에 가장 많은 판매를 한 년도를 출력해주세요.(tapply를 이용하세요)
+x <- tapply(fs$qty, fs$year,sum)
+names(x[x==max(x)])
+rownames(x)[x==max(x)]
+
+# [문제140] fruits_sales.csv file 읽어 들인 후 년도별로 판매량 중에 가장 많은 판매를 한 년도를 출력해주세요.(aggregate를 이용하세요)
+x <- aggregate(qty~year, fs, sum)
+x[x[2]==max(x[2]),'year']
+
+# [문제141] fruits_sales.csv file 읽어 들인 후 년도별로 판매량 중에 가장 많은 판매를 한 년도를 출력해주세요.(sqldf를 이용하세요)
+sqldf('with fr as (select year, sum(qty) as qsum from fs group by year) select year as bestYear from fr where qsum = ((select max(qsum) as sumax from fr))')
+
+# [문제142] fruits_sales.csv file 읽어 들인 후 과일 이름별 판매량, 판매합계를 구하세요.
+# ddply함수를 이용하세요.
+ddply(fs, 'name', summarise, netQty=sum(qty), netSales=sum(qty))
+
+# [문제143] emp 데이터 프레임을 새로운 df 이름으로 복제하세요.
+# df 데이터 프레임에  새로운 comm 컬럼을 생성하는데 COMMISSION_PCT 값을 기반으로 값을 입력하시고
+# 결측값은 기존 COMMISSION_PCT의 평균 값으로 입력해주세요.(단 mutate함수를 이용하세요)
+df <- emp
+df <- mutate(df, comm=ifelse(is.na(COMMISSION_PCT), round(mean(COMMISSION_PCT, na.rm=T),2), COMMISSION_PCT))
+head(df)
