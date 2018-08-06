@@ -1173,3 +1173,19 @@ ddply(fs, 'name', summarise, netQty=sum(qty), netSales=sum(qty))
 df <- emp
 df <- mutate(df, comm=ifelse(is.na(COMMISSION_PCT), round(mean(COMMISSION_PCT, na.rm=T),2), COMMISSION_PCT))
 head(df)
+
+# [문제144] 부서별 급여의 총액을 pie chart를 생성하세요.
+#tapply
+x <- tapply(emp$SALARY, emp$DEPARTMENT_ID, sum)
+pie(x, label=names(x), main='부서별 급여 총액')
+pie(x, label=paste0(names(x),'번 부서 급여 총액 ', x), main='부서별 급여 총액')
+
+#aggregate
+x <- aggregate(SALARY~DEPARTMENT_ID, emp, sum)
+pie(x[[2]], label=paste0(x[[1]], '번 부서', x[[2]], '만원'), main='부서별 급여 총액')
+
+df <- aggregate(SALARY~DEPARTMENT_ID, emp, sum)
+label1 <- paste(df$DEPARTMENT_ID, '부서', sep="")
+label2 <- paste(df$SALARY, '만원', sep="")
+pie(df$SALARY, labels=label2, main= '부서별 총액 급여', col=rainbow(length(df$SALARY)), radius=0.5)
+legend(1,1,label1,fill=rainbow(length(df$SALARY)))
