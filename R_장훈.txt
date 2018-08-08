@@ -1321,3 +1321,176 @@ library(plotrix)
 barlabels(bp, data, data, cex=0.8, prop=1.04)
 # boxed.labels(x축, y축, 라벨값, cex=텍스트크기, border=F(테두리 없앨시), srt=회전각도, bg=배경색)
 boxed.labels(bp, data, data, cex=0.8, border=F, srt=0, bg=c('red','yellow','purple', 'orange'))
+
+<!-- [문제150] exam.csv file에는 학생들의 시험점수가 있습니다. 학생들의 SQL 점수를 막대그래프로 출력해주세요. --> 
+setwd('c:/data')
+exam <- read.csv('exam.csv', stringsAsFactors = F)
+exam
+sql <- exam[exam$subject=='SQL', c('name', 'grade')]
+bp <- barplot(sql$grade, names.arg=sql$name, cex.names=0.7,main='SQL 시험점수', xlab='이름', ylab='점수', ylim=c(0,100), col=rainbow(length(sql$grade)))
+text(x=bp, y=sql$grade, labels=sql$grade, pos=3)
+
+<!-- [문제151] exam.csv file에는 학생들의 시험점수가 있습니다. 학생들의 R 점수를 막대그래프로 출력해주세요. -->
+r <- exam[exam$subject=='R', c('name', 'grade')]
+barplot(r$grade, names.arg=r$name, cex.names=0.7, main='R 시험점수', xlab='이름', ylab='점수', ylim=c(0, 100), col=rainbow(length(r$name)))
+
+<!-- [문제152] exam.csv file에는 학생들의 시험점수가 있습니다. 학생들의 PYTHON 점수를 막대그래프로 출력해주세요. -->
+python <- exam[exam$subject=='PYTHON', c('name', 'grade')]
+barplot(python$grade, names.arg=python$name, main='PYTHON 시험점수', cex.names=0.7, xlab='이름', ylab='점수', ylim=c(0, 100), col=rainbow(length(python$name)))
+
+<!-- [문제153] exam.csv file에는 학생들의 시험점수가 있습니다. 학생들의 과목 총 점수를 막대그래프로 출력하세요. -->
+total <- tapply(exam$grade, exam$subject, sum)
+barplot(total, names.arg=names(total), main='과목별 시험점수', xlab='과목명', ylab='점수', ylim=c(0, 700), col=rainbow(length(total)))
+
+<!-- [문제154] 학생들의 이름을 기준으로 과목점수를 스택형 막대그래프로 생성하세요. -->
+library(doBy)
+library(plotrix)
+data <- orderBy(~name, exam)
+data
+score <- matrix(data$grade, nrow=3)
+name <- data$name[seq(1, length(data$name), 3)]
+bp <- barplot(score, names.arg=name, cex.names=0.7, main='과목별 점수', xlab='이름', ylab='점수', ylim=c(0, 300), beside=F, col=c('gray', 'blue', 'red'), border=F)
+legend('topright',data$subject[1:3], cex=0.7, fill=c('gray', 'blue', 'red'), pch=15, pt.cex=0.5)
+text(x=bp, y=colSums(score), labels=paste0(colSums(score), '점'),cex=0.8, pos=3)
+boxed.labels(x=bp, y=colSums(score)-(score[3,]/2), labels=paste0(score[3,], '점'),cex=0.7, border=F)
+boxed.labels(x=bp, y=colSums(score[1:2,])-(score[2,]/2), labels=paste0(score[2,], '점'),cex=0.7, border=F)
+boxed.labels(x=bp, y=score[1,]-(score[1,]/2), labels=paste0(score[1,], '점'),cex=0.7, border=F)
+ 
+# tapply로 데이터 처리
+t <- tapply(exam$grade, list(exam$subject, exam$name), sum)
+bp <- barplot(t, names.arg=names(t), ylim=c(0,350),
+        xlab='이름', ylab='성적',col=c('blue','green','purple'),
+        main='과목별 점수',las=2)
+legend('topright',legend=rownames(t), title='과목', pch=15,
+       col=c('blue','green','purple'),
+       cex=0.9, pt.cex=1)
+# 기준선 긋기
+abline(h=seq(100,300,100),col='red',lty=2)
+library(plotrix)
+barlabels(bp,t,bg=c('blue','green','purple'),border=c('blue','green','purple'))
+total<-apply(t,2,sum)
+text(bp,y=total*1.1,labels=paste(total,'점',sep=""))
+
+<!-- [문제155] 학생들의 이름을 기준으로 과목점수를 그룹형 막대그래프로 생성하세요. -->
+data <- orderBy(~name, exam)
+data
+score <- matrix(data$grade, nrow=3)
+name <- data$name[seq(1, length(data$name), 3)]
+bp <- barplot(score, names.arg=name, cex.names=0.7, main='과목별 점수', xlab='이름', ylab='점수', ylim=c(0, 110), beside=T, col=c('gray', 'blue', 'red'), border=F)
+legend('topright',data$subject[1:3], cex=0.7, fill=c('gray', 'blue', 'red'))
+text(bp, score, labels=score, cex=0.6, pos=3)
+
+<!-- [문제156] 창업건수.csv 파일에 데이터 중에 년도별 치킨집 창업 건수를 막대그래프로 생성하세요. -->
+data <- read.csv('창업건수.csv')
+data
+bp <- barplot(data$치킨집, names.arg=data$년도, main='연도별 치킨집 창업 건수', xlab='연도', ylab='창업건수', ylim=c(0, 1200), col=rev(heat.colors(length(data$년도))))
+barlabels(bp, data$치킨집, data$치킨집, cex=0.9, border=rev(heat.colors(length(data$년도))), bg=rev(heat.colors(length(data$년도))))
+
+<!-- [문제157] 년도별 치킨집 창업, 폐업 건수를 그룹형 막대그래프로 생성하세요. -->
+open <- read.csv('창업건수.csv')
+close <- read.csv('폐업건수.csv')
+chicken <- rbind(open$치킨집, close$치킨집)
+bp <- barplot(chicken, names.arg=open$년도, main='연도별 치킨집 창업/폐업 현황', xlab='연도', ylab='건수', ylim=c(0, 3600), col=c('red', 'blue'), beside=T, legend.text=c('창업', '폐업'))
+text(bp-0.1, chicken/2, labels=chicken, cex=1, srt=90, col='white')
+
+<!-- [문제158] 2014 년도 업종별 창업 비율을 원형 그래프로 생성하세요. -->
+x <- unlist(open[open$년도==2014, -1])
+pie(x, labels=paste0(names(x),' ', round(x/sum(x)*100),'%'), main='2014년 업종별 창업 비율', col=rainbow(length(x)), border='whitesmoke')
+  
+x <- unlist(open[open$년도==2014, -1])
+pie3D(x, labels=paste0(names(x),'\n', round(x/sum(x)*100),'%'), explode=0.15, labelcex=0.7, theta=1, main='2014년 업종별 창업 비율', col=rainbow(length(x)), border='snow3')
+
+<!-- [문제159] 년도를 입력하면 해당 년도의 원형 그래프 생성할 수 있는 함수를 생성하세요. -->
+<!-- show_pie(2006) -->
+show_pie <- function(year){
+  open <- read.csv('창업건수.csv')
+  x <- unlist(open[open$년도==year, -1])
+  pie(x, labels=paste0(names(x),' ', round(x/sum(x)*100),'%'), main=paste0(year, '년 업종별 창업 비율'), col=rainbow(length(x)), border='whitesmoke')
+}
+
+show_pie(2006)
+  
+show_pie3D <- function(year){
+  open <- read.csv('창업건수.csv')
+  x <- unlist(open[open$년도==year, -1])
+  pie3D(x, labels=paste0(names(x),'\n', round(x/sum(x)*100),'%'), explode=0.15, labelcex=0.7, theta=1, main=paste0(year,'년 업종별 창업 비율'), col=rainbow(length(x)), border='snow3')
+}
+
+show_pie3D(2006)
+
+<!-- [문제160] 한 주간 영업 판매량을 막대그래프를 생성하데 막대그래프의 색상은 판매량에 따라 다르게 해야 합니다. -->
+<!-- 판매량이 200 이상이면 red, 199 ~ 150 이면 yellow, 149 ~ 100 이면 blue, 99 ~ 50 pink, 49 ~ black색으로 출력하세요. -->
+<!-- 월요일 : 70 -->
+<!-- 화요일 : 151 -->
+<!-- 수요일 : 210 -->
+<!-- 목요일 : 180 -->
+<!-- 금요일 : 250 -->
+<!-- 토요일 : 300 -->
+<!-- 일요일 : 40 -->
+  
+pickCol <- function(num){
+  col <- NULL
+  for(i in num){
+    x <- i%/%50
+    if(x >= 4){col <- c(col, 'red')}
+    else if(x == 3){col <- c(col, 'yellow')}
+    else if(x == 2){col <- c(col, 'blue')}
+    else if(x == 1){col <- c(col, 'pink')}
+    else {col <- c(col, 'black')}  
+  }
+  return(col)
+}
+
+sell <- c(월요일=70, 화요일=151, 수요일=210, 목요일=180, 금요일=250, 토요일=300, 일요일=40)
+barplot(sell, width=0.2,names.arg=names(sell), col=pickCol(sell), main='주간 영업 판매량', xlab='요일', ylab='판매량', ylim=c(0, 350))
+
+<!-- [문제161] itwill hotel 투수객 조사를 통해 고객들의 평가에 대한 정보는  survey.csv에 저장 되어 있습니다. -->
+<!-- 파일 내용을 통해서 호텔에 대한 고객들의 반응을 그래프로 생성하세요. -->
+  
+survey <- read.csv('survey.csv', stringsAsFactors = F, header=F)
+# result 만들기 by for
+fac <- unique(t(survey))
+result <- c()
+for(i in fac){
+  result[i] <- 0
+}
+for(i in survey){
+  result[i] <- result[i] + 1
+}
+ 
+
+  
+# result 만들기 by str_count
+library(stringr)
+result <- c('매우좋음'=sum(str_count(survey, '매우좋음')), '좋음'=sum(str_count(survey, '좋음')), '보통'=sum(str_count(survey, '보통')), '나쁨'=sum(str_count(survey, '나쁨')), '매우나쁨'=sum(str_count(survey, '매우나쁨')))
+result
+
+ 
+
+  
+# barplot
+bp <- barplot(result, names.arg = names(result), main='ITWILL HOTEL 투숙객 서베이 결과', xlab='반응', ylab='응답수', ylim=c(0, 11), col=rev(heat.colors(length(result))), border='grey70')
+text(bp, result, labels=result, pos=3)
+ 
+  
+# pie
+pie(result, labels= paste0(names(result),' ',result,'명'), main='ITWILL HOTEL 투숙객 서베이 결과', col=rev(heat.colors(length(result))), border='firebrick')
+ 
+
+  
+# pie3D
+pie3D(result, labels= paste0(names(result),' ',result,'명'), labelcex=0.9, main='ITWILL HOTEL 투숙객 서베이 결과', explode=0.1, theta=1.1, col=rev(heat.colors(length(result))), border='tomato')
+
+ 
+
+  
+# factor 활용하기
+s <- t(survey)
+u <- unique(s)
+u <- factor(u, levels=unlist(u))
+result <- data.frame(eval=sort(u), cn=0)
+for(i in s){
+  result[result$eval==i, 'cn'] <- result[result$eval==i, 'cn']+1
+}
+result
+ 
