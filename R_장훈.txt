@@ -1493,4 +1493,64 @@ for(i in s){
   result[result$eval==i, 'cn'] <- result[result$eval==i, 'cn']+1
 }
 result
- 
+
+[문제162] itwill hotel 투수객 조사를 통해 고객들의 평가에 대한 정보는  survey.csv에 저장 되어 있습니다.
+파일 내용을 통해서 호텔에 대한 고객들의 반응을 그래프로 생성하세요.(table함수를 이용해서 해결해주세요)
+hotel <- read.csv('survey.csv', header=F, stringsAsFactors = F)
+data <- table(t(factor(hotel, levels = c('매우좋음', '좋음', '보통', '나쁨', '매우나쁨'))))
+ratio <- prop.table(data)*100
+# barplot
+bp <- barplot(data, names.arg=names(data),main='ITWILL HOTEL 고객 평가', xlab='평가', ylab='명수', ylim=c(0, 10), col=heat.colors(length(data)))
+text(bp, data, labels = paste0(data,'명','\n',ratio, '%'))
+# pie
+pie(data, labels=paste0(names(data),'\n',data,'명(', ratio, '%)'), main='ITWILL HOTEL 고객 평가', col=heat.colors(length(data)))
+# pie3D
+library(plotrix)
+pie3D(data, labels=paste0(names(data),'\n',data,'명(', ratio, '%)'), labelcex=1.1, explode=0.15, theta=1, main='ITWILL HOTEL 고객 평가', col=heat.colors(length(data)))
+
+
+[문제163] 1군전염병발병현환_년도별.csv 에 데이터를 가지고 그래프를 생성하세요.
+raw <- read.csv('1군전염병발병현황_년도별.csv', header=T)
+epidemic <- raw[,-1]
+# plot
+for(i in c(1:length(epidemic))){
+  if(i==1){plot(x=epidemic[,1], ylim=c(0, max(epidemic)*1.1), xlab='', ylab='발병건수', axes=F, col=rainbow(length(raw))[1], type='o', lwd=1, main='연도별 1군전염병 발병현황(단위: 건, 출처: 통계청)')}
+  else{lines(epidemic[,i], col=rainbow(length(raw))[i], type='o', lwd=1)}
+}
+abline(h=seq(0, 6000, 250), v=seq(1, 11, 1), lty=3, lwd=0.2)
+axis(1, at=1:11, labels=raw$년도별, las=2)
+legend(x=1, y=5500, legend=names(raw[-1]), cex=0.8, col=rainbow(length(raw)), lty=1, lwd=1, pch=1)
+
+# barplot
+barplot(t(as.matrix(epidemic)), names.arg=raw$년도별, col=rainbow(length(epidemic)), main='연도별 1군전염병 발병현황(단위:건, 출처: 통계청)', xlab='', ylab='건수', ylim=c(0, max(epidemic)*1.1), beside=T, las=2)
+legend('topleft', names(epidemic), fill=rainbow(length(raw)),cex=0.7)
+
+[문제164] 조사된 데이터 값들이 있습니다. 도수분포표를 만드세요.
+90 88 78 65 80 94 69 72 83 64 95 68 87 69 82 91 63 70 81 67 
+              계급 도수
+           90점이상    4
+  80점이상~90점미만    6
+  70점이상~80점미만    3
+  60점이상~70점미만    7
+
+input <- '90 88 78 65 80 94 69 72 83 64 95 68 87 69 82 91 63 70 81 67'
+score <- as.integer(unlist(strsplit(input, split=' ')))
+result <- data.frame(계급=c('90점이상', '80점 이상~90점 미만', '70점 이상~80점 미만', '60점 이상~70점 미만', '전체'), 도수=0, 상대도수=0, 누적도수=0)
+for(i in score){
+  checker <- i%/%10
+  if(checker>=9){result[1,2] <- result[1,2]+1}
+  else if(checker==8){result[2,2] <- result[2,2]+1}
+  else if(checker==7){result[3,2] <- result[3,2]+1}
+  else if(checker==6){result[4,2] <- result[4,2]+1}
+}
+result$상대도수 <- result$도수/sum(result$도수)
+sums <- 0
+for(i in 1:length(result)){
+  sums <- sums+result$도수[i]
+  result$누적도수[i] <- sums
+}
+
+for(i in 2:length(result)){
+  result[5,i] <- sum(result[,i])
+}
+result
