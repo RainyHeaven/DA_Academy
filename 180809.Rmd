@@ -152,7 +152,8 @@ table(emp$DEPARTMENT_ID)
     + type: p(점), l(선), b(점+선), c(점선), o(선위의 점), h(수직선), s(계단형), n(숨김)
     + pch: 점의 종류
     + cex: 점의 크기(기본값 1)
-    + axis(1, at=1:11, labels=raw$년도별, las=2)
+* axis: plot에 새로운 축을 추가하는 함수
+* axis(축방향, at=라벨위치, labels=라벨값, las=라벨방향)
 * lines: plot에 새로운 줄을 추가하는 함수
     +lines(데이터, col=색깔, type=표시타입, lwd=선굵기)
 * abline: plot의 배경에 기준선을 그어주는 함수

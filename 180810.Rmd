@@ -1,0 +1,172 @@
+[문제165] itwill 자동차 수리점 부품 비용 자료 입니다. 분석하세요.
+91 78 93 57 75 52 99 80 97 62
+71 69 72 89 66 75 79 75 72 76
+104 74 62 68 97 105 77 65 80 109
+85 97 88 68 83 68 71 69 67 74
+62 82 98 101 79 105 79 69 62 73
+```{r}
+# cost <- scan()
+data <- '91 78 93 57 75 52 99 80 97 62 71 69 72 89 66 75 79 75 72 76 104 74 62 68 97 105 77 65 80 109 85 97 88 68 83 68 71 69 67 74 62 82 98 101 79 105 79 69 62 73'
+cost <- as.numeric(unlist(strsplit(data, split=' ')))
+step <- ceiling((max(cost)-min(cost))/round(length(cost)^(1/3)))
+lvl <- (bMax-bMin)/step
+bMin <- (min(cost)%/%step)*step
+bMax <- ((max(cost)%/%step)+1)*step
+freq <- table(cut(cost, breaks=seq(bMin, bMax, step), right=F))
+names(freq) <- c('45~60', '60~75', '75~90', '90~105', '105~120')
+hist(cost, breaks=seq(bMin, bMax, step), right=F, main=paste0('ITWILL 자동차 수리점','\n','부품 비용 현황'), axes=F, xlab='부품비용', ylab='갯수',ylim=c(0,max(freq)*1.25), col=rev(heat.colors(lvl)))
+axis(1, at=seq(bMin, bMax, step), labels=seq(bMin, bMax, step), las=2)
+axis(2, at=seq(0, max(freq)*1.25, (max(freq)*1.25)/5), labels=seq(0, max(freq)*1.25, (max(freq)*1.25)/5), las=2)
+
+# pie
+pie(freq, labels=paste0('가격: ',names(freq),'\n','재고비율: ',prop.table(freq)*100,'%'), main=paste0('ITWILL 자동차 수리점','\n','부품 비용 현황'), col=rev(heat.colors(lvl)))
+
+#pie3D
+library(plotrix)
+pie3D(freq, labels=paste0('가격: ',names(freq),'\n','재고비율: ',prop.table(freq)*100,'%'), labelcex=1, explode=0.1, theta=1, main=paste0('ITWILL 자동차 수리점','\n','부품 비용 현황'), col=rev(heat.colors(lvl)))
+```
+
+```{r}
+hist(cost, breaks=seq(bMin, bMax, step), right=F, main=paste0('ITWILL 자동차 수리점','\n','부품 비용 현황'), axes=F, xlab='부품비용', ylab='갯수',ylim=c(0,max(freq)*1.25), col=rev(heat.colors(lvl)), labels=T)
+par(new=T) #그래프 겹치기
+plot(density(cost), type='l', col='darkblue', lwd=2, axes=F, xlab='', ylab='', main='')
+```
+
+[문제166] 학생들의 몸무게 자료를 이용해서 도수분포표,그래프를 생성하세요.
+weight <- read.table("c:/data/weight.txt")
+```{r}
+weight <- unlist(read.table("weight.txt", header = F))
+step <- 5
+bMin <- (min(weight)%/%step)*step
+bMax <- ((max(weight)%/%step)+1)*step
+lvl <- (bMax-bMin)/step
+freq <- table(cut(weight, breaks=seq(bMin, bMax, step), right=F))
+floors <- seq(bMin, bMax, step)
+name <- c()
+for(i in floors){
+  if(i==max(floors)){NULL}
+  else{
+    floor <- paste0(i,'이상~',i+5,'미만')
+    name <- append(name, floor, after=length(name))
+  }
+    
+}
+
+table(cut(weight, breaks = floors, right=F, labels = name))
+
+hist(weight, breaks=floors, right=F, main='몸무게 현황', axes=F, xlab='몸무게(Kg)', ylab='명', ylim=c(0, (round(max(freq)/10)*10)+5), col=rev(heat.colors(lvl)), labels=T)
+axis(1, at=floors, labels=floors, col=rev(heat.colors(lvl)), las=1, cex.axis=0.7)
+axis(2, at=seq(0, (round(max(freq)/10)*10)+5, 5), labels=seq(0, (round(max(freq)/10)*10)+5, 5))
+par(new=T)
+plot(density(unlist(weight)), type='l', col='darkblue', lwd=2, axes=F, xlab='', ylab='', main='')
+```
+
+
+********************************************************************************************
+
+# 도수분포표
+### cut()
+* 연속형 변수를 범주형 변수로 전환
+* cut(데이터, breaks=구간기준, right=포함구분, labels=구간명)
+    + right=F: a <= x < b, [a,b)
+    + right=T: a < x <= b, (a,b]
+
+```{r}
+c <- cut(score, breaks=seq(60, 100, by=10), right=F, labels=c('60점이상~70점미만', '70점이상~80점미만', '80점이상~90점미만','90점 이상'))
+
+# 도수분포표
+c.table <- table(c)
+
+# 상대도수분포표
+c.prop <- prop.table(c.table)
+
+cbind(c.table, c.prop)
+```
+
+### hist
+* 히스토그램을 그리는 함수
+* 히스토그램: 자료의 중요한 특성을 서술적 방법으로 나타내는데 효과적인 도수분포표를 시각화할 때 사용
+* hist(데이터, breaks=구간기준, right=포함구분, col=구간색, labels=막대값표시여부)
+```{r}
+hist(score, breaks=seq(60, 100, 10), right=F, ylim=c(0, 8), col=rainbow(4), labels=T)
+```
+
+### stem
+* 줄기잎 그림을 그리는 함수
+* 줄기잎 그림(stem and leaf diagram): 서술적인 면과 그래프의 시각적인 면을 동시에 고려하여 자료의 특성을 나타내는데 사용
+* 자료를 구성하는 각각의 데이터 값들의 줄기(stem)와 잎(leaf)으로 구분
+```{r}
+stem(score)
+```
+
+### density
+* 밀도를 구하는 함수
+```{r}
+density(cost)
+?density
+```
+
+### par(new=T)
+* 이전, 이후의 그래프를 겹쳐 그릴때 사용하는 함수로 그래픽관련 인자를 다룬다.
+
+## ggmap
+### geocode()
+* 해당 지역의 위도(latitude, lat), 경도(longitude, lon) 값을 반환하는 함수
+* geocode('지역명 또는 주소')
+```{r}
+# install.packages('ggmap')
+library(ggmap)
+geocode(enc2utf8('서울시'))
+geocode(enc2utf8('서울시 강서구 강서로7길 38-6'))
+geocode(enc2utf8('남산타워'))
+```
+
+### enc2utf8()
+* UTF8로 인코딩해주는 함수
+
+### ggmap()
+* 구글맵을 표시하는 함수
+* ggmap(map)
+
+### get_googlemap()
+* 구글맵을 받아오는 함수
+* get_googlemap(center=중심좌표, zoom=확대정도, maptype=지도타입, size=지도크기, marker=마커출력좌표)
+    + center: 지도 좌표값
+    + zoom: 지도 크기, 기본값 10(도시), 3(대륙) ~ 21(빌딩)
+    + size: 지도 가로 세로 픽셀 크기 ex)640*640: size=c(640, 640)
+    + maptype: 지도 유형, terrain(지형정보 기반), satellite(위성지도), roadmap(도로명표시), hybrid(위성, 도로명)
+    + marker: 위도, 경도 위치에 마커 출력
+    
+```{r}
+target <- enc2utf8('광화문')
+gc <- as.numeric(geocode(target))
+map <- get_googlemap(center=gc, zoom=18, maptype='satellite')
+ggmap(map)
+
+names <- c('1. 협재해수욕장', '2. 함덕해수욕장')
+addr <- c('제주특별자치도 제주시 한림읍 협재리 2497-1', '제주특별자치도 제주시 조천읍 함덕리 1008')
+gc <- geocode(enc2utf8(addr))
+df <- data.frame(name=names, lon=gc$lon, lat=gc$lat)
+cen <- c(mean(df$lon), mean(df$lat))
+map <- get_googlemap(center=cen, maptype='roadmap', zoom=10, markers=gc)
+ggmap(map)
+
+cen <- c(2.294481, 48.85837)
+ggmap(get_googlemap(center=cen, maptype='roadmap', zoom=15, marker=data.frame(lon=2.294481, lat=48.85837)))
+```
+
+```{r}
+# install.packages('ggplot2')
+library(ggplot2)
+df <- read.csv('서울특별시_강남구_CCTV_20180510.csv', header=T, stringsAsFactors=F)
+df <- df[grep('테헤란로', df$소재지도로명주소),]
+df <- data.frame(name=df$소재지도로명주소, lat=df$위도, lon=df$경도)
+head(df)
+tail(df)
+cen <- c(mean(df$lon), mean(df$lat))
+ggmap(get_googlemap(center=cen, maptype = 'roadmap', zoom=13, markers=data.frame(df$lon, df$lat)))
+map <- get_googlemap(center=cen, maptype='roadmap', zoom=14)
+ggmap(map)+geom_point(data=df, aes(x=lon, y=lat), size=3, alpha=0.3, color='red')
+```
+
+

@@ -1554,3 +1554,65 @@ for(i in 2:length(result)){
   result[5,i] <- sum(result[,i])
 }
 result
+
+[문제165] itwill 자동차 수리점 부품 비용 자료 입니다. 분석하세요.
+91 78 93 57 75 52 99 80 97 62
+71 69 72 89 66 75 79 75 72 76
+104 74 62 68 97 105 77 65 80 109
+85 97 88 68 83 68 71 69 67 74
+62 82 98 101 79 105 79 69 62 73
+
+# cost <- scan()
+data <- '91 78 93 57 75 52 99 80 97 62 71 69 72 89 66 75 79 75 72 76 104 74 62 68 97 105 77 65 80 109 85 97 88 68 83 68 71 69 67 74 62 82 98 101 79 105 79 69 62 73'
+cost <- as.numeric(unlist(strsplit(data, split=' ')))
+step <- ceiling((max(cost)-min(cost))/round(length(cost)^(1/3)))
+lvl <- (bMax-bMin)/step
+bMin <- (min(cost)%/%step)*step
+bMax <- ((max(cost)%/%step)+1)*step
+freq <- table(cut(cost, breaks=seq(bMin, bMax, step), right=F))
+names(freq) <- c('45~60', '60~75', '75~90', '90~105', '105~120')
+hist(cost, breaks=seq(bMin, bMax, step), right=F, main=paste0('ITWILL 자동차 수리점','\n','부품 비용 현황'), axes=F, xlab='부품비용', ylab='갯수',ylim=c(0,max(freq)*1.25), col=rev(heat.colors(lvl)))
+axis(1, at=seq(bMin, bMax, step), labels=seq(bMin, bMax, step), las=2)
+axis(2, at=seq(0, max(freq)*1.25, (max(freq)*1.25)/5), labels=seq(0, max(freq)*1.25, (max(freq)*1.25)/5), las=2)
+
+# pie
+pie(freq, labels=paste0('가격: ',names(freq),'\n','재고비율: ',prop.table(freq)*100,'%'), main=paste0('ITWILL 자동차 수리점','\n','부품 비용 현황'), col=rev(heat.colors(lvl)))
+
+#pie3D
+library(plotrix)
+pie3D(freq, labels=paste0('가격: ',names(freq),'\n','재고비율: ',prop.table(freq)*100,'%'), labelcex=1, explode=0.1, theta=1, main=paste0('ITWILL 자동차 수리점','\n','부품 비용 현황'), col=rev(heat.colors(lvl)))
+```
+
+
+hist(cost, breaks=seq(bMin, bMax, step), right=F, main=paste0('ITWILL 자동차 수리점','\n','부품 비용 현황'), axes=F, xlab='부품비용', ylab='갯수',ylim=c(0,max(freq)*1.25), col=rev(heat.colors(lvl)), labels=T)
+par(new=T) #그래프 겹치기
+plot(density(cost), type='l', col='darkblue', lwd=2, axes=F, xlab='', ylab='', main='')
+
+
+[문제166] 학생들의 몸무게 자료를 이용해서 도수분포표,그래프를 생성하세요.
+weight <- read.table("c:/data/weight.txt")
+
+weight <- unlist(read.table("weight.txt", header = F))
+step <- 5
+bMin <- (min(weight)%/%step)*step
+bMax <- ((max(weight)%/%step)+1)*step
+lvl <- (bMax-bMin)/step
+freq <- table(cut(weight, breaks=seq(bMin, bMax, step), right=F))
+floors <- seq(bMin, bMax, step)
+name <- c()
+for(i in floors){
+  if(i==max(floors)){NULL}
+  else{
+    floor <- paste0(i,'이상~',i+5,'미만')
+    name <- append(name, floor, after=length(name))
+  }
+    
+}
+
+table(cut(weight, breaks = floors, right=F, labels = name))
+
+hist(weight, breaks=floors, right=F, main='몸무게 현황', axes=F, xlab='몸무게(Kg)', ylab='명', ylim=c(0, (round(max(freq)/10)*10)+5), col=rev(heat.colors(lvl)), labels=T)
+axis(1, at=floors, labels=floors, col=rev(heat.colors(lvl)), las=1, cex.axis=0.7)
+axis(2, at=seq(0, (round(max(freq)/10)*10)+5, 5), labels=seq(0, (round(max(freq)/10)*10)+5, 5))
+par(new=T)
+plot(density(unlist(weight)), type='l', col='darkblue', lwd=2, axes=F, xlab='', ylab='', main='')
