@@ -1,0 +1,235 @@
+```{r}
+rm(list=ls())
+setwd('C:/Users/stu/git/DA_Academy')
+```
+
+[문제167] 2016년_서울_주요구별_병원현황.csv file을 읽어 들인후 구별로 진료과목별 병원현황을 그룹막대형 그래프로 만드세요.
+```{r}
+raw <- read.csv('2016년_서울_주요구별_병원현황.csv', header=T, stringsAsFactors=F)
+sh <- as.matrix(raw[,-1])
+name <- raw[,1]
+rc <- rainbow(length(name))
+# barplot
+barplot(sh, cex.axis=0.7, names.arg=names(sh), cex.names=0.7, main='2016년 서울 주요구별 병원현황', xlab='구 이름', ylab='갯수', ylim=c(0, max(sh)*1.2), col=rc, border='lightblue1', beside=T, las=1) 
+abline(h=seq(0, 350, 50), v=seq(0, max(sh), 10), lty=3, lwd=0.1)
+legend('topright', name, fill=rc, cex=0.8, border='lightblue1')
+```
+
+[문제168] 강남구 과목별 병원수만 막대형 그래프를 생성하세요.(단 10개 1개로 표현하세요.)
+```{r}
+raw
+gn <- matrix(raw[, names(raw)=='강남구'], ncol=1)%/%10
+name <- raw[,1]
+bp <- barplot(gn, cex.axis=0.7, names.arg=name, cex.names=0.7, main='2016년 강남구 병원현황', ylab='갯수 (단위:10)', ylim=c(0, max(gn)*1.2), col=rainbow(length(name)), border='lightblue1', beside=T, las=2)
+text(bp, gn, labels=raw$강남구, pos=1, cex=0.7, offset=0.2)
+
+```
+
+
+[문제169] 2016년_서울_주요구별_병원현황.csv file을 읽어 들인후 구별 진료과목에 해당하는 병원수를 막대형 그래프로 만드세요. 단 막대높이는 10개당 1개로 만드시고 막대그래프 프로그램은 한개를 가지고 모든 구별 막대그래프가 생성되도록 만드세요.
+```{r}
+raw
+db <- as.matrix(raw[,-1])
+name <- raw[,1]
+par(mfrow=c(2,5)) 
+# stacked bar chart
+for(i in 1:ncol(db)){
+  data <- as.matrix(db[,i]%/%10, ncol=1)
+  bp <- barplot(data, cex.axis=0.7, names.arg=name, cex.names=0.5, main=paste0(names(raw[,-1])[i],' 병원현황'), ylab='갯수 (단위:10)', ylim=c(0, max(data)*1.2), col=rainbow(length(name)), border='lightblue1', beside=T, las=2)
+  text(bp, data, labels=db[,i], pos=3, cex=0.7)
+}
+```
+```{r}
+# bar chart
+par(mfrow=c(2,5))
+for(i in 1:ncol(db)){
+  data <- db[,i]%/%10
+  bp <- barplot(data, cex.axis=0.7, names.arg=name, cex.names=0.7, main=paste0(names(raw[,-1])[i],' 병원현황'), ylab='갯수 (단위:10)', ylim=c(0, max(data)*1.2), col=rainbow(ncol(db)), border='lightblue1', las=2)
+  text(bp, data, labels=db[,i], pos=3, cex=0.7)
+}
+```
+
+[문제 170] 모기업의 영업팀은 'A팀', 'B팀', 'C팀', 'D팀', 'E팀'이 있다. 영업팀별 영업 매출액은 90, 45, 70, 67, 85 이다. 이 자료를 이용해서 barplot, pie, pie3D 그래프를 그리시오.
+```{r}
+data <- c(90, 45, 70, 67, 85)
+names(data) <- c('A팀', 'B팀', 'C팀', 'D팀', 'E팀')
+library(plotrix)
+# barplot
+mycol=rainbow(length(data))
+bp <- barplot(data, names.arg=names(data), main='영업팀별 매출액 현황', xlab='팀명', ylab='매출', ylim=c(0, max(data)*1.2), col=mycol, border=F)
+boxed.labels(bp, data/2, labels=data, col=mycol, border=mycol, bg='white', cex=2)
+
+# pie
+ratio <- round((data/sum(data))*100)
+pie(data, labels=paste0(names(data),'\n',data,'(',ratio,'%)'), main='영업팀별 매출액 현황', col=mycol, border='gold')
+
+# pie3D
+pie3D(data, explode=0.13, theta=0.8, labels=paste0(names(data),'\n',data,'(',ratio,'%)'), main='영업팀별 매출액 현황', col=mycol, border='gold')
+```
+
+```{r}
+install.packages('jpeg')
+library(jpeg)
+```
+
+```{r}
+# 그림으로 저장
+jpeg('ex170_1.jpg', width=400, height=300, pointsize=12)
+
+# barplot
+mycol=rainbow(length(data))
+bp <- barplot(data, names.arg=names(data), main='영업팀별 매출액 현황', xlab='팀명', ylab='매출', ylim=c(0, max(data)*1.2), col=mycol, border=F)
+boxed.labels(bp, data/2, labels=data, col=mycol, border=mycol, bg='white', cex=2)
+
+```
+
+```{r}
+jpeg('ex170_2.jpg', width=400, height=300, pointsize=12)
+# pie
+ratio <- round((data/sum(data))*100)
+pie(data, labels=paste0(names(data),'\n',data,'(',ratio,'%)'), main='영업팀별 매출액 현황', col=mycol, border='gold')
+```
+
+```{r}
+jpeg('ex170_3.jpg', width=400, height=300, pointsize=12)
+# pie3D
+pie3D(data, explode=0.13, theta=0.8, labels=paste0(names(data),'\n',data,'(',ratio,'%)'), main='영업팀별 매출액 현황', col=mycol, border='gold')
+```
+
+```{r}
+library(jpeg)
+library(animation)
+for(i in 1:3){
+  img <- paste0('ex170_',i,'.jpg')
+  img <- readJPEG(img)
+  plot.new()
+  rect(0, 0, 1, 1, col='white', border='white')
+  rasterImage(img, 0,0,1,1)
+  ani.pause()
+}
+```
+
+[문제171] 문제169번을 수행하면서 구이름.jpg형식으로 파일이 생성하도록 한 후 구이름.jpg를 이용해서 애니메이션을 수행하세요.
+```{r}
+raw <- read.csv('2016년_서울_주요구별_병원현황.csv', header=T, stringsAsFactors=F)
+data <- as.matrix(raw[,-1])
+name <- raw[,1]
+
+for(i in 1:ncol(data)){
+  jpeg(paste0('data/hospital_',i,'.jpg'), width=400, height=300, pointsize=12)
+  subData <- data[,i]%/%10
+  bp <- barplot(subData, cex.axis=0.7, names.arg=name, cex.names=0.5, main=paste0(colnames(data)[i],' 병원현황'), ylab='갯수 (단위:10)', ylim=c(0, max(data)*0.12), col=rainbow(length(name)), border='lightblue1', las=2)
+  text(bp, subData, labels=subData, pos=3, cex=0.7)
+  dev.off()
+}
+
+for(i in 1:ncol(data)){
+  img <- paste0('C:/Users/stu/git/DA_Academy/data/hospital_',i,'.jpg')
+  img <- readJPEG(img)
+  plot.new()
+  rect(0, 0, 1, 1, col='white', border='white')
+  rasterImage(img, 0,0,1,1)
+  ani.pause()
+}
+```
+
+***************************************************************************************
+
+```{r}
+gs <- read.csv('강서구의원현황.csv', header=T, stringsAsFactors=F)
+name <- gs[1,]
+names(gs) <- name
+gs <- as.matrix(gs[2,], nrow=1)
+length(gs)
+dimnames(gs)
+data <- as.integer(gs[,4:27])
+names(data) <- names(gs[,4:27])
+data <- sort(data, decreasing = T)
+
+bp <- barplot(data, names.arg=names(data), cex.names=0.6, main='강서구 의원현황', ylab='병원수', axes=T, ylim=c(0, max(data)*1.2), col=rainbow(length(data)), border='snow', las=2)
+abline(h=seq(1, max(data)*1.1, 5), lty=3, lwd=0.2, col='gray80')
+text(bp, data, labels=data, pos=3, cex=0.7)
+?read.csv
+```
+
+### write.csv
+* 데이터를 csv 파일로 쓰기
+* write.csv(데이터, 파일명, quote=따옴표 표기 여부)
+```{r}
+raw <- read.csv('시군구별_표시과목별_의원현황_20180813100616.csv', header=T, stringsAsFactors=F, skip=1) #skip=줄 : 지정한 줄 만큼 건너뛰고 읽음
+str(raw)
+names(raw)
+head(raw)
+raw <- raw[,-1]
+raw <- t(raw)
+raw
+
+write.csv(raw, '서울시_표시과목별_의원현황.csv', quote=F)
+
+raw <- read.csv('서울시_표시과목별_의원현황.csv', skip=1, header=T, stringsAsFactors=F)
+raw
+barplot(raw[,3], beside=T)
+```
+
+## animation
+```{r}
+install.packages('animation')
+library(animation)
+```
+
+
+### rgb
+* 빛의 3원색
+* rgb(r값, g값, b값, 투명도)
+
+```{r}
+myAni <- function(){
+  for(i in 10:0){
+    plot.new()
+    rect(0, 0, 1, 1, col='gold')
+    text(0.5, 0.5, i, cex=i, col=rgb(0, 0, 1, 0.5))
+    ani.pause()
+  }
+}
+myAni()
+```
+
+## animation
+### ani.options: animation option 설정 조회 함수
+* interval: animation의 시간 간격(초단위) / 기본값 1초
+* nmax: animation 프레임을 만들기 위한 반복수(초당 30프레임) 스틸컷, 기본값 50
+```{r}
+myAni <- function(){
+  n <- ani.options('nmax')
+  x <- sample(1:n)
+  y <- sample(1:n)
+  
+  for(i in 1:n){
+    plot(x[i], y[i], cex=3, col='red', lwd=2, ylim=c(0, 50), xlim=c(0, 50))
+    ani.pause()
+  }
+}
+myAni()
+```
+## animation
+### ani.width()
+* 프레임 가로 크기(픽셀)
+
+## animation
+### ani.height()
+* 프레임 세로 크기(픽셀)
+
+## animation
+### ani.pause()
+* 주어진 시간동안 대기하고 현재 화면을 지움
+* ani.pause('interval')
+
+# jpeg
+###jpeg()
+* 다음에 생성되는 그래프를 jpeg로 저장
+* jpeg(파일명, width=가로크기, height=세로크기, pointsize=글자크기)
+
+### rasterImage()
+* 화면에 이미지를 출력하는 함수
+* rasterImage(이미지, 좌측좌표, 아래쪽좌표, 우측좌표, 위쪽좌표)
+

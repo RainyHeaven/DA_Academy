@@ -1616,3 +1616,110 @@ axis(1, at=floors, labels=floors, col=rev(heat.colors(lvl)), las=1, cex.axis=0.7
 axis(2, at=seq(0, (round(max(freq)/10)*10)+5, 5), labels=seq(0, (round(max(freq)/10)*10)+5, 5))
 par(new=T)
 plot(density(unlist(weight)), type='l', col='darkblue', lwd=2, axes=F, xlab='', ylab='', main='')
+
+[문제167] 2016년_서울_주요구별_병원현황.csv file을 읽어 들인후 구별로 진료과목별 병원현황을 그룹막대형 그래프로 만드세요.
+raw <- read.csv('2016년_서울_주요구별_병원현황.csv', header=T, stringsAsFactors=F)
+sh <- as.matrix(raw[,-1])
+name <- raw[,1]
+rc <- rainbow(length(name))
+# barplot
+barplot(sh, cex.axis=0.7, names.arg=names(sh), cex.names=0.7, main='2016년 서울 주요구별 병원현황', xlab='구 이름', ylab='갯수', ylim=c(0, max(sh)*1.2), col=rc, border='lightblue1', beside=T, las=1) 
+abline(h=seq(0, 350, 50), v=seq(0, max(sh), 10), lty=3, lwd=0.1)
+legend('topright', name, fill=rc, cex=0.8, border='lightblue1')
+
+[문제168] 강남구 과목별 병원수만 막대형 그래프를 생성하세요.(단 10개 1개로 표현하세요.)
+raw
+gn <- matrix(raw[, names(raw)=='강남구'], ncol=1)%/%10
+name <- raw[,1]
+bp <- barplot(gn, cex.axis=0.7, names.arg=name, cex.names=0.7, main='2016년 강남구 병원현황', ylab='갯수 (단위:10)', ylim=c(0, max(gn)*1.2), col=rainbow(length(name)), border='lightblue1', beside=T, las=2)
+text(bp, gn, labels=raw$강남구, pos=1, cex=0.7, offset=0.2)
+
+[문제169] 2016년_서울_주요구별_병원현황.csv file을 읽어 들인후 구별 진료과목에 해당하는 병원수를 막대형 그래프로 만드세요. 단 막대높이는 10개당 1개로 만드시고 막대그래프 프로그램은 한개를 가지고 모든 구별 막대그래프가 생성되도록 만드세요.
+raw
+db <- as.matrix(raw[,-1])
+name <- raw[,1]
+par(mfrow=c(2,5)) 
+# stacked bar chart
+for(i in 1:ncol(db)){
+  data <- as.matrix(db[,i]%/%10, ncol=1)
+  bp <- barplot(data, cex.axis=0.7, names.arg=name, cex.names=0.5, main=paste0(names(raw[,-1])[i],' 병원현황'), ylab='갯수 (단위:10)', ylim=c(0, max(data)*1.2), col=rainbow(length(name)), border='lightblue1', beside=T, las=2)
+  text(bp, data, labels=db[,i], pos=3, cex=0.7)
+}
+
+# bar chart
+par(mfrow=c(2,5))
+for(i in 1:ncol(db)){
+  data <- db[,i]%/%10
+  bp <- barplot(data, cex.axis=0.7, names.arg=name, cex.names=0.7, main=paste0(names(raw[,-1])[i],' 병원현황'), ylab='갯수 (단위:10)', ylim=c(0, max(data)*1.2), col=rainbow(ncol(db)), border='lightblue1', las=2)
+  text(bp, data, labels=db[,i], pos=3, cex=0.7)
+}
+
+[문제 170] 모기업의 영업팀은 'A팀', 'B팀', 'C팀', 'D팀', 'E팀'이 있다. 영업팀별 영업 매출액은 90, 45, 70, 67, 85 이다. 이 자료를 이용해서 barplot, pie, pie3D 그래프를 그리시오.
+data <- c(90, 45, 70, 67, 85)
+names(data) <- c('A팀', 'B팀', 'C팀', 'D팀', 'E팀')
+library(plotrix)
+# barplot
+mycol=rainbow(length(data))
+bp <- barplot(data, names.arg=names(data), main='영업팀별 매출액 현황', xlab='팀명', ylab='매출', ylim=c(0, max(data)*1.2), col=mycol, border=F)
+boxed.labels(bp, data/2, labels=data, col=mycol, border=mycol, bg='white', cex=2)
+
+# pie
+ratio <- round((data/sum(data))*100)
+pie(data, labels=paste0(names(data),'\n',data,'(',ratio,'%)'), main='영업팀별 매출액 현황', col=mycol, border='gold')
+
+# pie3D
+pie3D(data, explode=0.13, theta=0.8, labels=paste0(names(data),'\n',data,'(',ratio,'%)'), main='영업팀별 매출액 현황', col=mycol, border='gold')
+
+install.packages('jpeg')
+library(jpeg)
+
+# 그림으로 저장
+jpeg('ex170_1.jpg', width=400, height=300, pointsize=12)
+
+# barplot
+mycol=rainbow(length(data))
+bp <- barplot(data, names.arg=names(data), main='영업팀별 매출액 현황', xlab='팀명', ylab='매출', ylim=c(0, max(data)*1.2), col=mycol, border=F)
+boxed.labels(bp, data/2, labels=data, col=mycol, border=mycol, bg='white', cex=2)
+
+jpeg('ex170_2.jpg', width=400, height=300, pointsize=12)
+# pie
+ratio <- round((data/sum(data))*100)
+pie(data, labels=paste0(names(data),'\n',data,'(',ratio,'%)'), main='영업팀별 매출액 현황', col=mycol, border='gold')
+
+jpeg('ex170_3.jpg', width=400, height=300, pointsize=12)
+# pie3D
+pie3D(data, explode=0.13, theta=0.8, labels=paste0(names(data),'\n',data,'(',ratio,'%)'), main='영업팀별 매출액 현황', col=mycol, border='gold')
+
+library(jpeg)
+library(animation)
+for(i in 1:3){
+  img <- paste0('ex170_',i,'.jpg')
+  img <- readJPEG(img)
+  plot.new()
+  rect(0, 0, 1, 1, col='white', border='white')
+  rasterImage(img, 0,0,1,1)
+  ani.pause()
+}
+
+
+[문제171] 문제169번을 수행하면서 구이름.jpg형식으로 파일이 생성하도록 한 후 구이름.jpg를 이용해서 애니메이션을 수행하세요.
+raw <- read.csv('2016년_서울_주요구별_병원현황.csv', header=T, stringsAsFactors=F)
+data <- as.matrix(raw[,-1])
+name <- raw[,1]
+
+for(i in 1:ncol(data)){
+  jpeg(paste0('data/hospital_',i,'.jpg'), width=400, height=300, pointsize=12)
+  subData <- data[,i]%/%10
+  bp <- barplot(subData, cex.axis=0.7, names.arg=name, cex.names=0.5, main=paste0(colnames(data)[i],' 병원현황'), ylab='갯수 (단위:10)', ylim=c(0, max(data)*0.12), col=rainbow(length(name)), border='lightblue1', las=2)
+  text(bp, subData, labels=subData, pos=3, cex=0.7)
+  dev.off()
+}
+
+for(i in 1:ncol(data)){
+  img <- paste0('C:/Users/stu/git/DA_Academy/data/hospital_',i,'.jpg')
+  img <- readJPEG(img)
+  plot.new()
+  rect(0, 0, 1, 1, col='white', border='white')
+  rasterImage(img, 0,0,1,1)
+  ani.pause()
+}
