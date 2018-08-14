@@ -1,0 +1,326 @@
+[문제172] R에서 오라클 접속한 후 부서별 인원수에 대한 막대그래프 그리세요.
+```{r}
+library(RJDBC)
+jdbcDriver <- JDBC(driverClass = 'oracle.jdbc.OracleDriver', classPath = 'C:/data/ojdbc6.jar')
+conn <- dbConnect(jdbcDriver, 'jdbc:oracle:thin:@localhost:1521/xe', 'hr', 'hr')
+result <- dbGetQuery(conn, 'select department_id, count(*) from employees group by department_id order by 2 desc')
+?dbGetQuery
+
+deptN <- result[,2]
+name <- result[,1]
+top <- max(deptN)*1.2
+
+bp <- barplot(deptN, names.arg = ifelse(is.na(name), 'NA', name), col=rainbow(NROW(result)), main='부서별 인원수 현황', xlab='부서ID', ylab='인원수(명)', ylim=c(0, top), border='gray70')
+text(bp, deptN, labels = deptN, pos=3, cex=0.7)
+abline(h=seq(0, top, 5), lty=3, col='gray50')
+```
+```{r}
+library(RJDBC)
+jdbcDriver <- JDBC(driverClass = 'oracle.jdbc.OracleDriver', classPath = 'C:/data/ojdbc6.jar')
+conn <- dbConnect(jdbcDriver, 'jdbc:oracle:thin:@localhost:1521/xe', 'hr', 'hr')
+emp <- dbGetQuery(conn, 'select * from employees')
+result <- sort(table(emp[,c("DEPARTMENT_ID")], useNA = 'always'), decreasing = T)
+
+bp <- barplot(result, names.arg=ifelse(is.na(names(result)), 'NA', names(result)), col=rainbow(length(result)), main='부서별 인원수 현황', xlab='부서ID', ylab='인원수(명)', ylim=c(0, max(result)*1.2), border='gray70')
+text(bp, deptN, labels = deptN, pos=3, cex=0.7)
+abline(h=seq(0, top, 5), lty=3, col='gray50')
+```
+
+[문제173] 아래와 같은 결과를 출력하도록 SQL문을 작성하세요.
+
+
+Job                     Dept 10    Dept 20    Dept 30    Dept 40    Dept 50    Dept 60    Dept 70    Dept 80    Dept 90   Dept 100
+-------------------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ----------
+AC_MGR
+AC_ACCOUNT
+IT_PROG                                                                          28800
+ST_MAN                                                                36400
+AD_ASST                       0
+PU_MAN                                          11000
+SH_CLERK                                                              64300
+AD_VP                                                                                                     35700
+FI_ACCOUNT                                                                                                           39600
+MK_MAN                               13000
+PR_REP                                                                                      10000
+FI_MGR                                                                                                               12008
+PU_CLERK                                        13900
+SA_MAN                                                                                                 61000
+MK_REP                                6000
+AD_PRES                                                                                                   26400
+SA_REP                                                                                                243500
+HR_REP                                                      6500
+ST_CLERK                                                              55700
+
+```{r}
+# SQL
+dbGetQuery(conn, 'select job_id as "Job", (select sum(salary) from employees where department_id=10 and job_id=e.job_id) as "Dept 10", (select sum(salary) from employees where department_id=20 and job_id=e.job_id) as "Dept 20", (select sum(salary) from employees where department_id=30 and job_id=e.job_id) as "Dept 30", (select sum(salary) from employees where department_id=40 and job_id=e.job_id) as "Dept 40", (select sum(salary) from employees where department_id=50 and job_id=e.job_id) as "Dept 50", (select sum(salary) from employees where department_id=60 and job_id=e.job_id) as "Dept 60",(select sum(salary) from employees where department_id=70 and job_id=e.job_id) as "Dept 70",(select sum(salary) from employees where department_id=80 and job_id=e.job_id) as "Dept 80",(select sum(salary) from employees where department_id=90 and job_id=e.job_id) as "Dept 90",(select sum(salary) from employees where department_id=100 and job_id=e.job_id) as "Dept 100" from employees e group by job_id')
+```
+```{r}
+# decode 활용
+dbGetQuery(conn, 'SELECT job_id "Job",
+SUM(DECODE(department_id , 10, salary)) "Dept 10",
+SUM(DECODE(department_id , 20, salary)) "Dept 20",
+SUM(DECODE(department_id , 30, salary)) "Dept 30",
+SUM(DECODE(department_id , 40, salary)) "Dept 40",
+SUM(DECODE(department_id , 50, salary)) "Dept 50",
+SUM(DECODE(department_id , 60, salary)) "Dept 60",
+SUM(DECODE(department_id , 70, salary)) "Dept 70",
+SUM(DECODE(department_id , 80, salary)) "Dept 80",
+SUM(DECODE(department_id , 90, salary)) "Dept 90",
+SUM(DECODE(department_id , 100, salary)) "Dept 100"
+FROM employees
+GROUP BY job_id')
+
+# pivot활용
+dbGetQuery(conn,'SELECT *
+FROM   (SELECT department_id, job_id, salary
+              FROM   employees)
+PIVOT (SUM(salary)  FOR department_id  IN  (10,20,30,40,50,60,70,80,90,100,110))')
+
+# pivot활용 / department_id가 na인 row도 포함
+dbGetQuery(conn,'SELECT *
+FROM   (SELECT nvl(department_id,0) dept_id, job_id, salary
+              FROM   employees)
+ PIVOT (SUM(salary)  FOR dept_id  IN  (10,20,30,40,50,60,70,80,90,100,110,0))')
+
+```
+
+[문제175] R에서 오라클에 있는 employees 테이블을 읽어들인 후 R함수를 이용하셔서 문제 173번과 동일한 결과를 출력하세요.
+```{r}
+emp <- dbGetQuery(conn, 'select * from employees')
+emp <- dbReadTable(conn, 'EMPLOYEES')
+result <- emp[!is.na(emp$DEPARTMENT_ID),]
+tapply(result$SALARY, list(result$JOB_ID, result$DEPARTMENT_ID), sum, default=0)
+```
+
+[문제176] 부서 인원수를 ggplot를 이용해서 막대그래프를 출력하세요.
+```{r}
+library(ggplot2)
+deptMember <- data.frame(table(emp$DEPARTMENT_ID))
+names(deptMember) <- c('DeptId', 'Member')
+deptMember
+
+ggplot(data=deptMember, aes(x=DeptId, y=Member))+geom_bar(stat='identity', fill=rainbow(NROW(deptMember)))+geom_text(aes(y=Member, label=paste(Member,'명')), col='black', size=4, position=position_nudge(y = 1.5))+theme(axis.text.x = element_text(angle=25, hjust=1, vjust=1, colour='blue', size=10))
+```
+
+```{r}
+emp <- dbGetQuery(conn, "select nvl(department_id,0) dept_id, count(*) cn from employees group by nvl(department_id,0) order by cn desc")
+emp
+
+ggplot(emp, aes(x=factor(DEPT_ID),y=CN))+
+  geom_bar(stat="identity", fill= rainbow(12))+
+  geom_text(aes(label=CN),vjust=-0.1,size=5)+
+  labs(title='부서별 인원 현황', x='부서번호', y='인원수(명)')+
+  theme(plot.title=element_text(face='bold', color='darkblue', hjust=0.5))+
+  theme(axis.title.x=element_text(face='bold.italic', color='brown',size=6))+
+  theme(axis.title.y=element_text(face='bold.italic', color='brown'))
+```
+
+[문제177] 년도별 입사한 수를 ggplot를 이용해서 막대그래프를 출력하세요.
+```{r}
+emp <- dbGetQuery(conn,'select * from employees')
+result <- table(substr(emp$HIRE_DATE,1,4))
+result <- tapply(emp$EMPLOYEE_ID, substr(emp$HIRE_DATE,1,4), NROW)
+hireYear <- data.frame(year=names(result), cn=result)
+hireYear
+
+ggplot(data=hireYear, aes(x=year, y=cn))+geom_bar(stat='identity', fill=rainbow(NROW(hireYear)))+geom_text(aes(y=cn, label=paste(cn,'명')), col='black', size=4, position=position_nudge(y = 1.5))+theme(axis.text.x = element_text(angle=25, hjust=1, vjust=1, colour='gray1', size=10))
+```
+
+```{r}
+library(RJDBC)
+library(ggplot2)
+library(lubridate)
+library(plyr)
+
+emp <- dbGetQuery(conn, "select * from employees")
+
+ggplot(emp,aes(x=year(HIRE_DATE)))+
+  geom_bar()
+
+ggplot(emp, aes(x=factor(year(HIRE_DATE)), fill=factor(year(HIRE_DATE))))+
+  geom_bar()+
+  labs(title = "년도별 입사현황", x="년도", y="인원수", fill="년도")+
+  theme(plot.title=element_text(face='bold', color='darkblue', hjust=0.5))+
+  theme(axis.title.x=element_text(face='bold', color='darkblue'))+
+  theme(axis.title.y=element_text(face='bold', color='darkblue'))+
+  theme(legend.title.align=0.5, legend.box.background = element_rect(),
+        legend.box.margin = margin(t=0.1,r=0.1, b=0.1, l=0.1,unit='cm'))
+
+count(emp,"year(HIRE_DATE)")
+year_cn <- count(emp,"year(HIRE_DATE)")
+colnames(year_cn) <- c("year","cn")
+year_cn
+
+ggplot(year_cn,aes(x=year,y=cn,fill=factor(year)))+
+  geom_bar(stat="identity")+
+  geom_text(aes(label=cn))+
+  ggtitle("년도별 입사현황",subtitle="신입사원")+
+  theme(plot.title = element_text(lineheight=.8, face="bold",color="darkblue",hjust=0.5))+
+  theme(plot.subtitle = element_text(lineheight=.8, face="bold",color="darkblue",hjust=0.5))+
+  labs(caption = "2001년 ~ 2008년")+
+  labs(x="년도",y="인원수")+
+  guides(fill=guide_legend(title="년도"))+
+  theme(legend.title.align=0.5, legend.box.background = element_rect(),
+      legend.box.margin = margin(t=0.1,r=0.1, b=0.1, l=0.1,unit='cm'))
+  
+
+hire_cn <- dbGetQuery(conn, "select to_char(hire_date,'yyyy') year,count(*) cn from employees group by to_char(hire_date,'yyyy')")
+hire_cn
+ggplot(hire_cn,aes(x=YEAR,y=CN,fill=YEAR))+
+  geom_bar(stat="identity")+
+  geom_text(aes(label=CN))+
+  labs(title = "년도별 입사현황", x="년도", y="인원수", fill="년도")+
+  theme(plot.title=element_text(face='bold', color='darkblue', hjust=0.5))+
+  theme(axis.title.x=element_text(face='bold', color='darkblue'))+
+  theme(axis.title.y=element_text(face='bold', color='darkblue'))+
+  theme(legend.title.align=0.5, legend.box.background = element_rect(),
+        legend.box.margin = margin(t=0.1,r=0.1, b=0.1, l=0.1,unit='cm'))
+```
+
+[문제178] 학생들의 과목 점수를 각각으로 막대그래프를 그리세요.
+```{r}
+df <- read.csv("exam.csv", header=TRUE, stringsAsFactors=F)
+df
+
+ggplot(df, aes(x=name, y=grade))+
+  geom_bar(stat="identity",fill="red")+
+  theme(axis.text.x = element_blank())+
+  facet_wrap(~ name+subject)
+
+ggplot(df, aes(x=subject, y=grade, group=name))+
+  geom_col(aes(fill=subject))+
+  theme(axis.text.x = element_blank())+
+  facet_wrap(~ name)
+```
+
+
+
+**************************************************************************************************
+
+## RJDBC
+* R과 DBMS 연결하는 package
+```{r}
+# install.packages('RJDBC')
+# library(RJDBC)
+```
+
+## RJDBC
+### JDBC()
+* DBMS 접속을 위한 DBI 드라이버 생성
+* JDBC(driverClass = 'oracle.jdbc.OracleDriver', classPath=ojdbc6.jar파일경로)
+```{r}
+jdbcDriver <- JDBC(driverClass="oracle.jdbc.OracleDriver", classPath="C:/data/ojdbc6.jar")
+```
+
+## RJDBC
+### dbConnect()
+* DBMS에 접속
+* dbConnect(드라이버명, DBMS접속정보)
+* 접속정보: 'jdbc:oracle:thin:DBMS주소:포트번호/인스턴스아이디(SID), 아이디, 패스워드'
+```{r}
+conn <- dbConnect(jdbcDriver, "jdbc:oracle:thin:@localhost:1521/xe", "hr",  "hr")
+```
+
+## RJDBC
+### dbGetQuery()
+* DBMS에 query를 보내고 결과를 리턴
+* dbGetQuery(접속명, 쿼리)
+```{r}
+emp <- dbGetQuery(conn, "select * from employees")
+dept <- dbGetQuery(conn, "select * from departments")
+```
+
+## RJDBC
+### dbReadTable()
+* DBMS의 테이블을 읽어옴
+* dbReadTable(접속명, 테이블명)
+```{r}
+dbReadTable(conn, 'DEPARTMENTS')
+```
+
+##RJDBC
+### dbWriteTable()
+* DBMS에 테이블을 생성
+* dbWriteTable(접속명, 생성할 테이블명, 데이터)
+```{r}
+emp_pivot <- dbGetQuery(conn, 'SELECT job_id "Job",
+SUM(DECODE(department_id , 10, salary)) "Dept10",
+SUM(DECODE(department_id , 20, salary)) "Dept20",
+SUM(DECODE(department_id , 30, salary)) "Dept30",
+SUM(DECODE(department_id , 40, salary)) "Dept40",
+SUM(DECODE(department_id , 50, salary)) "Dept50",
+SUM(DECODE(department_id , 60, salary)) "Dept60",
+SUM(DECODE(department_id , 70, salary)) "Dept70",
+SUM(DECODE(department_id , 80, salary)) "Dept80",
+SUM(DECODE(department_id , 90, salary)) "Dept90",
+SUM(DECODE(department_id , 100, salary)) "Dept100"
+FROM employees
+GROUP BY job_id')
+str(emp_pivot)
+emp_pivot <- replace(emp_pivot, is.na(emp_pivot), 0)
+
+dbSendUpdate(conn, 'drop table emp_test')
+dbWriteTable(conn, 'emp_test', emp_pivot)
+```
+
+##RJDBC
+### dbSendUpdate()
+* DBMS에 DML 쿼리 전송
+* dbSendUpdate(접속명, 쿼리문)
+```{r}
+dbSendUpdate(conn, 'drop table emp_test')
+```
+
+## ggplot2
+### ggplot()
+* ggplot을 만드는 함수
+* ggplot(data=데이터, aes값, fill=크로스테이블을 만들 시 컬럼에 넣을 값, group=그룹의 기준으로 삼을 값)
+```{r}
+library(ggplot2)
+df <- read.csv('exam.csv', header=T, stringsAsFactors = F)
+str(df)
+x <- df[df$subject=='SQL',]
+
+ggplot(x, aes(x=name, y=grade))+geom_bar(stat='identity', fill='green', col='red')+theme(axis.text.x=element_text(angle=25, hjust=1, vjust=1, colour='blue', size=10))
+
+ggplot(df2, aes(x=name, y=grade, fill=subject))+geom_bar(stat='identity')+geom_text(aes(y=grade, label=paste(grade, '점')), col='yellow', size=4, position=position_stack(vjust=0.5))+theme(axis.text.x=element_text(angle=45, hjust=1, vjust=1, colour='blue', size=10))+ggtitle('ITWILL 학생 성적', subtitle='중간고사')+labs(x='이름', y='점수', fill='과목')
+```
+
+* stacked bar chart
+```{r}
+# 과목기준
+ggplot(data=df, aes(subject, grade, group=name))+geom_col(aes(fill=name), position='stack')+geom_text(aes(label=grade), position=position_stack(vjust=0.5))
+
+# 이름기준
+ggplot(data=df, aes(name, grade, group=subject))+geom_col(aes(fill=subject), position='stack')+geom_text(aes(label=grade), position=position_stack(vjust=0.5))
+```
+
+* grouped bar chart
+```{r}
+ggplot(data=df, aes(subject, grade, group=name))+geom_col(aes(fill=name), position='dodge')+geom_text(aes(label=grade), position=position_dodge(0.9, preserve = 'total'), vjust=0)
+ggplot(data=df, aes(name, grade, group=subject))+geom_col(aes(fill=subject), position='dodge')+geom_text(aes(label=grade), position=position_dodge(0.9, preserve = 'total'), vjust=0, size=4)
+```
+
+정렬하기 
+```{r}
+# order 활용
+df[order(df$name),]
+
+# arrange 활용
+library(plyr)
+arrange(df, name, subject)
+
+# orderBy 활용
+library(doBy)
+df2 <- orderBy(~name+subject, df)
+```
+
+# SQL- Pivot
+* cross table을 만들 때 사용
+* select * from 테이블명 pivot(표현식 for 기준컬럼 in (컬럼값))
+* 사용할 테이블은 필요한 데이터만 든 테이블 사용
+```{r}
+dbGetQuery(conn,'SELECT * FROM(SELECT department_id, job_id, salary FROM   employees) PIVOT (SUM(salary) FOR department_id IN (10,20,30,40,50,60,70,80,90,100,110))')
+```
+
