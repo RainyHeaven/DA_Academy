@@ -225,7 +225,7 @@ data <- str_replace_all(data, '[0-9]', '')
 data <- str_replace_all(data, '천백도로', '1100도로')
 data <- str_replace_all(data, '천백고지', '1100고지')
 data <- str_replace_all(data, '천백십이도로', '1112도로')
-data <- str_replace_all(data, '제주', '')
+data <- str_replace_all(data, '제주 ', '')
 data <- str_replace_all(data, '있습니', '')
 
 bow <- extractNoun(data)
