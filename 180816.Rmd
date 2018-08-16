@@ -65,28 +65,39 @@ wordcloud(names(wordcount), freq=wordcount, scale=c(2, 0.5), random.order = F, r
 
 [문제181] jeju.txt 분석하세요.
 ```{r}
-spot <- readLines('jejuspots.txt')
-data <- readLines('jeju.txt')
+# 데이터 로드
+spots <- readLines('jejuspots.txt')
+raw <- readLines('jeju.txt')
 
-# 주요 관광지명에서 공백 제거
-library(stringr)
-for(w in spot){
+# 관광지 리스트 중복제거
+spots <- sort(unique(spots))
+
+# 관광지 리스트에서 유사한 이름 통합
+x <- grep(pattern = '제주', spots, value=T)
+x <- str_replace_all(x, '제주', '')
+
+spots <- spots[!spots%in%x]
+
+write(x = spots, file = 'jejuspots_1.txt')
+
+# 데이터에서 공백 제거(관광지 리스트에 포함된 단어 기준)
+for(w in spots){
   reg <- ''
   for(i in 1:nchar(w)){
     c <- substr(w, i, i)
     reg <- paste(reg, c, sep=' *')
   }
   reg <- substr(reg, 3, nchar(reg))
-  data <- str_replace_all(data, reg, w)
+  data <- str_replace_all(raw, reg, w)
 }
 
-# 문장기호, 공백 제거
+# 문장기호, 공백문자 치환
 data <- str_replace_all(data, '[[:punct:][:space:]]', ' ')
 
-data <- str_replace_all(data, '1100 *도로|천백 도로', '천백도로')
-grep(pattern = '1100', x = data, value = T)
-
-data <- str_replace_all(data, '1100 *고지|천백 +고지', '천백고지')
+# 중복된 관광지 표현 통합
+# 숫자 제거를 위해 숫자가 표현된 관광지는 한글로 변경
+data <- str_replace_all(data, '1100도로|천백 *도로', '천백도로')
+data <- str_replace_all(data, '1100고지|천백 *고지', '천백고지')
 grep(pattern = '1100', x = data, value = T)
 
 grep(pattern = '공룡 ', x = data, value = T) #NA
@@ -99,7 +110,7 @@ grep(pattern = '한림 +공원', x = data, value = T) #NA
 grep(pattern = '유리의 +성', x = data, value = T) #NA
 grep(pattern = '유리 *성', x = data, value = T) #NA
 
-data <- str_replace_all(data, '오 *설록 *(박물관|뮤지엄|티 *하우스|티 *뮤지엄)', '오설록')
+data <- str_replace_all(data, '오 *설록 *(박물관|뮤지엄|티 *하우스)', '오설록')
 data <- str_replace_all(data, '오설록', '오설록티뮤지엄')
 grep(pattern = '설록', x = data, value = T)
 
@@ -218,26 +229,42 @@ grep(pattern = '렛츠 *', x = data, value = T)  #NA
 # 제주 관광지 사전에 등록
 library(KoNLP)
 useSejongDic()
-buildDictionary(ext_dic='sejong', user_dic=data.frame(readLines('jejuspots.txt'), 'ncn'), replace_usr_dic = T)
+buildDictionary(ext_dic='sejong', user_dic=data.frame(readLines('jejuspots_1.txt'), 'ncn'), replace_usr_dic = T)
 
 # 숫자 제거후 관광지 이름에 숫자 복구
 data <- str_replace_all(data, '[0-9]', '')
 data <- str_replace_all(data, '천백도로', '1100도로')
 data <- str_replace_all(data, '천백고지', '1100고지')
 data <- str_replace_all(data, '천백십이도로', '1112도로')
-data <- str_replace_all(data, '제주 ', '')
 data <- str_replace_all(data, '있습니', '')
 
-bow <- extractNoun(data)
+# 명사 추출
+# bow <- extractNoun(data)
+
+# 하나의 리뷰에서 반복된 명사 제거하여 추출
+bow <- list()
+for(i in 1:NROW(data)){
+  bow <- append(x = bow, values = unique(extractNoun(data[i])), after = length(bow))
+}
+
+#빈도체크
 bow_cn <- table(unlist(bow))
-
 result <- sort(bow_cn[nchar(names(bow_cn))>=2], decreasing = T)
-result
 
+# 임의로 삭제할 단어 카운트 초기화
+resetWords <- c('제주', '여행', '숙소', '해안', '전망', '시간')
+result[names(result)%in%resetWords] <- 0
+
+result
 # wordcloud 생성
+# 전체 데이터
 library(wordcloud)
-pal <- brewer.pal(8, 'Dark2')
+pal <- brewer.pal(8, 'pastel3')
 wordcloud(names(result), freq=result, scale=c(3, 0.5), min.freq=2, max.words = 100, random.order=F, rot.per=.1, colors=pal)
+
+# 지정된 관광지 데이터만 포함
+wordcloud(names(result[names(result)%in%spots]), freq=result, scale=c(3, 0.5), min.freq=2, max.words = 100, random.order=F, rot.per=.1, colors=pal)
+
 ```
 
 
