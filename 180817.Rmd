@@ -1,0 +1,90 @@
+[문제] 하나 이상 연이은 숫자를 찾기
+```{r}
+data <- readLines('jeju.txt')
+
+grep('[:digit:]+', data, value=T)
+
+library(stringr)
+unlist(str_extract_all(data, '[:digit:]+'))
+```
+
+[문제] 숫자 앞 뒤에 문자가 있거나 없는 경우
+```{r}
+table(unlist(str_extract_all(data, '[:alpha:]*[:digit:]+[:alpha:]*')))
+
+unlist(str_extract_all(data, '[:alpha:]*우도[:alpha:]*'))
+
+unlist(str_extract_all(data, '[:punct:]*중문[:punct:]*'))
+unlist(str_extract_all(data, '[:punct:]*중문[:punct:]*[:alpha:]*'))
+
+unlist(str_extract_all(data, '[:alpha:]* *폭포[:alpha:]*'))
+```
+
+*************************************************************************************
+```{r}
+library(ggplot2)
+library(ggmap)
+library(doBy)
+getwd()
+setwd('C:\Users\stu\git\DA_Academy')
+jeju <- read.csv("제주도여행코스.csv",header=T, stringsAsFactors=F)
+jeju <- orderBy(~lon, jeju)
+jeju <- jeju[, -1]
+
+temp <- data.frame(name=NULL, lon=NULL, lat=NULL)
+for(spot in route){
+  temp <- rbind(temp, jeju[jeju$name==spot, ])
+}
+jeju <- temp
+
+jeju1 <- get_map(location = c(lon = 126.52916660000005, lat = 33.3616666), zoom=10, maptype = "roadmap")
+jeju.map <- ggmap(jeju1)+
+  geom_point(data=jeju, aes(x=lon, y=lat),size=1,alpha=0.7,col="red")
+
+# geom_path 함수를 써서 경로를 선으로 연결해서 표시합니다.
+jeju.map + 
+  geom_path(data=jeju,aes(x=lon,y=lat),size=1,linetype=2,col="blue")+
+  geom_text(data=jeju, aes(x = lon, y = lat+0.01, label=name),size=2)
+?geom_path
+ggsave("c:/data/jeju.png",dpi=300)
+
+```
+
+```{r}
+jeju <- read.csv("제주도여행코스.csv",header=T, stringsAsFactors=F)
+data <- jeju[, -1]
+
+# 최단 이동경로 구하기
+getDist <- function(x, y){distance <- ((x[1]-y[1])^2)+((x[2]-y[2])^2);return(sqrt(distance))}
+
+# 시작점을 정한다
+start <- data$name[1]
+
+# 시작점에서 다른 모든 점까지의 거리를 구한다
+# 거리가 가장 작은점을 다음 시작점으로 한다
+# 반복
+loop <- 1:NROW(data)
+route <- c(NULL)
+for(i in loop){
+  if(i<max(loop)){
+    route <- c(route, start)
+    x <- unlist(data[data$name==start, -1])
+    data <- data[data$name!=start, ]
+    results <- data.frame(name=NULL, distance=NULL, stringsAsFactors = F)
+    for(j in 1:NROW(data)){
+      y <- unlist(data[j, -1])
+      d <- getDist(x, y)
+      result <- data.frame(name=data[j, 1], distance=d, stringsAsFactors = F)
+      results <- rbind(results, result)
+    }
+    near <- min(results$distance)
+    start <- results[results$distance==near, 1]
+    
+  }else{
+    route <- c(route, data$name)
+  }
+}
+```
+
+
+
