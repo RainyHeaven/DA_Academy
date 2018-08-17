@@ -73,6 +73,7 @@ raw <- readLines('jeju.txt')
 spots <- sort(unique(spots))
 
 # 관광지 리스트에서 유사한 이름 통합
+library(stringr)
 x <- grep(pattern = '제주', spots, value=T)
 x <- str_replace_all(x, '제주', '')
 
@@ -250,21 +251,31 @@ for(i in 1:NROW(data)){
 #빈도체크
 bow_cn <- table(unlist(bow))
 result <- sort(bow_cn[nchar(names(bow_cn))>=2], decreasing = T)
-
-# 임의로 삭제할 단어 카운트 초기화
-resetWords <- c('제주', '여행', '숙소', '해안', '전망', '시간')
-result[names(result)%in%resetWords] <- 0
-
 result
+# 임의로 삭제할 단어 제거
+stopWords <- c('제주', '여행', '숙소', '해안', '전망', '시간', '공항')
+result <- result[!names(result)%in%stopWords]
+
 # wordcloud 생성
 # 전체 데이터
 library(wordcloud)
-pal <- brewer.pal(8, 'pastel3')
+pal <- brewer.pal(8, 'Accent')
 wordcloud(names(result), freq=result, scale=c(3, 0.5), min.freq=2, max.words = 100, random.order=F, rot.per=.1, colors=pal)
 
 # 지정된 관광지 데이터만 포함
-wordcloud(names(result[names(result)%in%spots]), freq=result, scale=c(3, 0.5), min.freq=2, max.words = 100, random.order=F, rot.per=.1, colors=pal)
+loc <- names(result[names(result)%in%spots])
+wordcloud(loc, freq=result, scale=c(3, 0.5), min.freq=2, max.words = 100, random.order=F, rot.per=.1, colors=pal)
 
+# 구글맵 표시
+library(ggmap)
+library(ggplot2)
+topN <- 10
+names <- loc[1:topN]
+gc <- geocode(enc2utf8(names))
+df <- na.omit(data.frame(name=names, lon=gc$lon, lat=gc$lat))
+cen <- c(mean(df$lon), mean(df$lat))
+map <- get_googlemap(center=cen, maptype='satellite', zoom=10, markers = gc)
+ggmap(map)+geom_point(data=df, aes(x=lon, y=lat), size=result[1:NROW(df)], alpha=0.3, color='orange')+ geom_text(data = df, aes(x=lon, y=lat, label=df$name), col='black', size=2, vjust=-1.2)
 ```
 
 
@@ -284,8 +295,7 @@ strsplit(text1, ' ')
 ```
 
 ## KoNLP
-### extractNoun()
-* 한글 명사를 추출하는 함수 / 한나눔 분석기 사용
+* 한글 자연어 처리를 위한 패키지
 ```{r}
 # rJava를 설치하기 전 Jre 설치되어 있어야 함
 # 설치 순서 지켜야함(rJava->KoNLP)
@@ -294,15 +304,20 @@ library(rJava)
 
 install.packages('KoNLP')
 library(KoNLP)
+```
 
+### extractNoun()
+* 한글 명사를 추출하는 함수 / 한나눔 분석기 사용
+* extractNoun(데이터)
+```{r}
 useSejongDic()
-
 extractNoun(text1)
 ```
 
 ## KoNLP
 ### SimplePos09()
 * 9개의 품사 tag를 사용하여 형태소 분석
+* SimplePos09(데이터)
 ```{r}
 SimplePos09(text1)
 ```
@@ -364,7 +379,7 @@ library(wordcloud)
 
 ## wordcloud
 ### wordcloud()
-* wordcloud(데이터, freq=빈도수, sacle=글자크기, min.freq=최소출력기준, max.words=최대출력기준, random.order=출력순서랜덤여부, rot.per=단어배치, colors=단어색)
+* wordcloud(데이터, freq=빈도수, scale=글자크기, min.freq=최소출력기준, max.words=최대출력기준, random.order=출력순서랜덤여부, rot.per=단어배치, colors=단어색)
 * 글자크기: c(최대, 최소)
 
 ```{r}
