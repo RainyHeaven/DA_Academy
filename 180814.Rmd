@@ -302,6 +302,80 @@ ggplot(data=df, aes(subject, grade, group=name))+geom_col(aes(fill=name), positi
 ggplot(data=df, aes(name, grade, group=subject))+geom_col(aes(fill=subject), position='dodge')+geom_text(aes(label=grade), position=position_dodge(0.9, preserve = 'total'), vjust=0, size=4)
 ```
 
+## ggplot2
+### aes()
+* 꾸미기 설정
+* aes(x=x축값, y=y축값, col=색깔, group=그룹기준)
+```{r}
+aes(subject, grade, group=name)
+```
+
+## ggplot2
+### geom_bar()
+* barchar 생성
+* geom_bar(stat='identity', fill=막대색, col=테두리색)
+* aes 필수값: x, y / 선택값: alpha, colour, fill, group, lineheight, size
+```{r}
+geom_bar(stat='identity', fill='green', col='red')
+```
+
+## ggplot2
+### geom_text()
+* ggplot에 text를 추가
+* geom_text(aes값, position=bar위치, col=색깔, size=크기)
+* aes 필수값: x, y, label / 선택값: alpha, angle, colour, family, fontface, group, hjust, lineheight, size, vjust
+```{r}
+geom_text(aes(y=grade, label=paste(grade, '점')), col='yellow', size=4, position=position_stack(vjust=0.5))
+```
+
+## ggplot2
+### labs()
+* ggplot의 축, 범례, 라벨 설정
+* labs(aes값 혹은 단일옵션)
+* 단일옵션: title=제목, subtitle=부제목, caption=하단캡션
+* aes에 지정해놓은 값 사용
+```{r}
+# 앞부분에서 aes(x, y, fill) 지정시
+labs(x='이름', y='점수', fill='과목')
+```
+
+## ggplot2
+### theme()
+* ggplot 구성요소의 테마 설정
+* theme(요소=값, ...)
+* 요소와 값은 help참조(다양함)
+```{r}
+theme(axis.text.x=element_text(angle=25, hjust=1, vjust=1, colour='blue', size=10))
+```
+
+## ggplot2
+### ggtitle()
+* ggplot의 라벨 설정
+* ggtitle(title=제목, subtitle=부제목)
+```{r}
+ggtitle('연도별 입사현황', subtitle='신입사원')
+```
+
+## ggplot2
+### guides()
+* ggplot 구성요소들 비율 가이드 설정
+* guides(aes값)
+* 인자 값으로 함수 사용 
+* 색: guide_colorbar()
+* 크기 & 모양: guide_legend()
+```{r}
+guides(fill=guide_legend(title='연도'))
+```
+
+## ggplot2
+### facet_wrap()
+* 지정한 값을 기준으로 개별 plot을 생성
+* facet_wrap(fomula 표현식)
+```{r}
+facet_wrap(~name+subject)
+```
+
+
 정렬하기 
 ```{r}
 # order 활용
