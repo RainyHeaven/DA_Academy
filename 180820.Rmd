@@ -1,0 +1,159 @@
+
+```{r}
+Sys.getlocale()
+```
+
+
+***************************************************************************************
+
+## rvest
+
+```{r}
+install.packages('rvest')
+library(rvest)
+```
+
+```{r}
+start_url <- 'https://search.joins.com/JoongangNews?page=1&Keyword=%EB%B9%85%EB%8D%B0%EC%9D%B4%ED%84%B0&SortType=New&SearchCategoryType=JoongangNews'
+
+# html 읽어오기
+html <- read_html(start_url)
+
+html
+
+# html에서 원하는 정보 추출하기
+urls <- html_nodes(html, '.list_default .headline')%>%
+  html_nodes('a')%>%
+  html_attr('href')
+
+urls
+
+html <- read_html('https://news.joins.com/article/22897894')
+html
+
+test <- html_nodes(html, '#article_body')%>%
+  html_text()
+```
+
+# 중앙일보 기사 10페이지 크롤링
+## 기사 추출
+```{r}
+# 기사 추출
+library(rvest)
+articles <- c()
+for(i in 1:10){
+  start_url <- paste0('https://search.joins.com/JoongangNews?page=',i,'&Keyword=%EB%B9%85%EB%8D%B0%EC%9D%B4%ED%84%B0&SortType=New&SearchCategoryType=JoongangNews')
+  html <- read_html(start_url)
+  urls <- html_nodes(html, '.list_default .headline')%>%
+    html_nodes('a')%>%
+    html_attr('href')
+  for(url in urls){
+    subHtml <- read_html(url)
+    article <- html_nodes(subHtml, '#article_body')%>%
+      html_text()
+    articles <- append(x = articles, values = article, after = length(articles))
+  }
+
+}
+articles
+```
+
+## 데이터 전처리
+```{r}
+library(stringr)
+library(KoNLP)
+
+# 특수문자, 연이은 공백 처리
+raw <- str_replace_all(articles, '[:punct:]', ' ')
+raw <- str_replace_all(raw, '[:space:]+', ' ')
+raw <- raw[-1]
+
+# 의미있는 숫자 탐색
+str_match_all(raw, '[:alpha:]+ *[:digit:]+ *[:alpha:]+')
+
+# 의미있는 숫자 저장
+stopwords <- c('[:digit:]+년', '[A-z]2[A-z]', 'CO2', 'ABC360', '3D', '프로듀스 *[:digit:]+', '프듀 *[:digit:]+', 'AKB *[:digit:]+', 'HKT *[:digit:]+', '[:digit:]차 *산업 *혁명', '[0-9] *급')
+
+# 의미있는 숫자는 numData로 저장, raw에서 삭제
+numData <- c()
+for(word in stopwords){
+  numWords <- unlist(str_extract_all(raw, word))
+  numData <- append(numData, numWords, length(numData))
+  raw <- str_replace_all(raw, word, '')
+}
+
+# raw의 모든 숫자 제거
+raw <- str_replace_all(raw, '[:digit:]', '')
+
+# 단어 추출
+data <- unlist(extractNoun(raw))
+
+# data와 numData 통합
+data <- append(data, numData, length(data))
+
+# 단어 카운트
+result <- table(data)
+result <- sort(result[nchar(names(result))>=2 & result > 10], decreasing = T)
+
+# 임의로 삭제할 단어 제거
+rmWords <- c()
+result <- result[!names(result)%in%rmWords]
+```
+
+## 데이터 시각화
+```{r}
+# wordcloud 생성
+library(wordcloud)
+display.brewer.all()
+pal <- brewer.pal(8, 'Set3')
+wordcloud(names(result), freq=result, scale=c(3, 0.5), min.freq=2, max.words = 100, random.order=F, rot.per=.1, colors=pal)
+```
+
+
+# stackoverflow 질문
+## 질문 수집
+```{r}
+library(rvest)
+result <- c()
+pages <- 1:100
+
+for(p in pages){
+  mainUrl <- paste0('https://stackoverflow.com/questions/tagged/python?page=',p,'&sort=newest&pagesize=15')
+  html <- read_html(mainUrl)
+  questions <- html_nodes(html, 'div.question-summary > div.summary > h3 > a')%>%
+    html_text()
+  result <- append(result, questions, length(result))
+  Sys.sleep(0.5)
+  print(paste0(p, '페이지 크롤링 완료'))
+}
+```
+
+## 데이터 정제
+```{r}
+library(tm)
+library(KoNLP)
+library(stringr)
+
+result <- removeWords(tolower(result), stopwords('en'))
+
+data <- unlist(extractNoun(result))
+rank <- sort(table(data[nchar(data)>=3]), decreasing = T)
+# 임의로 삭제할 단어 제거
+removeWords <- c('python', 'using', 'pytho', 'duplicate', 'hold', 'get', 'can', 'create', 'use', 'two', 'erro', 'run', 'add', 'change', 'one', 'running', 'without', 'find', 'based', 'work', 'command')
+rank <- rank[rank >= 10 & !names(rank)%in%removeWords]
+```
+
+## 데이터 시각화
+```{r}
+# wordcloud 생성
+library(wordcloud)
+display.brewer.all()
+pal <- brewer.pal(12, 'Set3')
+wordcloud(names(rank), freq=rank, scale=c(3, 0.5), min.freq=2, max.words = 100, random.order=F, rot.per=.1, colors=pal)
+
+library(wordcloud2)
+df <- data.frame(rank)
+wordcloud2(df, size=0.4, color = 'random-light', backgroundColor = 'black')
+letterCloud(df, size=0.4, word='P')
+```
+
