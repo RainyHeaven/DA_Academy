@@ -1,0 +1,313 @@
+
+
+# 전제
+- 정치적 견해에 따라 입장이 달라지는 주제가 있다.
+- 특정 정치색을 갖는 언론사들은 자신들의 입장에 맞는 기사를 주로 내보낼 것이다
+
+# 주제 선정
+- 특정 키워드들에 대한 진보, 보수 언론 보도 조사 / 비교
+
+# 모집단 선정
+- 진보언론 2곳(한겨레, 프레시안), 보수언론 2곳(조선, 중앙)에서 동일한 키워드로 검색하여 노출된 기사 각 100건
+
+# 키워드 선정
+- 사회, 문화, 경제적 측면에서 시의성이 있다고 생각되는 단어 선정
+최저임금, 북한, 
+
+# 데이터 추출
+```{r}
+# 기본 세팅
+# rm(list=ls())
+library(rvest)
+library(stringr)
+library(KoNLP)
+library(wordcloud)
+library(wordcloud2)
+library(extrafont)
+library(showtext)
+library(png)
+font_import()
+useSejongDic()
+loadfonts(device='win')
+
+keyword <- '최저임금'
+articles <- data.frame(keyword=NULL, press=NULL, title=NULL, date=NULL, text=NULL, stringsAsFactors = F)
+
+save <- function(toSave, keyword, press, title, date, text){
+  pressNames <- factor(c('조선일보', '중앙일보', '한겨레', '프레시안'), levels = c('조선일보', '중앙일보', '한겨레', '프레시안'))
+  if(press=='조선'){p <- 1}else if(press=='중앙'){p <- 2}else if(press=='한겨레'){p <- 3}else if(press=='프레시안'){p <- 4}
+  article <- data.frame(keyword=keyword, press=pressNames[p], title=title, date=date, text=text, stringsAsFactors = F)
+  articles <- rbind(toSave, article)
+  return(articles)
+}
+```
+
+조선
+```{r}
+# 조선일보 - 정확도순, 최근1년, 조선일보 기사만
+pages <- 1:10 # 총 페이지 수(1페이지당 10개 기사)
+for(p in pages){
+  startUrl <- paste0('http://search.chosun.com/search/news.search?query=',keyword,'&pageno=',p,'&orderby=news&naviarraystr=&kind=&cont1=&cont2=&cont5=&categoryname=%EC%A1%B0%EC%84%A0%EC%9D%BC%EB%B3%B4&categoryd2=&c_scope=paging&sdate=Y&edate=&premium=')
+  html <- read_html(startUrl)
+  links <- html_nodes(html, 'body > div.schCont > div > div.l_area > div.search_news_box > dl > dt > a') %>%
+            html_attr('href')
+  for(link in links){
+    subHtml <- read_html(link)
+    title <- html_node(subHtml, '#news_title_text_id') %>%
+              html_text()
+    date <- html_node(subHtml, '#news_body_id .news_date') %>%
+              html_text()
+    text <- html_node(subHtml, '#news_body_id .par') %>%
+              html_text()
+    articles <- save(articles, keyword, '조선', title, date, text)
+    Sys.sleep(0.5)
+  }
+}
+```
+
+중앙
+```{r}
+# 중앙일보 - 정확도순, 최근 1년, 중앙일보 기사만
+pages <- 1:10 # 총 페이지 수(1페이지당 10개 기사)
+for(p in pages){
+  startUrl <- paste0('https://search.joins.com/TotalNews?page=',p,'&Keyword=',keyword,'&PeriodType=DirectInput&StartSearchDate=08%2F21%2F2017%2000%3A00%3A00&EndSearchDate=08%2F21%2F2018%2000%3A00%3A00&SourceGroupType=Joongang&SearchCategoryType=TotalNews')
+  html <- read_html(startUrl)
+  links <- html_nodes(html, '#content > div.section_news > div.bd > ul > li > div > strong > a') %>%
+            html_attr('href')
+  for(link in links){
+    subHtml <- read_html(link)
+    title <- html_node(subHtml, '#article_title') %>%
+              html_text()
+    date <- html_nodes(subHtml, '#body > div.article_head > div.clearfx > div.byline > em')[2] %>%
+              html_text()
+    text <- html_node(subHtml, '#article_body') %>%
+              html_text()
+    articles <- save(articles, keyword, '중앙', title, date, text)
+    Sys.sleep(1)
+  }
+}
+```
+
+한겨레
+```{r}
+# 한겨레 - 정확도순, 최근 1년, 한겨레 기사만
+pages <- 1:10 # 총 페이지 수(1페이지당 10개 기사)
+for(p in pages){
+  startUrl <- paste0('http://search.hani.co.kr/Search?command=query&keyword=',keyword,'&media=news&sort=d&period=year&datefrom=20170821&dateto=20180821&pageseq=',p)
+  html <- read_html(startUrl)
+  links <- html_nodes(html, '#contents > div.search-result-section.first-child > ul > li > dl > dt > a') %>%
+            html_attr('href')
+  for(link in links){
+    subHtml <- read_html(link)
+    title <- html_node(subHtml, '#article_view_headline > h4 > span') %>%
+              html_text()
+    date <- html_node(subHtml, '#article_view_headline > p.date-time') %>%
+              html_text()
+    text <- html_node(subHtml, '#a-left-scroll-in > div.article-text > div > div.text') %>%
+              html_text()
+    articles <- save(articles, keyword, '한겨레', title, date, text)
+    Sys.sleep(1)
+  }
+}
+```
+
+프레시안
+```{r}
+# 프레시안 - 정확도순, 최근 1년, 프레시안 기사만
+pages <- 1:5 # 총 페이지 수(1페이지당 20개 기사)
+for(p in pages){
+  startUrl <- paste0('http://www.pressian.com/news/search_result.html?search=',keyword,'&search_type=&search_no=&startdate=2017-08-21&enddate=2018-08-21&page=',p)
+  html <- read_html(startUrl)
+  links <- html_nodes(html, '#container > div > div > div > div > div.c011_sr2 > div > div.li_right > div.list_tt > a') %>%
+            html_attr('href')
+  if(length(links)!=20){
+    moreLinks <- html_nodes(html, '#container > div > div > div > div > div.c011_sr2 > div > div.li_right2 > div.list_tt > a') %>%
+                  html_attr('href')
+    links <- c(links, moreLinks)
+  }
+  for(link in links){
+    subHtml <- read_html(link)
+    title <- html_node(subHtml, '#container > div > div > div > div > div.m01_arv > div.text-info > div.title') %>%
+              html_text()
+    date <- html_node(subHtml, '#container > div > div > div > div > div.m01_arv > div.text-info > div.byotherspan > div.date') %>%
+              html_text()
+    text <- html_node(subHtml, '#CmAdContent') %>%
+              html_text()
+    articles <- save(articles, keyword, '프레시안', title, date, text)
+    Sys.sleep(1)
+  }
+}
+```
+
+# 데이터 정제
+```{r}
+# 오프라인 작업을 위해 데이터 저장 / 읽어오기
+# write.csv(x = articles, file = 'articles.csv', row.names = F)
+articles <- read.csv(file = 'articles.csv', stringsAsFactors = F)
+
+both <- rbind(articles$title, articles$text)
+
+# 의미있는 숫자 단어 검색
+str_match_all(both, '[:alpha:]+ *[:digit:]+[:alpha:]* *[:alpha:]+')
+
+# 의미있는 숫자 단어 저장
+keepWords <- c('4대강', '제[:digit:]금융권', '[:digit:]+ ?(만|억|조)? ?여? ?(차|건|년|명|원|달러|시간)')
+
+# 데이터 분리
+conservative <- articles[articles$press%in%c('조선일보', '중앙일보'), c('title', 'text')]
+progressive <- articles[articles$press%in%c('한겨레', '프레시안'), c('title', 'text')]
+
+# 데이터 정제함수 생성
+refine <- function(data, keepwords){
+  # 특수문자 공백처리
+  result <- str_replace_all(data, '[:punct:]',' ')
+  
+  # 연이은 공백은 하나의 공백처리
+  result <- str_replace_all(result, '[:space:]+',' ')
+  
+  # 의미있는 숫자단어는 numData로 저장, 데이터에서 삭제
+  numData <- c()
+  for(word in keepWords){
+    numWords <- unlist(str_extract_all(result, word))
+    numData <- append(numData, numWords, length(numData))
+    result <- str_replace_all(result, word, '')
+  }
+  
+  # 데이터에서 나머지 숫자 제거
+  result <- str_replace_all(result, '[:digit:]', '')
+  
+  # 단어 추출
+  data <- unlist(extractNoun(na.omit(result)))
+  
+  # data와 numData 통합
+  data <- append(data, numData, length(data))
+  
+  # 결과 리턴
+  return(data)
+}
+
+# 사전에 추가할 단어 정리
+## 의미있는 숫자단어 추가
+dicWords <- c()
+for(word in keepWords){
+  dicWord <- na.omit(str_extract(both, word))
+  dicWords <- append(dicWords, dicWord, length(dicWords))
+}
+## 대한민국 국회의원 목록 추가
+url <- 'https://ko.wikipedia.org/wiki/%EB%8C%80%ED%95%9C%EB%AF%BC%EA%B5%AD_%EC%A0%9C20%EB%8C%80_%EA%B5%AD%ED%9A%8C%EC%9D%98%EC%9B%90_%EB%AA%A9%EB%A1%9D_(%EC%A0%95%EB%8B%B9%EB%B3%84)'
+html <- read_html(url)
+congressmen <- html_nodes(html, '#mw-content-text > div > ul > li > a') %>%
+                  html_text()
+dicWords <- append(dicWords, congressmen, length(dicWords))
+## 특정 단어 추가
+moreWords <- c('문재인', '소상공인', '더불어민주당', '자유한국당', '바른미래당', '민주평화당', '정의당', '민중당', '대한애국당')
+dicWords <- append(dicWords, moreWords, length(dicWords))
+## 중복제거
+dicWords <- unique(dicWords)
+
+# 사전에 단어 추가
+write(dicWords, 'userdic.txt')
+buildDictionary(ext_dic='sejong', user_dic=data.frame(readLines('userdic.txt'), 'ncn'), replace_usr_dic = T)
+
+# 데이터 정제
+consTitle <- refine(conservative$title, keepWords)
+consArticle <- refine(conservative$text, keepWords)
+progTitle <- refine(progressive$title, keepWords)
+progArticle <- refine(progressive$text, keepWords)
+
+consWords <- c(consTitle, consArticle)
+progWords <- c(progTitle, progArticle)
+
+totalWords <- c(consWords, progWords)
+
+# 사용할 데이터 선택
+data <- consText
+
+# 제외할 단어 설정
+rmWords <- c('가능', '회의', '일부', '지적', '적용', '기획', '방식', '교수', '이유', '해서', '중요', '민주', 'hani', '정치', '발표', '의원', '후보', '내용', '영향', '요구', '생각', '위원장', '주장', '관련', '경우', '위원', '규모', '얘기', '대변인', '업종', '이번', '발언', '뉴스', '정도', '원내', '관계자', '결정', '이상', '임금', '결과', '업체', '으로', '수준', '지난해', '이후', '이날', '우리', '필요', '하게', '상황', '올해', '주도', '들이', '때문', '하기', '사설', '칼럼', '최저임금','인상','<U+A>━<U+A>', 'joongang', '개월', '<U+A>', '<U+A><U+A>')
+
+# 지정한 단어 제외, 최소횟수 이상, 최소길이 이상의 단어 카운트 함수 생성
+wordCount <- function(words, minLength, minFreq, exception){
+  data <- words[!words%in%exception]
+  result <- table(data)
+  result <- sort(result[nchar(names(result))>=minLength & result > minFreq], decreasing = T)
+  return(result)
+}
+
+# 불필요하게 카운트된 단어 찾기 / 제외하기 반복
+show10 <- function(data, i){
+  if(i==1){
+    data[i:10*i]
+  }else{
+    data[(10*i)+1:10*(i+1)]
+  }
+  
+}
+
+test <- wordCount(progText, 2, 30, rmWords)
+show10(names(test), 4)
+
+
+# 단어 카운트
+ctCount <- wordCount(consTitle, 2, 5, rmWords)
+caCount <- wordCount(consArticle, 2, 30, rmWords)
+consCount <- wordCount(consWords, 2, 30, rmWords)
+
+ptCount <- wordCount(progTitle, 2, 5, rmWords)
+paCount <- wordCount(progArticle, 2, 30, rmWords)
+progCount <- wordCount(progWords, 2, 30, rmWords)
+
+totalCount <- wordCount(totalWords, 2, 50, rmWords)
+```
+
+# 데이터 시각화
+```{r}
+# wordcloud 생성
+display.brewer.all()
+consPal <- brewer.pal(9, 'YlOrRd')
+progPal <- brewer.pal(8, 'PuBu')
+Pal <- brewer.pal(8,'Dark2')
+
+png('wc.png', width=1200, height=800, pointsize = 12)
+par(mar=rep(0,4))
+wordcloud(words=names(result), freq=result, scale=c(10, 1), max.words = 100, random.order=F, rot.per=0.2, colors=Pal, family='NanumBarunGothic')
+
+wordcloud2(result[1:100], color = 'red', backgroundColor = 'white')
+```
+
+## 전체 워드클라우드
+```{r}
+data <- totalCount
+letterCloud(data, word = '￦', wordSize=1.5, letterFont='NanumBarunGothic')
+```
+
+##보수 워드클라우드
+```{r}
+data <- consCount
+# wc1
+wordcloud2(data, color='random-dark', figPath = 'korea.png', size= 1, fontFamily = 'NanumBarunGothic', shuffle = F)
+# wc2
+wordcloud2(data, color='random-dark', figPath = 'growth.png', size= 1.5, fontFamily = 'NanumBarunGothic', shuffle = F)
+```
+
+##진보 워드클라우드
+```{r}
+data <- progCount
+# wc1
+wordcloud2(data, color='random-dark', figPath = 'korea.png', size=1, fontFamily = 'NanumBarunGothic', shuffle = F)
+# wc2
+wordcloud2(data, color='random-dark', figPath = 'growth.png', size=0.5, fontFamily = 'NanumBarunGothic', shuffle = F)
+```
+
+##보수에서만 나온 단어 워드클라우드
+```{r}
+data <- consCount[!names(consCount)%in%names(progCount)]
+wordcloud2(data, color='random-dark', size=1.5, fontFamily = 'NanumBarunGothic')
+```
+
+##진보에서만 나온 단어 워드클라우드
+```{r}
+data <- progCount[!names(progCount)%in%names(consCount)]
+wordcloud2(data, color='random-dark', size=1.5, fontFamily = 'NanumBarunGothic')
+```
+
