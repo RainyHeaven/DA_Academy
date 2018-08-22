@@ -21,11 +21,9 @@
 library(rvest)
 library(stringr)
 library(KoNLP)
-library(wordcloud)
 library(wordcloud2)
 library(extrafont)
 library(showtext)
-library(png)
 font_import()
 useSejongDic()
 loadfonts(device='win')
@@ -261,20 +259,6 @@ totalCount <- wordCount(totalWords, 2, 50, rmWords)
 ```
 
 # 데이터 시각화
-```{r}
-# wordcloud 생성
-display.brewer.all()
-consPal <- brewer.pal(9, 'YlOrRd')
-progPal <- brewer.pal(8, 'PuBu')
-Pal <- brewer.pal(8,'Dark2')
-
-png('wc.png', width=1200, height=800, pointsize = 12)
-par(mar=rep(0,4))
-wordcloud(words=names(result), freq=result, scale=c(10, 1), max.words = 100, random.order=F, rot.per=0.2, colors=Pal, family='NanumBarunGothic')
-
-wordcloud2(result[1:100], color = 'red', backgroundColor = 'white')
-```
-
 ## 전체 워드클라우드
 ```{r}
 data <- totalCount
