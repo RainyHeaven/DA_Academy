@@ -1,0 +1,208 @@
+말뭉치(corpus)는 자연어 연구를 위해 특정한 목적을 가지고 언어의 표본을 추출한 집합
+
+## tm
+* 말뭉치 관련 패키지
+```{r}
+install.packages('tm')
+library(tm)
+```
+
+### Corpus()
+* Corpus(VectorSource(데이터))
+```{r}
+setwd('C:/Users/stu/git/DA_Academy')
+data1 <- readLines('tm_example.txt')
+data1
+corp1 <- Corpus(VectorSource(data1))
+corp1 # documents: tm 패키지가 작업할 수 있는 특별한 형태. 일반적으로 1줄이 1개의 document가 된다.
+```
+
+## tm
+### inspect
+```{r}
+# corpus 내용 보는법
+summary(corp1) 
+inspect(corp1)
+corp1[[1]] #corpus 인덱싱
+corp1[[1]]$meta #corpus meta정보 확인
+corp1[[1]]$content #corpus 내용 확인
+```
+
+## tm
+### TermDocumentMatrix()
+* tm패키지가 분석할 수 있는 Term-Document형식의 matrix로 변환
+* TermDocumentMatrix(데이터, control=list(wordLengths=c(최소글자수, 최대글자수)))
+```{r}
+tdm <- TermDocumentMatrix(corp1, control=list(wordLengths=c(1,Inf)))
+m <- as.matrix(tdm)
+m
+```
+
+## tm
+### tm_map()
+```{r}
+# 여러개의 공백을 하나의 공백으로 변환
+corp2 <- tm_map(corp1, stripWhitespace)
+
+# 대문자가 있을 경우 소문자로 변환
+corp2 <- tm_map(corp1, tolower)
+
+# 숫자 제거
+corp2 <- tm_map(corp2, removeNumbers)
+
+# 특수문자 제거
+corp2 <- tm_map(corp2, removePunctuation)
+
+inspect(corp2)
+```
+
+## tm
+### content_transformer()
+```{r}
+# 일반적인 gsub은 말뭉치에서 제대로 작동하지 않음
+corp3 <- gsub('~', '', corp1)
+corp3
+
+# 말뭉치에서 gsub함수 사용방법
+toString <- content_transformer(function(x, from, to) gsub(from,to,x))
+corp3 <- tm_map(corp1, toString, '~','')
+corp3 <- tm_map(corp3, toString, '!','')
+corp3 <- tm_map(corp3, toString, ',','')
+inspect(corp3)
+```
+
+## tm
+### stopwords()
+```{r}
+stopwords('en')
+sword <- c('and', 'but', 'not')
+corp2 <- tm_map(corp2, removeWords, sword)
+tdm2 <- TermDocumentMatrix(corp2)
+m2 <- as.matrix(tdm2)
+m2
+```
+
+## tm
+### findFreqTerms()
+```{r}
+freq1 <- sort(rowSums(m2), decreasing = T)
+freq1
+
+freq2 <- sort(colSums(m2), decreasing = T)
+freq2
+
+# 특정 빈도수 이상 등장한 단어
+findFreqTerms(tdm2, 2)
+```
+
+
+```{r}
+# 특정 단어와 상관관계를 찾고 싶을 경우
+findAssocs(tdm, 'apple', 0.5)
+```
+
+```{r}
+library(wordcloud)
+library(ggplot2)
+pal <- brewer.pal(7, 'Set3')
+wordcloud(names(freq1), freq=freq1, min.freq=1, colors=pal)
+barplot(freq1, main='tm packages', las=2)
+```
+
+```{r}
+mm <- m2%*%t(m2) # 행렬곱
+mm
+
+# install.packages('igraph')
+library(igraph)
+
+g <- graph.adjacency(mm, weighted = T, mode='undirected')
+plot(g)
+g2 <- simplify(g) # 재귀부분 제거
+plot(g2)
+```
+
+```{r}
+data <- readLines('obama.txt')
+corp <- Corpus(VectorSource(data))
+
+refinedCorpus <- tm_map(corp, removeWords, stopwords('en'))
+
+
+tdm <- TermDocumentMatrix(refinedCorpus)
+tdm <- as.matrix(tdm)
+freq <- sort(rowSums(tdm), decreasing = T)
+
+freq
+```
+
+
+```{r}
+articles <- read.csv(file = 'articles.csv', stringsAsFactors = F)
+articles
+data <- Corpus(x = VectorSource(articles$text))
+inspect(data)
+
+refinedData <- tm_map(data, stripWhitespace) #공백제거시 tdm변환때 한글 깨짐
+
+refinedData <- tm_map(data, removePunctuation)
+refinedData <- tm_map(refinedData, removeNumbers)
+inspect(refinedData)
+
+tdmData <- TermDocumentMatrix(refinedData)
+tdmData <- as.matrix(tdmData)
+tdmData
+tdm <- tdmData%*%t(tdmData)
+
+conservative <- articles[articles$press%in%c('조선일보', '중앙일보'), 'text']
+progressive <- articles[articles$press%in%c('한겨레', '프레시안'), 'text']
+
+text <- Corpus(VectorSource(conservative[1:5]))
+tt <- tm_map(text, removePunctuation)
+tt <- tm_map(tt, removeNumbers)
+tt <- extractNoun(tt)
+tt <- Corpus(VectorSource(tt))
+
+inspect(tt)
+tdm <- TermDocumentMatrix(tt)
+tdm <- as.matrix(tdm)
+tdm
+
+result <- tdm%*%t(tdm)
+result
+```
+
+
+```{r}
+library(tm)
+data1 <- readLines("취임사.txt")
+
+corp1 <- Corpus(VectorSource(data1))
+
+inspect(corp1)
+
+corp2 <- tm_map(corp1,removeNumbers) 
+corp2 <- tm_map(corp2,removePunctuation)
+
+library(KoNLP)
+
+useSejongDic()
+
+tdm <- TermDocumentMatrix(corp2, control=list(tokenize=extractNoun))
+
+#Encoding(tdm$dimnames$Terms) = 'UTF-8'
+
+m <- as.matrix(tdm)
+m
+
+freq1 <- sort(rowSums(m),decreasing=T)
+head(freq1,20)
+
+library(wordcloud)
+library(RColorBrewer)
+
+palete <- brewer.pal(7,"Set3")
+wordcloud(names(freq1), freq=freq1, scale=c(5,1), min.freq=1,colors=palete)
+
+```
+
