@@ -3,11 +3,12 @@
 ## tm
 * 말뭉치 관련 패키지
 ```{r}
-install.packages('tm')
+# install.packages('tm')
 library(tm)
 ```
 
 ### Corpus()
+* 데이터를 말뭉치(corpus) 형태로 변환
 * Corpus(VectorSource(데이터))
 ```{r}
 setwd('C:/Users/stu/git/DA_Academy')
@@ -40,6 +41,8 @@ m
 
 ## tm
 ### tm_map()
+* corpus에 함수를 적용
+* tm_map(말뭉치,함수)
 ```{r}
 # 여러개의 공백을 하나의 공백으로 변환
 corp2 <- tm_map(corp1, stripWhitespace)
@@ -58,6 +61,8 @@ inspect(corp2)
 
 ## tm
 ### content_transformer()
+* corpus의 내용을 바꿀 수 있는 content transformer 생성
+* content_transformer(원하는 함수 사용/생성)
 ```{r}
 # 일반적인 gsub은 말뭉치에서 제대로 작동하지 않음
 corp3 <- gsub('~', '', corp1)
@@ -73,6 +78,8 @@ inspect(corp3)
 
 ## tm
 ### stopwords()
+* 미리 지정된 다양한 불용어 중 원하는 불용어 모음 리턴
+* stopwords(원하는 불용어 종류)
 ```{r}
 stopwords('en')
 sword <- c('and', 'but', 'not')
@@ -84,6 +91,8 @@ m2
 
 ## tm
 ### findFreqTerms()
+* corpus에서 특정 빈도수 이상 등장한 단어 리턴
+* findFreqTerms(corpus, 빈도수)
 ```{r}
 freq1 <- sort(rowSums(m2), decreasing = T)
 freq1
@@ -95,7 +104,10 @@ freq2
 findFreqTerms(tdm2, 2)
 ```
 
-
+## tm
+### findAssocs()
+* corpus와 특정 단어와의 상관관계 중 최소범위 이상 리턴
+* findAssocs(corpus, 단어, 최소범위)
 ```{r}
 # 특정 단어와 상관관계를 찾고 싶을 경우
 findAssocs(tdm, 'apple', 0.5)
@@ -109,12 +121,20 @@ wordcloud(names(freq1), freq=freq1, min.freq=1, colors=pal)
 barplot(freq1, main='tm packages', las=2)
 ```
 
+## igraph
+* 그래프 관련 패키지
+```{r}
+# install.packages('igraph')
+library(igraph)
+```
+
+## igraph
+### simplify()
+* 중복되는 부분을 삭제
+* simplify(데이터)
 ```{r}
 mm <- m2%*%t(m2) # 행렬곱
 mm
-
-# install.packages('igraph')
-library(igraph)
 
 g <- graph.adjacency(mm, weighted = T, mode='undirected')
 plot(g)

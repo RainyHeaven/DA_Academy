@@ -1,0 +1,277 @@
+[문제182] noise.txt 데이터를 시각화 하세요.
+
+데이터 읽어오기
+```{r}
+getwd()
+setwd('C:/Users/stu/git/DA_Academy')
+# read.csv
+raw <- read.csv('noise.txt', header = F, stringsAsFactors = F, sep = ' ')
+raw <- as.double(unlist(raw))
+
+# read.table
+# raw <- read.table('noise.txt')
+```
+
+히스토그램
+```{r}
+data <- raw
+minimum <- (min(data)%/%10)*10
+maximum <- ((max(data)%/%10)+1)*10
+step <- 5
+
+hist(data, breaks=seq(minimum, maximum, step), right = F, ylim=c(0, 10+(3*step)), col=rainbow(8), border=F, labels=T, main = 'Noise.txt의 데이터 분포', xlab='구간', ylab= '', axes=F)
+axis(1, at=seq(minimum, maximum, step), labels=seq(minimum, maximum, step), las=1)
+```
+
+꺾은선 그래프
+```{r}
+library(ggplot2)
+data <- round(raw)
+minimum <- (min(data)%/%10)*10
+maximum <- ((max(data)%/%10)+1)*10
+step <- 5
+
+freq <- table(cut(data, breaks=seq(minimum, maximum, step), right=F))
+name <- names(freq)
+name <- gsub('[[]', '', name)
+name <- gsub(',', '이상 ', name)
+name <- gsub(')', '미만', name)
+names(freq) <- name
+data <- as.data.frame(freq)
+
+ggplot(data, aes(x=Var1, y=Freq, group=1))+ggtitle('Noise.txt의 분포')+labs(x='구간', y='분포')+geom_line()+geom_point()
+```
+
+[문제183] noise.txt 데이터에서 25%의 기준 데이터 75%의 기준 데이터를 찾으세요.
+```{r}
+raw <- read.csv('noise.txt', header = F, stringsAsFactors = F, sep = ' ')
+raw <- as.double(unlist(raw))
+
+findCriteria <- function(data, percentile, decreasing = F){
+  if(decreasing==T){data <- sort(data, decreasing = T)}else{data <- sort(data, decreasing = F)}
+  return(data[ceiling(length(data)*(percentile/100))])
+}
+
+# 하위 25% 기준 데이터
+findCriteria(raw, 25, F)
+
+# 하위 75% 기준 데이터
+findCriteria(raw, 75, F)
+
+# 상위 75% 기준 데이터
+findCriteria(raw, 75, T)
+```
+
+### quantile()
+* 데이터의 4분위수 리턴
+* quantile(데이터, type=2)
+```{r}
+quantile(raw, type=2)['25%']
+```
+
+
+[문제184] food.csv 데이터를 기준으로 토마토의 sweetness은 6,  crunchiness은 4 입니다. 분류를 하세요.
+```{r}
+food <- read.csv('food.csv', stringsAsFactors = F, header = T)
+food
+
+train <- food[, c(2, 3)]
+label <- food[, 4]
+test <- data.frame(sweetness=6,crunchiness=4)
+
+knn(train, test, label, prob=T)
+```
+```{r}
+library(ggplot2)
+tomato <- data.frame(ingredient='tomato', sweetness=6,crunchiness=4)
+ggplot(data=food, aes(x=sweetness, y=crunchiness))+labs(title='What is tomato class?') + geom_point(aes(color=class, shape=class), size=6) + geom_text(aes(label=ingredient), vjust=-1, size=5)+geom_point(data=tomato, colour='black', size=6)+geom_text(data=tomato, aes(label=ingredient), vjust=-2, size=5, fontface='bold')
+
+data.frame(ingredient=food[,1], distinct=sqrt((food[,2] - tomato[, 2])^2 + (food[,3] - tomato[,3]^2)))
+```
+
+
+******************************************************************************************
+
+# boxplot
+* 히스토그램은 자료가 모여 있는 위치나 자료의 분포에 관한 대략적인 정보를 한눈에 파악할 수 있는 장점은 있지만, 구체적인 수치정보를 쉽게 알아 볼 수 없다는 단점이 있다.
+* 따라서 최소값, 제1사분위수, 중위수, 제3사분위수, 최대값의 다섯가지 요약 수치 등을 이용한 상자그림(Boxplot)을 사용한다. 
+```{r}
+boxplot(raw)
+boxplot(raw, horizontal = T)
+
+mean(raw)
+median(raw)
+var(raw)
+sd(raw)
+min(raw)
+max(raw)
+```
+
+### quantile()
+* quantile(데이터, type=타입값)
+* 0% 최소값, 25% 1분위수, 50% 중위수, 75% 3사분위수, 100% 최대값
+* type2가 일반적
+```{r}
+quantile(raw, type=2) 
+quantile(raw) # 제1사분위수가 데이터에 없는 값이 나옴 / type 지정 필수
+summary(raw) # 제1사분위수가 데이터에 없는 값이 나옴
+```
+
+중위값 구해보기
+```{r}
+data <- sort(raw)
+
+if(length(data)%%2==0){
+  a <- length(data)/2
+  sum(data[c(a, a+1)])/2
+}else{
+  a <- ceiling(length(data)/2)
+  data[a]
+}
+
+ifelse(length(data)%%2==0, sum(data[c(length(data)/2, length(data)/2+1)])/2, data[ceiling(length(data)/2)])
+```
+
+# 사분위수 범위(inter quantile range) / IQR
+* 제3사분위수 - 제1사분위수
+```{r}
+iqr <- findCriteria(raw, 75, F) - findCriteria(raw, 25, F)
+iqr
+
+# IQR 함수 사용
+IQR(raw, type=2)
+```
+
+# lower fence
+* 1사분위수 - 1.5*IQR
+```{r}
+lf <- findCriteria(raw, 25)-1.5*iqr
+lf
+
+min(raw[raw>=lf])
+```
+
+# upper fence
+* 3사분위수 + 1.5*IQR
+```{r}
+uf <- findCriteria(raw, 75)+1.5*iqr
+uf
+max(raw[raw<=uf])
+```
+
+```{r}
+bp <- boxplot(raw, horizontal = T)
+boxMin <- min(raw[raw>=lf])
+boxMax <- max(raw[raw<=uf])
+boxMdn <- median(raw)
+q1 <- quantile(raw, type=2)['25%']
+q3 <- quantile(raw, type=2)['75%']
+
+text(x=boxMin, y=1.3, labels=boxMin)
+text(x=boxMax, y=1.3, labels=boxMax)
+text(x=boxMdn, y=1.3, labels=boxMdn)
+text(x=q1, y=1.3, labels=q1)
+text(x=q3, y=1.3, labels=q3)
+
+under <- raw[raw<lf]
+over <- raw[raw>uf]
+text(x=under, y=1.1, labels=under, col='Red')
+text(x=over[1], y=1.1, labels=over[1], col = 'Red')
+text(x=over[2], y=0.9, labels=over[2], col = 'Red')
+```
+
+```{r}
+boxplot(raw, horizontal = T)
+# 제1사분위수 출력
+text(quantile(raw, 0.25, type=2)+0.5, 1, labels=quantile(raw, 0.25, type=2), col='blue')
+
+# 중위수 출력
+text(quantile(raw, 0.50, type=2)+0.5, 1, labels=quantile(raw, 0.25, type=2), col='blue')
+
+# 제3사분위수 출력
+text(quantile(raw, 0.75, type=2)+0.5, 1, labels=quantile(raw, 0.25, type=2), col='blue')
+
+# 사분위범위 내에 최소값 출력
+lf <- quantile(raw, 0.25, type=2) - 1.5 * IQR(raw, type=2)
+uf <- quantile(raw, 0.75, type=2) + 1.5 * IQR(raw, type=2)
+text(min(raw[raw>=lf & raw<=uf])+0.5, 1, labels=min(raw[raw>=lf & raw<=uf]), col='blue')
+
+# 사분위범위 내에 최대값 출력
+text(max(raw[raw>=lf & raw<=uf])+0.5, 1, labels=max(raw[raw>=lf & raw<=uf]), col='blue')
+
+# 이상치 출력
+text(raw[raw<lf], 1.03, labels=raw[raw<lf], col='red', cex=0.7)
+text(raw[raw>uf], 1.03, labels=raw[raw>uf], col='red', cex=0.7)
+
+```
+
+# 머신러닝(machine learning)
+* 인공지능(Artificial Inteligence, 기계로 만들어지는 지능)의 한 분야로서 컴퓨터가 학습할 수 있도록 하는 알고리즘과 기술을 개발하는 분야
+* 통계, 데이터과학, 컴퓨터과학
+* 분류(classification): KNN, 나이브베이즈, 결정트리
+* 패턴감지(pattern detection): 연관규칙
+* 수치예측(numeric prediction): 회귀
+* 군집화(clustering): k평균군집화
+
+# learning
+* supervised learning(지도학습)
+** 레이블이 달려있는 정해져 있는 데이터를 가지고 학습
+** 트레이닝 set을 가지고 학습 
+** 분류: 이미지(개, 고양이), 스팸
+** 회귀: 시험점수 예측
+** binary classification: 합격, 불합격
+** multi label classification: A,B,C,D...
+
+* unsupervised learning(비지도학습)
+** 레이블이 없는 데이터를 직접 데이터를 가지고 학습
+** 유사한 뉴스를 그룹으로 모은다
+** 비슷한 단어들을 모은다
+
+
+# KNN(K Nearest Neighbors) 최근접이웃
+* 사회적인 관계를 관찰해 보면
+** 대략적으로 비슷한 사람끼리 모이는 성질
+** 비슷한 취향의 사람끼리 모여서 동호회를 만들고
+** 비슷한 부류의 계층의 사람끼리 친분을 맺기도 한다
+
+* 공간적인 관계를 관찰해 보면
+** 가구점이 모이는 상가지역이 따로 형성이 되어있다.
+** 한약방이 밀집되어 있는 지역이 따로 모여있는 경우가 많
+
+* k(갯수) nn(거리)
+* k값이 너무 높을 시 과적합(overfitting)이 발생하여 정확도가 떨어질 수 있다
+* 일반적으로 k값은 루트n개, 홀수를 선택
+```{r}
+like <- read.csv('like.csv', stringsAsFactors = F, header = T)
+str(like)
+colnames(like) <- c('talk', 'book', 'travel', 'school', 'tall', 'skin', 'muscle', 'label')
+str(like)
+
+test <- data.frame(talk=70, book=50, travel=30, school=70, tall=70, skin=40, muscle=50)
+```
+
+## class
+
+```{r}
+install.packages('class')
+library(class)
+```
+
+### knn
+* knn 알고리즘을 통해 테스트데이터 분
+* knn(트레이닝데이터, 테스트데이터, 라벨, k=k값)
+```{r}
+train <- like[, -8]
+group <- like[, 8]
+train
+group
+
+knn(train, test, group, k=3)
+
+knn(train, test, group, k=5)
+knn(train, test, group, k=10)
+
+# 확률값 리턴
+knn(train, test, group, k=3, prob=T)
+```
+
