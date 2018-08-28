@@ -1,0 +1,272 @@
+[문제185]  나이, 월수입, 상품구매여부를 갖는 데이터가 있다.
+이 데이터를 이용해서 나이가 44 이고 월급이 400 만원인 사람이
+상품을 구매할지 비구매할지를 knn 분류 알고리즘으로 분석하세요.
+```{r}
+library(class)
+setwd('C:/Users/stu/git/DA_Academy')
+
+buy <- read.csv('buy.csv', stringsAsFactors = F, header = T)
+train <- buy[, -3]
+label <- buy[, 3]
+test <- data.frame(나이=44, 월수입=440)
+
+# 표준정규화
+print('비표준화, K=1')
+knn(train = train, test = test, cl = label, k = 1, prob = T)
+print('비표준화, K=3')
+knn(train = train, test = test, cl = label, k = 3, prob = T)
+print('비표준화, K=5')
+knn(train = train, test = test, cl = label, k = 5, prob = T)
+print('*************************************************')
+
+train1 <- scale(buy[,-3])
+test1 <- matrix(c((44-mean(buy$나이))/sd(buy$나이), (440-mean(buy$월수입))/sd(buy$월수입)),nrow = 1)
+print('표준화, K=1')
+knn(train1, test1, label, k=1, prob=T)
+print('표준화, K=3')
+knn(train1, test1, label, k=3, prob=T)
+print('표준화, K=5')
+knn(train1, test1, label, k=5, prob=T)
+
+# 0-1 변환
+temp <- data.frame(나이=44, 월수입=440, 상품구매여부=NA)
+buy1 <- rbind(buy, temp)
+train1 <- buy1[, -3]
+label <- buy1[-22, 3]
+
+for(i in 1:length(train1)){
+  cmax <- max(train1[, i])
+  cmin <- min(train1[, i])
+  for(j in 1:NROW(train1)){
+    train1[j, i] <- (train1[j, i]-cmin)/(cmax-cmin)
+  }
+}
+
+test1 <- train1[22, ]
+train1 <- train1[-22,]
+
+print('0-1표준화, K=1')
+knn(train1, test1, label, k=1, prob=T)
+print('0-1표준화, K=3')
+knn(train1, test1, label, k=3, prob=T)
+print('0-1표준화, K=5')
+knn(train1, test1, label, k=5, prob=T)
+```
+
+[문제186] zoo.csv 데이터 집합은 동물의 특징과 부류 정보가 있습니다. 
+	  특정 데이터 동물 정보가 어느 부류에 속하는 지를 knn 알고리즘을 이용해서 분석하세요.
+
+[변수 정보]
+
+   1. animal name:      Unique for each instance
+   2. hair		Boolean
+   3. feathers		Boolean
+   4. eggs		Boolean
+   5. milk		Boolean
+   6. airborne		Boolean
+   7. aquatic		Boolean
+   8. predator		Boolean
+   9. toothed		Boolean
+  10. backbone		Boolean
+  11. breathes		Boolean
+  12. venomous		Boolean
+  13. fins		Boolean
+  14. legs		Numeric (set of values: {0,2,4,5,6,8})
+  15. tail		Boolean
+  16. domestic		Boolean
+  17. catsize		Boolean
+  18. type		Numeric (integer values in range [1,7])
+
+[18. type]
+1 : 포유류
+2 : 조류
+3 : 파충류
+4 : 어류
+5 : 양서류 
+6 : 곤충
+7 : 갑각류 
+```{r}
+zoo <- read.csv('zoo.csv', header = F, stringsAsFactors = F)
+dim(zoo)
+train <- zoo[-101,-c(1, 18)]
+test <- zoo[101, -c(1, 18)]
+label <- zoo[-101, 18]
+type <- c('포유류', '조류', '파충류', '어류', '양서류', '곤충', '갑각류')
+for(i in 1:length(type)){
+  label[grep(i, label)] <- type[i]
+}
+label
+
+train
+test
+knn(train, test, label, k=3, prob=T)
+
+```
+
+
+*********************************************************************************************
+# KNN 알고리즘 구현
+```{r}
+gnn <- function(training, test, label, k){
+  distance <- data.frame(row=NULL, distance=NULL)
+  
+  train <- rbind(training, test)
+  for(i in 1:length(train)){
+    cmax <- max(train[,i])
+    cmin <- min(train[,i])
+    for(j in 1:NROW(train)){
+      train[j, i] <- (train[j,i]-cmin)/(cmax-cmin)
+    }
+  }
+  test1 <- train[NROW(train),]
+  train1 <- train[-NROW(train),]
+  
+  for(i in 1:NROW(train1)){
+    dist <- 0
+    for(j in 1:length(test1)){
+      dist <- dist + abs(train1[i,j]-test1[1,j])
+    }
+    temp <- data.frame(row=i,distance=dist)
+    distance <- rbind(distance, temp)
+  }
+  result <- label[distance[order(distance$distance),1][1:k]]
+
+  return(names(sort(table(result), decreasing = T)[1]))
+}
+
+```
+
+GNN 테스트
+```{r}
+buy <- read.csv('buy.csv', stringsAsFactors = F, header = T)
+training <- buy[,-3]
+label <- buy[,3]
+test <- data.frame(나이=44, 월수입=440)
+buy
+knn(training, test, label, k = 3)
+gnn(training, test, label, 7)
+
+
+like <- read.csv('like.csv', stringsAsFactors = F, header = T)
+colnames(like) <- c('talk', 'book', 'travel', 'school', 'tall', 'skin', 'muscle', 'label')
+train <- like[, -8]
+label <- like[, 8]
+test <- data.frame(talk=70, book=50, travel=30, school=70, tall=70, skin=40, muscle=50)
+
+knn(train, test, label, k=3)
+gnn(train, test, label, k=5)
+```
+
+
+# 유클리드거리 vs 맨해튼 거리
+
+# 변수 표준화
+* 서로 다른 기준을 가진 확률 변수들을 상대적으로 비교할 수 있는 도구
+X ~ N(μ, δ^2)
+Z ~ N(0, 1^2)
+
+Z = (관측값 - 평균) / 표준편차
+          한국      미국      일본
+평균      200만원   2500달러  21만엔
+표준편차  10만원    300달러   2.5만엔
+-------------------------------------
+특정사원  215만원   2800달러  23만엔
+          15/10     300/300   2/2.5
+
+  -> 한국 사원이 평균대비 더 높은 급여를 받고 있는 편
+
+### sample()
+* 주어진 데이터에서 원하는 횟수만큼의 복원/비복원 추출 시행
+* sample(데이터, 횟수, replace=복원추출여부)
+```{r}
+x <- 1:12
+# 랜덤순열
+sample(x)
+
+# 재사용을 허용한 랜덤순열 (x의 길이가 1 초과일때만 가능)
+sample(x, replace=T)
+
+# 베르누이 시행 100번
+sample(c(0,1), 100, replace = T)
+
+x <- 1:10
+sample(x[x>8])
+sample(x[x>9])
+```
+
+### set.seed()
+* 지정된 난수를 생성하고 싶을때 사용 
+* set.seed(숫자)
+
+## gmodels
+* model fitting을 위한 패키지
+```{r}
+# install.packages("gmodels")
+library(gmodels)
+```
+
+## gmodels
+### CrossTable()
+* 모델이 예측한 값과 실제 값을 비교하기 위한 cross table 생
+```{r}
+CrossTable(x = iris_test_label, y = iris_model, prop.chisq=FALSE)
+```
+
+
+# iris 
+## 데이터 불러오기
+```{r}
+# 붓꽃 데이터
+# SepalLength : 꽃받침의 길이
+# SepalWidth  : 꽃받침의 폭
+# PetalLength : 꽃잎의 길이
+# PetalWidth  : 꽃잎의 너비
+# 붓꽃의 종류 : Iris-setosa, Iris-versicolor, Iris-virginica
+iris <- read.csv("iris.csv" , stringsAsFactors = F , header = T)
+iris
+str(iris)
+summary(iris) 
+```
+
+## 데이터 정규화
+```{r}
+normalize <- function(x) {
+  return ((x - min(x)) / (max(x) - min(x)))
+}
+
+iris_n <- as.data.frame(lapply(iris[1:4], normalize))
+summary(iris_n)
+
+table(iris$Name)
+```
+
+## 데이터 샘플링
+```{r}
+# 데이터 샘플링
+set.seed(1234)
+
+## 트레이닝(67%), 테스트(33%)
+iris_sample <- sample(2,nrow(iris), replace=TRUE,prob = c(0.67,0.33))
+iris_training <- iris[iris_sample == 1, 1:4]
+iris_training
+iris_train_label <- iris[iris_sample ==1, 5]
+iris_train_label
+
+iris_test <- iris[iris_sample == 2, 1:4]
+iris_test
+iris_test_label <- iris[iris_sample ==2, 5]
+iris_test_label
+
+library(class)
+iris_model <- knn(iris_training,iris_test,iris_train_label, k=3)
+iris_model
+
+library(gmodels)
+CrossTable(x = iris_test_label, y = iris_model, prop.chisq=FALSE)
+
+# 어느부분에서 모델이 잘못 예측했는지 찾기
+err <- which(iris_model!=iris_test_label)
+iris_model[err]
+iris_test_label[err]
+```
+

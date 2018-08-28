@@ -79,7 +79,7 @@ train <- food[, c(2, 3)]
 label <- food[, 4]
 test <- data.frame(sweetness=6,crunchiness=4)
 
-knn(train, test, label, prob=T)
+knn(train, test, label, k=3, prob=T)
 ```
 ```{r}
 library(ggplot2)

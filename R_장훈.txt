@@ -2180,3 +2180,199 @@ df <- na.omit(data.frame(name=names, lon=gc$lon, lat=gc$lat))
 cen <- c(mean(df$lon), mean(df$lat))
 map <- get_googlemap(center=cen, maptype='satellite', zoom=10, markers = gc)
 ggmap(map)+geom_point(data=df, aes(x=lon, y=lat), size=result[1:NROW(df)], alpha=0.3, color='orange')+ geom_text(data = df, aes(x=lon, y=lat, label=df$name), col='black', size=2, vjust=-1.2)
+
+[문제182] noise.txt 데이터를 시각화 하세요.
+
+데이터 읽어오기
+```{r}
+getwd()
+setwd('C:/Users/stu/git/DA_Academy')
+# read.csv
+raw <- read.csv('noise.txt', header = F, stringsAsFactors = F, sep = ' ')
+raw <- as.double(unlist(raw))
+
+# read.table
+# raw <- read.table('noise.txt')
+```
+
+히스토그램
+```{r}
+data <- raw
+minimum <- (min(data)%/%10)*10
+maximum <- ((max(data)%/%10)+1)*10
+step <- 5
+
+hist(data, breaks=seq(minimum, maximum, step), right = F, ylim=c(0, 10+(3*step)), col=rainbow(8), border=F, labels=T, main = 'Noise.txt의 데이터 분포', xlab='구간', ylab= '', axes=F)
+axis(1, at=seq(minimum, maximum, step), labels=seq(minimum, maximum, step), las=1)
+```
+
+꺾은선 그래프
+```{r}
+library(ggplot2)
+data <- round(raw)
+minimum <- (min(data)%/%10)*10
+maximum <- ((max(data)%/%10)+1)*10
+step <- 5
+
+freq <- table(cut(data, breaks=seq(minimum, maximum, step), right=F))
+name <- names(freq)
+name <- gsub('[[]', '', name)
+name <- gsub(',', '이상 ', name)
+name <- gsub(')', '미만', name)
+names(freq) <- name
+data <- as.data.frame(freq)
+
+ggplot(data, aes(x=Var1, y=Freq, group=1))+ggtitle('Noise.txt의 분포')+labs(x='구간', y='분포')+geom_line()+geom_point()
+```
+
+[문제183] noise.txt 데이터에서 25%의 기준 데이터 75%의 기준 데이터를 찾으세요.
+```{r}
+raw <- read.csv('noise.txt', header = F, stringsAsFactors = F, sep = ' ')
+raw <- as.double(unlist(raw))
+
+findCriteria <- function(data, percentile, decreasing = F){
+  if(decreasing==T){data <- sort(data, decreasing = T)}else{data <- sort(data, decreasing = F)}
+  return(data[ceiling(length(data)*(percentile/100))])
+}
+
+# 하위 25% 기준 데이터
+findCriteria(raw, 25, F)
+
+# 하위 75% 기준 데이터
+findCriteria(raw, 75, F)
+
+# 상위 75% 기준 데이터
+findCriteria(raw, 75, T)
+```
+
+### quantile()
+* 데이터의 4분위수 리턴
+* quantile(데이터, type=2)
+```{r}
+quantile(raw, type=2)['25%']
+```
+
+
+[문제184] food.csv 데이터를 기준으로 토마토의 sweetness은 6,  crunchiness은 4 입니다. 분류를 하세요.
+```{r}
+food <- read.csv('food.csv', stringsAsFactors = F, header = T)
+food
+
+train <- food[, c(2, 3)]
+label <- food[, 4]
+test <- data.frame(sweetness=6,crunchiness=4)
+
+knn(train, test, label, k=3, prob=T)
+```
+```{r}
+library(ggplot2)
+tomato <- data.frame(ingredient='tomato', sweetness=6,crunchiness=4)
+ggplot(data=food, aes(x=sweetness, y=crunchiness))+labs(title='What is tomato class?') + geom_point(aes(color=class, shape=class), size=6) + geom_text(aes(label=ingredient), vjust=-1, size=5)+geom_point(data=tomato, colour='black', size=6)+geom_text(data=tomato, aes(label=ingredient), vjust=-2, size=5, fontface='bold')
+
+data.frame(ingredient=food[,1], distinct=sqrt((food[,2] - tomato[, 2])^2 + (food[,3] - tomato[,3]^2)))
+```
+
+[문제185]  나이, 월수입, 상품구매여부를 갖는 데이터가 있다.
+이 데이터를 이용해서 나이가 44 이고 월급이 400 만원인 사람이
+상품을 구매할지 비구매할지를 knn 분류 알고리즘으로 분석하세요.
+```{r}
+library(class)
+setwd('C:/Users/stu/git/DA_Academy')
+
+buy <- read.csv('buy.csv', stringsAsFactors = F, header = T)
+train <- buy[, -3]
+label <- buy[, 3]
+test <- data.frame(나이=44, 월수입=440)
+
+# 표준정규화
+print('비표준화, K=1')
+knn(train = train, test = test, cl = label, k = 1, prob = T)
+print('비표준화, K=3')
+knn(train = train, test = test, cl = label, k = 3, prob = T)
+print('비표준화, K=5')
+knn(train = train, test = test, cl = label, k = 5, prob = T)
+print('*************************************************')
+
+train1 <- scale(buy[,-3])
+test1 <- matrix(c((44-mean(buy$나이))/sd(buy$나이), (440-mean(buy$월수입))/sd(buy$월수입)),nrow = 1)
+print('표준화, K=1')
+knn(train1, test1, label, k=1, prob=T)
+print('표준화, K=3')
+knn(train1, test1, label, k=3, prob=T)
+print('표준화, K=5')
+knn(train1, test1, label, k=5, prob=T)
+
+# 0-1 변환
+temp <- data.frame(나이=44, 월수입=440, 상품구매여부=NA)
+buy1 <- rbind(buy, temp)
+train1 <- buy1[, -3]
+label <- buy1[-22, 3]
+
+for(i in 1:length(train1)){
+  cmax <- max(train1[, i])
+  cmin <- min(train1[, i])
+  for(j in 1:NROW(train1)){
+    train1[j, i] <- (train1[j, i]-cmin)/(cmax-cmin)
+  }
+}
+
+test1 <- train1[22, ]
+train1 <- train1[-22,]
+
+print('0-1표준화, K=1')
+knn(train1, test1, label, k=1, prob=T)
+print('0-1표준화, K=3')
+knn(train1, test1, label, k=3, prob=T)
+print('0-1표준화, K=5')
+knn(train1, test1, label, k=5, prob=T)
+```
+
+[문제186] zoo.csv 데이터 집합은 동물의 특징과 부류 정보가 있습니다. 
+	  특정 데이터 동물 정보가 어느 부류에 속하는 지를 knn 알고리즘을 이용해서 분석하세요.
+
+[변수 정보]
+
+   1. animal name:      Unique for each instance
+   2. hair		Boolean
+   3. feathers		Boolean
+   4. eggs		Boolean
+   5. milk		Boolean
+   6. airborne		Boolean
+   7. aquatic		Boolean
+   8. predator		Boolean
+   9. toothed		Boolean
+  10. backbone		Boolean
+  11. breathes		Boolean
+  12. venomous		Boolean
+  13. fins		Boolean
+  14. legs		Numeric (set of values: {0,2,4,5,6,8})
+  15. tail		Boolean
+  16. domestic		Boolean
+  17. catsize		Boolean
+  18. type		Numeric (integer values in range [1,7])
+
+[18. type]
+1 : 포유류
+2 : 조류
+3 : 파충류
+4 : 어류
+5 : 양서류 
+6 : 곤충
+7 : 갑각류 
+```{r}
+zoo <- read.csv('zoo.csv', header = F, stringsAsFactors = F)
+dim(zoo)
+train <- zoo[-101,-c(1, 18)]
+test <- zoo[101, -c(1, 18)]
+label <- zoo[-101, 18]
+type <- c('포유류', '조류', '파충류', '어류', '양서류', '곤충', '갑각류')
+for(i in 1:length(type)){
+  label[grep(i, label)] <- type[i]
+}
+label
+
+train
+test
+knn(train, test, label, k=3, prob=T)
+
+```
