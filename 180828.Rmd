@@ -207,7 +207,7 @@ library(gmodels)
 
 ## gmodels
 ### CrossTable()
-* 모델이 예측한 값과 실제 값을 비교하기 위한 cross table 생
+* 모델이 예측한 값과 실제 값을 비교하기 위한 cross table 
 ```{r}
 CrossTable(x = iris_test_label, y = iris_model, prop.chisq=FALSE)
 ```

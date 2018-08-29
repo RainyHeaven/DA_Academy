@@ -1,0 +1,452 @@
+[문제187] 유방암 데이터 입니다. kNN알고리즘을 이용해서 훈련데이터셋,테스트데이터셋을 이용해서 분류가 잘되는지 확인하세요.
+- 위스콘신대학의 연구원들의 자료
+- 유방 종양의 미세침 흡인물 디지털 이미지에서 측정한 값 이며 이 값은 디지털 이미지에 나타난 세포 핵의 특징이다.
+- 암조직 검사에 대한 관측값은 569개, 변수(속성) 32
+- 식별숫자, 암진단 여부(악성(Malignant),양성(Benign)), 30개 수치 측정치
+- 세포핵의 모양과 크기관련된 10개 특성
+	* radius(반지름)
+	* texture(질감)
+	* perimeter(둘레)
+	* area(넓이)
+	* smoothness(매끄러움)
+	* compactness(조밀성)
+	* concavity(오목함)
+	* concave points(오목점)
+	* symmetry(대칭성)
+	* fractal dimension(프랙탈 차원)
+	
+```{r}
+rm(list=ls())
+raw <- read.csv('wisc_bc_data.csv', header = T, stringsAsFactors = F)
+str(raw)
+summary(raw)
+
+label <- raw[, 2]
+data <- scale(raw[, -c(1,2)])
+summary(data)
+
+trainIdx <- sample(NROW(data), ((NROW(data)*70)%/%100), replace = F)
+train <- data[trainIdx,]
+trainLabel <- label[trainIdx]
+
+test <- data[-trainIdx, ]
+testLabel <- label[-trainIdx]
+
+dim(train)
+dim(test)
+dim(trainLabel)
+
+kNum <- sample(c(floor(sqrt(NROW(train))), 3, 5, 7, 9), 1)
+knn(train, test, trainLabel, kNum, prob = T)
+cancerModel <- knn(train, test, trainLabel, kNum)
+
+which(cancerModel!=testLabel)
+
+library(gmodels)
+CrossTable(testLabel, cancerModel, prop.chisq = F)
+```
+
+사용할 변수를 줄여보자
+```{r}
+colnames(data)
+keyword <- 'worst'
+featureIdx <- grep(pattern = keyword, x = colnames(data), ignore.case = T)
+
+set.seed(86)
+trainIdx <- sample(NROW(data), ((NROW(data)*70)%/%100), replace = F)
+
+train <- data[trainIdx,featureIdx]
+trainLabel <- label[trainIdx]
+
+test <- data[-trainIdx, featureIdx]
+testLabel <- label[-trainIdx]
+
+knn(train, test, trainLabel, kNum, prob = T)
+cancerModel <- knn(train, test, trainLabel, kNum)
+
+CrossTable(testLabel, cancerModel, prop.chisq = F)
+```
+
+선생님답
+```{r}
+1 단계 : 데이터 수집
+- 위스콘신대학의 연구원들의 자료
+- 유방 종양의 미세침 흡인물 디지털 이미지에서 측정한 값 이며 이 값은 디지털 
+이미지에 나타난 세포 핵의 특징이다.
+- 암조직 검사에 대한 관측값은 569개, 변수(속성) 32
+- 식별숫자, 암진단 여부(악성(Malignant),양성(Benign)), 30개 수치 측정치
+- 세포핵의 모양과 크기관련된 10개 특성
+* radius(반지름)
+* texture(질감)
+* perimeter(둘레)
+* area(넓이)
+* smoothness(매끄러움)
+* compactness(조밀성)
+* concavity(오목함)
+* concave points(오목점)
+* symmetry(대칭성)
+* fractal dimension(프랙탈 차원)
+
+
+2 단계  : 데이터 준비
+
+wbcd <- read.csv("c:/data/wisc_bc_data.csv", stringsAsFactors = FALSE)
+
+str(wbcd)
+head(wbcd)
+
+
+# id 속성 제거
+wbcd <- wbcd[-1]
+
+
+# diagnosis 변수 결과 악성212 양성 357
+table(wbcd$diagnosis)
+
+
+# 팩터로서 진단 변수 변환
+wbcd$diagnosis <- factor(wbcd$diagnosis, levels = c("B", "M"), labels = c
+                         ("Benign", "Malignant"))
+head(wbcd)
+
+
+# 진단 변수의 비율
+round(prop.table(table(wbcd$diagnosis)) * 100, digits = 1) # round 함수에 digit 인자를 통해 소수점 표현 가능
+
+Benign Malignant 
+62.7      37.3 
+
+
+# 세 속성에 대한 요약
+summary(wbcd[c("radius_mean", "area_mean", "smoothness_mean")])
+
+# 정규화 함수
+normalize <- function(x) {
+  return ((x - min(x)) / (max(x) - min(x)))
+}
+
+# wbcd 데이터 정규화
+wbcd_n <- as.data.frame(lapply(wbcd[2:31], normalize))
+
+head(wbcd)
+head(wbcd_n)
+
+# 정규화가 잘 되었는지 확인 
+summary(wbcd_n$area_mean)
+summary(wbcd_n$concavity_worst)
+
+# 훈련 데이터와 테스트 데이터 생성 
+n <- sample(1:569,400)
+
+wbcd_train <- wbcd_n[n,]
+wbcd_test <- wbcd_n[-n,] 
+
+
+# 훈련 데이터와 테스트 데이터에 대한 라벨 생성
+wbcd_train_labels <- wbcd[n, 1]
+wbcd_test_labels <- wbcd[-n, 1]
+
+round(prop.table(table(wbcd_train_labels)) * 100)
+round(prop.table(table(wbcd_test_labels)) * 100)
+
+## 3단계 : 데이터로 모델 훈련 
+library(class)
+wbcd_test_pred <- knn(train = wbcd_train, test = wbcd_test, cl = 
+                        wbcd_train_labels, k=21)
+
+## 4 단계 : 모델 성능 평가 
+library(gmodels)
+
+# 예측값과 실제값의 교차표 생성
+CrossTable(x = wbcd_test_labels, y = wbcd_test_pred, prop.chisq=FALSE)
+
+                 | wbcd_test_pred 
+wbcd_test_labels |    Benign | Malignant | Row Total | 
+-----------------|-----------|-----------|-----------|
+          Benign |       102 |         2 |       104 | 
+                 |     0.981 |     0.019 |     0.615 | 
+                 |     0.971 |     0.031 |           | 
+                 |     0.604 |     0.012 |           | 
+-----------------|-----------|-----------|-----------|
+       Malignant |         3 |        62 |        65 | 
+                 |     0.046 |     0.954 |     0.385 | 
+                 |     0.029 |     0.969 |           | 
+                 |     0.018 |     0.367 |           | 
+-----------------|-----------|-----------|-----------|
+    Column Total |       105 |        64 |       169 | 
+                 |     0.621 |     0.379 |           | 
+-----------------|-----------|-----------|-----------|
+
+
+# 분류 정확도 계산하기
+
+ 
+sum(wbcd_test_pred == wbcd_test_labels ) / length(wbcd_test_labels)
+[1] 0.9704142
+
+
+
+## 5 단계 : 모델 성능 향상 
+
+# 데이터 프레임를 z-score 표준화하기 위해 scale() 함수 사용
+wbcd_z <- as.data.frame(scale(wbcd[-1]))
+
+# 변환이 정확하게 적용되었는지 확인
+summary(wbcd_z$area_mean)
+
+# 훈련과 테스트 데이터셋 생성
+
+n <- sample(1:569,400)
+
+wbcd_train <- wbcd_z[n,]
+wbcd_test <- wbcd_z[-n,] 
+
+
+# 훈련 데이터와 테스트 데이터에 대한 라벨 생성
+
+wbcd_train_labels <- wbcd[n, 1]
+wbcd_test_labels <- wbcd[-n, 1]
+
+# 변경한 데이터로 분류 
+wbcd_test_pred <- knn(train = wbcd_train, test = wbcd_test, cl = 
+                        wbcd_train_labels, k=21)
+
+# 예측값과 실제값의 교차표 생성
+CrossTable(x = wbcd_test_labels, y = wbcd_test_pred, prop.chisq=FALSE)
+
+# 다른 k 값으로 분류
+wbcd_test_pred <- knn(train = wbcd_train, test = wbcd_test, cl = 
+                        wbcd_train_labels, k=1)
+CrossTable(x = wbcd_test_labels, y = wbcd_test_pred, prop.chisq=FALSE)
+
+wbcd_test_pred <- knn(train = wbcd_train, test = wbcd_test, cl = 
+                        wbcd_train_labels, k=5)
+CrossTable(x = wbcd_test_labels, y = wbcd_test_pred, prop.chisq=FALSE)
+
+wbcd_test_pred <- knn(train = wbcd_train, test = wbcd_test, cl = 
+                        wbcd_train_labels, k=11)
+CrossTable(x = wbcd_test_labels, y = wbcd_test_pred, prop.chisq=FALSE)
+
+wbcd_test_pred <- knn(train = wbcd_train, test = wbcd_test, cl = 
+                        wbcd_train_labels, k=15)
+CrossTable(x = wbcd_test_labels, y = wbcd_test_pred, prop.chisq=FALSE)
+
+
+# 분류 정확도 계산하기
+
+sum(wbcd_test_pred == wbcd_test_labels ) / length(wbcd_test_labels )
+```
+
+
+[문제188] 새환자의 초음파 결과를 보고 종양이 양성인지 악성인지를 분석해 주세요
+```{r}
+patient <- read.csv('patient.csv', header = T, stringsAsFactors = F)
+raw <- read.csv('wisc_bc_data.csv', header = T, stringsAsFactors = F)
+
+data <- raw[, -c(1,2)]
+label <- raw[, 2]
+
+test <- patient[, -c(1,2)]
+data <- scale(rbind(data, test))
+summary(data)
+
+test <- data[NROW(data), ]
+data <- data[-NROW(data), ]
+
+kNum <- sample(c(floor(sqrt(NROW(data))), 3, 5, 7, 9), 1)
+
+knn(data, test, label, kNum, prob=T) # B(양성)
+
+# feature를 줄여서 시도
+keyword <- 'worst'
+featureIdx <- grep(pattern = keyword, x = colnames(data), ignore.case = T)
+
+train <- data[,featureIdx]
+test <- test[featureIdx]
+
+knn(train, test, label, kNum, prob = T) # B(양성)
+```
+
+[문제189] JOB_ID 별로 월급의 차이가 존재하는지 crosstable로 분석하려고 합니다.
+월급 10000을 기준으로 JOB_ID 별로 각각 10000 이상인 사원과 이하인 사원들의 인원수가 출력하세요. 
+```{r}
+library(gmodels)
+emp <- read.csv('emp_new.csv', header = T, stringsAsFactors = F)
+splitBySal <- cut(emp$SALARY, c(0, 10000, 30000), right=F, labels=c('under', 'over'))
+emp$sal[splitBySal=='under'] <- 'under'
+emp$sal[splitBySal=='over'] <- 'over'
+
+CrossTable(emp$JOB_ID, emp$sal, prop.chisq=F)
+```
+
+[문제190] 수강생이 다른 세 반의 평균은?
+반    수강생    반평균
+1반   40        70
+2반   35        75
+3반   25        80
+```{r}
+((40*70)+(35*75)+(25*80))/(40+35+25)
+```
+
+[문제191] 홍하든, 박커리 두 학생이 확률통계(3학점), 컴퓨터시스템(2학점)을 수강한 결과 홍하든은 확률통계에서 A학점, 컴퓨터시스템에서 B학점을 받았고 박커리는 확률통계에서 B학점 컴퓨터 시스템에서 A학점을 받았다. A학점의 평점은 4, B학점의 평점은 3일때 학점 수를 가중치로 하여 두 학생의 평균평점을 구하세요.
+```{r}
+harden <- ((3*4)+(2*3))/(3+2)
+curry <- ((3*3)+(2*4))/(3+2)
+both <- ((3*4)+(2*3)+(3*3)+(2*4))/((3+2)*2)
+```
+
+[문제192] 전년도 대비 증가율을 구하세요.
+년도    수익    증가율
+2013    635
+2014    998
+2015    1265
+2016    1701
+2017    2363
+```{r}
+data <- data.frame(year=c(2013,2014, 2015, 2016, 2017), income = c(635, 998, 1265, 1701, 2363), growth=0)
+
+for(i in 2:NROW(data)){
+  data$growth[i] <- ((data$income[i]-data$income[i-1])/data$income[i-1])*100
+}
+data
+```
+
+[문제193] 5년동안 연평균 변화율은?
+```{r}
+(2363/635)^(1/4)-1
+```
+
+[문제194] 서울과 부산(400km)를 왕복하는데 서울에서 부산까지 시속 150km/h로 가고 돌아올 때 시속 100km로 왔다면 왕복하는데 걸린 평균 시속은?
+```{r}
+800/((400/150)+(400/100))
+```
+
+[문제195] 가구당 자녀수
+```{r}
+p <- c(2,3,0,2,1,0,3,0,1,4)
+mean(p)
+sd(p)
+# 1.6 ± 1.4
+
+```
+
+[문제196] 병원진료시간 어느 병원으로 가면 좋을까요?
+A병원 10 15 17 17 23 20
+B병원 17 32 5  19 20 9
+```{r}
+aWait <- c(10, 15, 17, 23, 20)
+bWait <- c(17, 32, 5, 19, 20, 9)
+
+mean(aWait) - mean(bWait)
+sd(aWait) - sd(bWait)
+```
+
+[문제197]관측데이터값들을 확인 한 후 NA값이 있을 경우 산술평균으로 넣어주세요.
+```{r}
+data <- c(1, 3, 4, NA, 10, NA, 8, 2)
+summary(data)
+data[is.na(data)] <- mean(data[!is.na(data)])
+data
+```
+
+[문제198] 관측데이터값들을 확인 한 후 NA값이 있을 경우 내가 만든 함수를 통해서 산술평균의 값으로 수정해주세요.
+```{r}
+data <- c(1,3,4,NA,10,NA,8,2)
+fillNA <- function(data){
+  result <- data
+  result[is.na(result)] <- mean(result[!is.na(result)])
+  return(result)
+}
+
+fillNA(data)
+```
+
+[문제199] sample함수를 통해서 1부터 100까지의 숫자들 중에 60개만 랜덤하게 추출하여 6행의 matrix를 생성하세요. 생성한 행렬의 값 중에 3행 2열에 NA값, 5행 4열에 NA값으로 수정하세요. 198번에서 만든 함수를 이용하여 NA값은 열을 기준으로 하는 평균값으로 수정하세요.
+```{r}
+data <- matrix(sample(1:100, 60, replace = F), nrow = 6)
+data[3, 2] <- NA
+data[5, 4] <- NA
+
+for(i in 1:NCOL(data)){
+  data[, i] <- fillNA(data[,i])
+}
+data
+```
+
+**************************************************************************************
+
+# 자료의 중심
+## 중심위치(central location)
+* 관찰된 자료들이 어디에 집중되어 있는가를 나타냄
+* 대표값(대표할 수 있는 값)
+* 평균, 중앙값, 최빈값
+
+## 산술평균(mean)
+* 자료들의 무게중심
+* μ(모집단의 평균) 
+* ￣x (표본의 평균)
+```{r}
+x <- 1:5
+mean(x)
+```
+
+## 가중평균(Weighted mean)
+* 각 항의 수치에 그 중요도에 비례하는 계수를 곱한 다음 산출한 평균
+* 정밀도나 들어온 양이 같지 않은 물품의 평균 가격처럼 원래의 수치가 동등하지 않다고 생각되는 경우 사용
+```{r}
+#중간고사와 기말고사의 합
+(70*기말고사) + (30*중간고사) / (70+30)
+```
+
+## 기하평균(Gemetric mean)
+* 곱의 형태로 변하는 자료
+* 비율의 평균 계산에 많이 사용
+* 물가 상승률, 인구 변동률, 연평균 증가율
+* 숫자들을 모두 곱하고 n제곱근을 해서 얻는 평
+
+## 절단평균(절사평균, Trimmed mean)
+* 자료중에서 큰 관측값이나 작은 관측값을 일정 수만큼 버린 나머지 관측값들의 평균
+* 평균은 양쪽 끝값(최대, 최소)의 변화에 민감하다
+* 최소, 최대를 제거한 후 평균
+* 스포츠 경기에 많이 사
+* 2014년 국회의원 재산공개 
+  - 평균 97억 5667만원
+  - 500억 이상을 제외한 평균 18억 686만
+
+## 중앙값(median)
+* 중심으로 좌우 분포 면적이 같다
+* 이상치의 영향을 받지 않음
+* 자료를 순서대로 늘어놓고 전체 자료 갯수에서 50%가 되는 값
+
+## 최빈값(mode)
+* 가장 많은 빈도로 등장하는 값
+
+# 자료의 퍼진 정도
+* 대표값을 중심으로 자료들이 얼마나 퍼져있는지를 나타내는 값
+
+## 범위(range): max- min
+## 편차(deviation): 관측값 - 평균 / 편차의 합은 0
+```{r}
+h <- c(168, 174, 171, 165, 177)
+dev <- h-mean(h)
+```
+
+## 분산(Variance)
+* 개별 자료들이 평균에 대해 얼마만큼 떨어져 있을지 기대하는 값
+```{r}
+var(h)
+
+# 모분산
+sum((h-mean(h))^2)/length(h)
+
+# 표본분산
+sum((h-mean(h))^2)/(length(h)-1)
+
+# 표준편차
+sqrt(sum((h-mean(h))^2)/(length(h)-1))
+
+mean(h)
+sd(h)
+# 171 ± 4.74
+```
+
