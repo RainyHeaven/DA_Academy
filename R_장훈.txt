@@ -2376,3 +2376,587 @@ test
 knn(train, test, label, k=3, prob=T)
 
 ```
+
+[문제187] 유방암 데이터 입니다. kNN알고리즘을 이용해서 훈련데이터셋,테스트데이터셋을 이용해서 분류가 잘되는지 확인하세요.
+- 위스콘신대학의 연구원들의 자료
+- 유방 종양의 미세침 흡인물 디지털 이미지에서 측정한 값 이며 이 값은 디지털 이미지에 나타난 세포 핵의 특징이다.
+- 암조직 검사에 대한 관측값은 569개, 변수(속성) 32
+- 식별숫자, 암진단 여부(악성(Malignant),양성(Benign)), 30개 수치 측정치
+- 세포핵의 모양과 크기관련된 10개 특성
+	* radius(반지름)
+	* texture(질감)
+	* perimeter(둘레)
+	* area(넓이)
+	* smoothness(매끄러움)
+	* compactness(조밀성)
+	* concavity(오목함)
+	* concave points(오목점)
+	* symmetry(대칭성)
+	* fractal dimension(프랙탈 차원)
+	
+```{r}
+rm(list=ls())
+raw <- read.csv('wisc_bc_data.csv', header = T, stringsAsFactors = F)
+str(raw)
+summary(raw)
+
+label <- raw[, 2]
+data <- scale(raw[, -c(1,2)])
+summary(data)
+
+trainIdx <- sample(NROW(data), ((NROW(data)*70)%/%100), replace = F)
+train <- data[trainIdx,]
+trainLabel <- label[trainIdx]
+
+test <- data[-trainIdx, ]
+testLabel <- label[-trainIdx]
+
+dim(train)
+dim(test)
+dim(trainLabel)
+
+kNum <- sample(c(floor(sqrt(NROW(train))), 3, 5, 7, 9), 1)
+knn(train, test, trainLabel, kNum, prob = T)
+cancerModel <- knn(train, test, trainLabel, kNum)
+
+which(cancerModel!=testLabel)
+
+library(gmodels)
+CrossTable(testLabel, cancerModel, prop.chisq = F)
+```
+
+사용할 변수를 줄여보자
+```{r}
+colnames(data)
+keyword <- 'worst'
+featureIdx <- grep(pattern = keyword, x = colnames(data), ignore.case = T)
+
+set.seed(86)
+trainIdx <- sample(NROW(data), ((NROW(data)*70)%/%100), replace = F)
+
+train <- data[trainIdx,featureIdx]
+trainLabel <- label[trainIdx]
+
+test <- data[-trainIdx, featureIdx]
+testLabel <- label[-trainIdx]
+
+knn(train, test, trainLabel, kNum, prob = T)
+cancerModel <- knn(train, test, trainLabel, kNum)
+
+CrossTable(testLabel, cancerModel, prop.chisq = F)
+```
+
+선생님답
+```{r}
+1 단계 : 데이터 수집
+- 위스콘신대학의 연구원들의 자료
+- 유방 종양의 미세침 흡인물 디지털 이미지에서 측정한 값 이며 이 값은 디지털 
+이미지에 나타난 세포 핵의 특징이다.
+- 암조직 검사에 대한 관측값은 569개, 변수(속성) 32
+- 식별숫자, 암진단 여부(악성(Malignant),양성(Benign)), 30개 수치 측정치
+- 세포핵의 모양과 크기관련된 10개 특성
+* radius(반지름)
+* texture(질감)
+* perimeter(둘레)
+* area(넓이)
+* smoothness(매끄러움)
+* compactness(조밀성)
+* concavity(오목함)
+* concave points(오목점)
+* symmetry(대칭성)
+* fractal dimension(프랙탈 차원)
+
+
+2 단계  : 데이터 준비
+
+wbcd <- read.csv("c:/data/wisc_bc_data.csv", stringsAsFactors = FALSE)
+
+str(wbcd)
+head(wbcd)
+
+
+# id 속성 제거
+wbcd <- wbcd[-1]
+
+
+# diagnosis 변수 결과 악성212 양성 357
+table(wbcd$diagnosis)
+
+
+# 팩터로서 진단 변수 변환
+wbcd$diagnosis <- factor(wbcd$diagnosis, levels = c("B", "M"), labels = c
+                         ("Benign", "Malignant"))
+head(wbcd)
+
+
+# 진단 변수의 비율
+round(prop.table(table(wbcd$diagnosis)) * 100, digits = 1) # round 함수에 digit 인자를 통해 소수점 표현 가능
+
+Benign Malignant 
+62.7      37.3 
+
+
+# 세 속성에 대한 요약
+summary(wbcd[c("radius_mean", "area_mean", "smoothness_mean")])
+
+# 정규화 함수
+normalize <- function(x) {
+  return ((x - min(x)) / (max(x) - min(x)))
+}
+
+# wbcd 데이터 정규화
+wbcd_n <- as.data.frame(lapply(wbcd[2:31], normalize))
+
+head(wbcd)
+head(wbcd_n)
+
+# 정규화가 잘 되었는지 확인 
+summary(wbcd_n$area_mean)
+summary(wbcd_n$concavity_worst)
+
+# 훈련 데이터와 테스트 데이터 생성 
+n <- sample(1:569,400)
+
+wbcd_train <- wbcd_n[n,]
+wbcd_test <- wbcd_n[-n,] 
+
+
+# 훈련 데이터와 테스트 데이터에 대한 라벨 생성
+wbcd_train_labels <- wbcd[n, 1]
+wbcd_test_labels <- wbcd[-n, 1]
+
+round(prop.table(table(wbcd_train_labels)) * 100)
+round(prop.table(table(wbcd_test_labels)) * 100)
+
+## 3단계 : 데이터로 모델 훈련 
+library(class)
+wbcd_test_pred <- knn(train = wbcd_train, test = wbcd_test, cl = 
+                        wbcd_train_labels, k=21)
+
+## 4 단계 : 모델 성능 평가 
+library(gmodels)
+
+# 예측값과 실제값의 교차표 생성
+CrossTable(x = wbcd_test_labels, y = wbcd_test_pred, prop.chisq=FALSE)
+
+                 | wbcd_test_pred 
+wbcd_test_labels |    Benign | Malignant | Row Total | 
+-----------------|-----------|-----------|-----------|
+          Benign |       102 |         2 |       104 | 
+                 |     0.981 |     0.019 |     0.615 | 
+                 |     0.971 |     0.031 |           | 
+                 |     0.604 |     0.012 |           | 
+-----------------|-----------|-----------|-----------|
+       Malignant |         3 |        62 |        65 | 
+                 |     0.046 |     0.954 |     0.385 | 
+                 |     0.029 |     0.969 |           | 
+                 |     0.018 |     0.367 |           | 
+-----------------|-----------|-----------|-----------|
+    Column Total |       105 |        64 |       169 | 
+                 |     0.621 |     0.379 |           | 
+-----------------|-----------|-----------|-----------|
+
+
+# 분류 정확도 계산하기
+
+ 
+sum(wbcd_test_pred == wbcd_test_labels ) / length(wbcd_test_labels)
+[1] 0.9704142
+
+
+
+## 5 단계 : 모델 성능 향상 
+
+# 데이터 프레임를 z-score 표준화하기 위해 scale() 함수 사용
+wbcd_z <- as.data.frame(scale(wbcd[-1]))
+
+# 변환이 정확하게 적용되었는지 확인
+summary(wbcd_z$area_mean)
+
+# 훈련과 테스트 데이터셋 생성
+
+n <- sample(1:569,400)
+
+wbcd_train <- wbcd_z[n,]
+wbcd_test <- wbcd_z[-n,] 
+
+
+# 훈련 데이터와 테스트 데이터에 대한 라벨 생성
+
+wbcd_train_labels <- wbcd[n, 1]
+wbcd_test_labels <- wbcd[-n, 1]
+
+# 변경한 데이터로 분류 
+wbcd_test_pred <- knn(train = wbcd_train, test = wbcd_test, cl = 
+                        wbcd_train_labels, k=21)
+
+# 예측값과 실제값의 교차표 생성
+CrossTable(x = wbcd_test_labels, y = wbcd_test_pred, prop.chisq=FALSE)
+
+# 다른 k 값으로 분류
+wbcd_test_pred <- knn(train = wbcd_train, test = wbcd_test, cl = 
+                        wbcd_train_labels, k=1)
+CrossTable(x = wbcd_test_labels, y = wbcd_test_pred, prop.chisq=FALSE)
+
+wbcd_test_pred <- knn(train = wbcd_train, test = wbcd_test, cl = 
+                        wbcd_train_labels, k=5)
+CrossTable(x = wbcd_test_labels, y = wbcd_test_pred, prop.chisq=FALSE)
+
+wbcd_test_pred <- knn(train = wbcd_train, test = wbcd_test, cl = 
+                        wbcd_train_labels, k=11)
+CrossTable(x = wbcd_test_labels, y = wbcd_test_pred, prop.chisq=FALSE)
+
+wbcd_test_pred <- knn(train = wbcd_train, test = wbcd_test, cl = 
+                        wbcd_train_labels, k=15)
+CrossTable(x = wbcd_test_labels, y = wbcd_test_pred, prop.chisq=FALSE)
+
+
+# 분류 정확도 계산하기
+
+sum(wbcd_test_pred == wbcd_test_labels ) / length(wbcd_test_labels )
+```
+
+
+[문제188] 새환자의 초음파 결과를 보고 종양이 양성인지 악성인지를 분석해 주세요
+```{r}
+patient <- read.csv('patient.csv', header = T, stringsAsFactors = F)
+raw <- read.csv('wisc_bc_data.csv', header = T, stringsAsFactors = F)
+
+data <- raw[, -c(1,2)]
+label <- raw[, 2]
+
+test <- patient[, -c(1,2)]
+data <- scale(rbind(data, test))
+summary(data)
+
+test <- data[NROW(data), ]
+data <- data[-NROW(data), ]
+
+kNum <- sample(c(floor(sqrt(NROW(data))), 3, 5, 7, 9), 1)
+
+knn(data, test, label, kNum, prob=T) # B(양성)
+
+# feature를 줄여서 시도
+keyword <- 'worst'
+featureIdx <- grep(pattern = keyword, x = colnames(data), ignore.case = T)
+
+train <- data[,featureIdx]
+test <- test[featureIdx]
+
+knn(train, test, label, kNum, prob = T) # B(양성)
+```
+
+[문제189] JOB_ID 별로 월급의 차이가 존재하는지 crosstable로 분석하려고 합니다.
+월급 10000을 기준으로 JOB_ID 별로 각각 10000 이상인 사원과 이하인 사원들의 인원수가 출력하세요. 
+```{r}
+library(gmodels)
+emp <- read.csv('emp_new.csv', header = T, stringsAsFactors = F)
+splitBySal <- cut(emp$SALARY, c(0, 10000, 30000), right=F, labels=c('under', 'over'))
+emp$sal[splitBySal=='under'] <- 'under'
+emp$sal[splitBySal=='over'] <- 'over'
+
+CrossTable(emp$JOB_ID, emp$sal, prop.chisq=F)
+```
+
+[문제190] 수강생이 다른 세 반의 평균은?
+반    수강생    반평균
+1반   40        70
+2반   35        75
+3반   25        80
+```{r}
+((40*70)+(35*75)+(25*80))/(40+35+25)
+```
+
+[문제191] 홍하든, 박커리 두 학생이 확률통계(3학점), 컴퓨터시스템(2학점)을 수강한 결과 홍하든은 확률통계에서 A학점, 컴퓨터시스템에서 B학점을 받았고 박커리는 확률통계에서 B학점 컴퓨터 시스템에서 A학점을 받았다. A학점의 평점은 4, B학점의 평점은 3일때 학점 수를 가중치로 하여 두 학생의 평균평점을 구하세요.
+```{r}
+harden <- ((3*4)+(2*3))/(3+2)
+curry <- ((3*3)+(2*4))/(3+2)
+both <- ((3*4)+(2*3)+(3*3)+(2*4))/((3+2)*2)
+```
+
+[문제192] 전년도 대비 증가율을 구하세요.
+년도    수익    증가율
+2013    635
+2014    998
+2015    1265
+2016    1701
+2017    2363
+```{r}
+data <- data.frame(year=c(2013,2014, 2015, 2016, 2017), income = c(635, 998, 1265, 1701, 2363), growth=0)
+
+for(i in 2:NROW(data)){
+  data$growth[i] <- ((data$income[i]-data$income[i-1])/data$income[i-1])*100
+}
+data
+```
+
+[문제193] 5년동안 연평균 변화율은?
+```{r}
+(2363/635)^(1/4)-1
+```
+
+[문제194] 서울과 부산(400km)를 왕복하는데 서울에서 부산까지 시속 150km/h로 가고 돌아올 때 시속 100km로 왔다면 왕복하는데 걸린 평균 시속은?
+```{r}
+800/((400/150)+(400/100))
+```
+
+[문제195] 가구당 자녀수
+```{r}
+p <- c(2,3,0,2,1,0,3,0,1,4)
+mean(p)
+sd(p)
+# 1.6 ± 1.4
+
+```
+
+[문제196] 병원진료시간 어느 병원으로 가면 좋을까요?
+A병원 10 15 17 17 23 20
+B병원 17 32 5  19 20 9
+```{r}
+aWait <- c(10, 15, 17, 23, 20)
+bWait <- c(17, 32, 5, 19, 20, 9)
+
+mean(aWait) - mean(bWait)
+sd(aWait) - sd(bWait)
+```
+
+[문제197]관측데이터값들을 확인 한 후 NA값이 있을 경우 산술평균으로 넣어주세요.
+```{r}
+data <- c(1, 3, 4, NA, 10, NA, 8, 2)
+summary(data)
+data[is.na(data)] <- mean(data[!is.na(data)])
+data
+```
+
+[문제198] 관측데이터값들을 확인 한 후 NA값이 있을 경우 내가 만든 함수를 통해서 산술평균의 값으로 수정해주세요.
+```{r}
+data <- c(1,3,4,NA,10,NA,8,2)
+fillNA <- function(data){
+  result <- data
+  result[is.na(result)] <- mean(result[!is.na(result)])
+  return(result)
+}
+
+fillNA(data)
+```
+
+[문제199] sample함수를 통해서 1부터 100까지의 숫자들 중에 60개만 랜덤하게 추출하여 6행의 matrix를 생성하세요. 생성한 행렬의 값 중에 3행 2열에 NA값, 5행 4열에 NA값으로 수정하세요. 198번에서 만든 함수를 이용하여 NA값은 열을 기준으로 하는 평균값으로 수정하세요.
+```{r}
+data <- matrix(sample(1:100, 60, replace = F), nrow = 6)
+data[3, 2] <- NA
+data[5, 4] <- NA
+
+for(i in 1:NCOL(data)){
+  data[, i] <- fillNA(data[,i])
+}
+data
+```
+
+[문제200]A반 B 반의 수학점수를 비교하세요.
+A반 35,55,60,70,100
+B반 55,60,65,65,75
+```{r}
+classA <- c(35,55, 60, 70, 100)
+classB <- c(55, 60, 65, 65, 75)
+
+math <- rbind(summary(classA), summary(classB))
+row.names(math) <- c('A반','B반')
+math
+
+# A반과 B반의 평균은 동일하지만 A반은 점수가 넓게 분포되어 있어 학생들의 편차가 큰 반면 B반은 점수가 상대적으로 적은 편차로 분포되어 있다.
+```
+
+[문제201] 성적.csv 파일에 과목별 평균값, 분산값, 표준편차값을 행으로 추가하시오.
+```{r}
+setwd('C:/Users/stu/git/DA_Academy')
+score <- read.csv('score.csv', header = T, stringsAsFactors = F)
+total <- data.frame(name=c('Average', 'Variance', 'Standard Deviation'), sql=c(mean(score$sql), var(score$sql), sd(score$sql)), r=c(mean(score$r), var(score$r), sd(score$r)))
+total
+
+rbind(score, total)
+write.csv(x = rbind(score, total), file = 'score1.csv', row.names = F, quote = F)
+```
+
+[문제202] carrick의 sql=90점과 pogba의 r=90 둘중 어느 사람이 더 잘한 것인가?
+```{r}
+score1 <- read.csv('score1.csv', header = T, stringsAsFactors = F)
+summary(score1[-c(10:12),])
+
+# carrick / sql / 90
+# - sql 평균: 72 / 표준편차 20.4 / 최고점수 95
+
+# pogba / r / 90
+# - r 평균 72 / 표준편차 12.11 / 최고점수 90
+
+# 표준정규화 : 점수 - 평균 / 표준편차
+scale(score[,-1])
+# Carrick / sql / 0.88
+# Pogba / r / 1.48
+
+# 0-1 정규화: 점수 - 최저점 / 최고점 - 최저점
+# Carrick (90-35)/(95-35): 0.9166667 -> 92점
+# Pogba: (90-50)/(90-50): 1 -> 100점
+
+# t점수
+# Carrick 0.88*10+ 50: 58.8
+# Pogba 1.48*10+50: 64.8
+```
+
+[문제203] 지난달을 기준으로 a 사원은 영업 매출이 월 평균 1000만원, 표준편차가 200만원인  대리점을 담당하고있고,
+b 사원은 영업 매출이 월 평균 100만원, 표준편차가 10만원인 대리점을 담당하고 있다.
+이번달 a 사원이 담당하는 대리점의 매출이 1200만원으로 늘었고, b 사원이 담당하는 대리점은 120만원 늘었다.
+평균 매출 대비 20% 상승했다. 누가 잘한거죠?
+```{r}
+# 표준정규화
+## a사원
+(1200-1000)/200 # 1
+
+## b사원
+(120-100)/10 # 2
+```
+
+[문제204] 세곳의 채소농원으로부터 10일 동안 측정한 pphm 단위의 오존 농도를 보고 받았다. 오존 농도를 분석하세요.
+```{r}
+ozone <- read.csv('gardens.csv', header = T, stringsAsFactors = F)
+summary(ozone)
+scale(ozone)
+
+# 오존의 평균은 A농장이 3 B,C농장이 5
+# 표준편차는 A와 B농장이 1.154로 같고, C농장이 3.771로 제일 높다.
+# A농장이 상대적으로 가장 낮은 농도의 오존상태를 비교적 균일하게 유지하고 있다
+# B농장은 편차가 크진 않지만 A농장보다 평균치가 높고, C농장은 상대적으로 오존농도의 편차가 크고 평균적인 농도가 높다.
+
+# plot 
+plot(1:NROW(ozone), ozone$gardenA, col=2, type='o', xlab='기간(일)', ylab='오존량(ppm)', ylim=c(0,15))
+lines(1:NROW(ozone), ozone$gardenB, col=4, type='o')
+lines(1:NROW(ozone), ozone$gardenC, col=3, type='o')
+legend(1, 15, c('A농장', 'B농장', 'C농장'), lwd=c(1, 1, 1), col=c('red', 'blue', 'green'))
+
+# ggplot
+library(ggplot2)
+ggplot(data = ozone, aes(x=1:10))+ggtitle('농장별 오존량 현황')+labs(x='기간(일)', y='오존량(ppm)')+geom_line(data = ozone, aes(x=1:10, y=ozone$gardenA, col='A농장'), lwd=1)+geom_line(data = ozone, aes(x=1:10, y=ozone$gardenB, col='B농장'), lwd=1)+geom_line(data = ozone, aes(x=1:10, y=ozone$gardenC, col='C농장'), lwd=1)
+```
+
+선생님답
+```{r}
+garden <- read.csv('gardens.csv')
+boxplot(garden)
+
+library(reshape2)
+gar <- melt(garden) # wide -> long
+
+library(plyr)
+ddply(gar, 'variable', summarise, mean=mean(value), var=var(value), sd=sd(value))
+
+names(gar) <- c('garden', 'Ozone')
+gar$day <- rep(1:10, 3)
+
+library(ggplot2)
+ggplot(gar, aes(x=day, y=Ozone, group=garden, color=garden))+geom_line(size=1)+geom_point()+labs(title='농장별 오존 측정량', subtitle='(단위: ppm)')+geom_abline(intercept=seq(0, 10, 1), slope=0, color='gray80')+theme(panel.background = element_rect(colour='gray50', fill='white'), panel.grid = element_blank())
+```
+
+[문제205] R의 점수입니다. 아래와 같은 성적 분류표를 이용해서 학생들의 학점에  과락, 과락아님 여부 현황 파악을 막대그래프로 표현하세요.
+
+
+범주   분류 기준     						                                  과락여부
+---   --------------------------------------------------------    -----------   
+A     점수 > 평균 + 1.5 * 표준편차		  		                      과락아님
+B     평균 + 0.5 * 표준편차 < 점수 <= 평균 + 1.5 * 표준편차	      과락아님
+C     평균 - 0.5 * 표준편차 < 점수 <= 평균 + 0.5 * 표준편차	      과락아님
+D     평균 - 1.5 * 표준편차 < 점수 <= 평균 - 0.5 * 표준편차	      과락
+F     점수 <= 평균 - 1.5 * 표준편차			                          과락
+```{r}
+rscore <- read.csv('rscore.csv')
+rscore <- unlist(rscore)
+
+m <- mean(rscore)
+s <- sd(rscore)
+
+judge <- cut(rscore, breaks=c(0, seq((m-1.5*s), (m+1.5*s),s), Inf), right=T, labels=c('F', 'D', 'C','B', 'A'))
+
+table(judge)
+
+# 과락 선 표기 / 색으로 구분
+barplot(table(judge), ylim=c(0, 20), col=c('red','red', 'skyblue', 'skyblue', 'skyblue'), main='R 시험 점수 현황', xlab='학점', ylab='인원(명)', border=F)
+legend(x=5.1, y=18, c('통과', '과락'), fill=c('skyblue', 'red'))
+text(bp, table(judge), table(judge), pos=3)
+abline(v=2.5, lty=2, lwd=2, col='red')
+axis(1, 2.5, '과락 기준', col='white', col.axis='red')
+```
+
+선생님 답
+```{r}
+score <- read.csv("c:/data/r점수.csv", header=F)
+avg <- mean(score[,1])
+std <- sd(score[,1])
+breaks <- c(0,avg-1.5*std, avg-0.5*std, avg+0.5*std, avg+1.5*std,100)
+lab <- c("F","D","C","B","A")
+r_cut <- cut(score[,1], breaks=breaks, right=T, labels=lab)
+r_spec <- as.data.frame(table(r_cut))
+names(r_spec) <- c("범주","빈도수")
+r_spec <- r_spec[sort(r_spec$범주,decreasing=T),]
+r_spec <- cbind(r_spec, 과락여부=ifelse(r_spec$범주%in%c("A","B","C"),"과락아님","과락"))
+
+library(ggplot2)
+ggplot(r_spec, aes(x=범주, y=빈도수, fill=과락여부))+
+  geom_bar(stat="identity",width=0.5)+	
+  labs(x="범주",y="빈도수",title="성적에 따른 과락여부")+
+  geom_text(aes(label=as.character(빈도수)), vjust=-0.3, size=3)
+```
+
+[문제206] survey_new.csv 데이터를 아래와 같이 생성하세요.
+         만족  보통 불만족 행의합 한계확률
+남        2.0  1.0    1.0      4      0.4
+여        0.0  4.0    2.0      6      0.6
+열의합    2.0  5.0    3.0     10      1.0
+한계확률  0.2  0.5    0.3      1      0.1
+```{r}
+survey <- read.csv('survey_new.csv', stringsAsFactors = T, header = F)
+survey
+
+# cross table
+library(gmodels)
+ct <- CrossTable(survey$V1,survey$V2, chisq = F)
+
+# table
+result <- table(survey)
+result <- cbind(result, apply(result, 1, sum))
+result <- rbind(result, apply(result, 2, sum))
+
+result <- cbind(result, result[,4]/NROW(survey))
+result <- rbind(result, result[3,]/NROW(survey))
+
+colnames(result)[c(4, 5)] <- c('행의합', '한계확률')
+rownames(result)[c(3, 4)] <- c('열의합', '한계확률')
+
+result
+```
+
+선생님답
+```{r}
+survey <- read.csv("c:/data/survey_new.csv",header=FALSE)
+
+result <- table(survey)
+result <- cbind(result, apply(result,1,sum))
+result <- rbind(result, apply(result,2,sum))
+result <- cbind(result,apply(result[,1:3],1,sum)/NROW(survey))
+result <- rbind(result,apply(result[1:2,],2,sum)/NROW(survey))
+result
+
+colnames(result)[4:5] <- c('행의합','한계확률')
+rownames(result)[3:4] <- c('열의합','한계확률')
+result
+
+```
+
+[문제207] 3명중 대표2명을 선출하여 반장, 부반장으로 임명할 수 있는 경우의 수?
+```{r}
+# 3P2
+factorial(3)/factorial(3-2)
+```
+
+[문제208] 3명중 공동대표 2명을 선출하는 경우의 수
+```{r}
+# 3C2
+factorial(3) / (factorial(2)*factorial(3-2))
+```

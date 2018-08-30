@@ -1,0 +1,304 @@
+[문제200]A반 B 반의 수학점수를 비교하세요.
+A반 35,55,60,70,100
+B반 55,60,65,65,75
+```{r}
+classA <- c(35,55, 60, 70, 100)
+classB <- c(55, 60, 65, 65, 75)
+
+math <- rbind(summary(classA), summary(classB))
+row.names(math) <- c('A반','B반')
+math
+
+# A반과 B반의 평균은 동일하지만 A반은 점수가 넓게 분포되어 있어 학생들의 편차가 큰 반면 B반은 점수가 상대적으로 적은 편차로 분포되어 있다.
+```
+
+[문제201] 성적.csv 파일에 과목별 평균값, 분산값, 표준편차값을 행으로 추가하시오.
+```{r}
+setwd('C:/Users/stu/git/DA_Academy')
+score <- read.csv('score.csv', header = T, stringsAsFactors = F)
+total <- data.frame(name=c('Average', 'Variance', 'Standard Deviation'), sql=c(mean(score$sql), var(score$sql), sd(score$sql)), r=c(mean(score$r), var(score$r), sd(score$r)))
+total
+
+rbind(score, total)
+write.csv(x = rbind(score, total), file = 'score1.csv', row.names = F, quote = F)
+```
+
+[문제202] carrick의 sql=90점과 pogba의 r=90 둘중 어느 사람이 더 잘한 것인가?
+```{r}
+score1 <- read.csv('score1.csv', header = T, stringsAsFactors = F)
+summary(score1[-c(10:12),])
+
+# carrick / sql / 90
+# - sql 평균: 72 / 표준편차 20.4 / 최고점수 95
+
+# pogba / r / 90
+# - r 평균 72 / 표준편차 12.11 / 최고점수 90
+
+# 표준정규화 : 점수 - 평균 / 표준편차
+scale(score[,-1])
+# Carrick / sql / 0.88
+# Pogba / r / 1.48
+
+# 0-1 정규화: 점수 - 최저점 / 최고점 - 최저점
+# Carrick (90-35)/(95-35): 0.9166667 -> 92점
+# Pogba: (90-50)/(90-50): 1 -> 100점
+
+# t점수
+# Carrick 0.88*10+ 50: 58.8
+# Pogba 1.48*10+50: 64.8
+```
+
+[문제203] 지난달을 기준으로 a 사원은 영업 매출이 월 평균 1000만원, 표준편차가 200만원인  대리점을 담당하고있고,
+b 사원은 영업 매출이 월 평균 100만원, 표준편차가 10만원인 대리점을 담당하고 있다.
+이번달 a 사원이 담당하는 대리점의 매출이 1200만원으로 늘었고, b 사원이 담당하는 대리점은 120만원 늘었다.
+평균 매출 대비 20% 상승했다. 누가 잘한거죠?
+```{r}
+# 표준정규화
+## a사원
+(1200-1000)/200 # 1
+
+## b사원
+(120-100)/10 # 2
+```
+
+[문제204] 세곳의 채소농원으로부터 10일 동안 측정한 pphm 단위의 오존 농도를 보고 받았다. 오존 농도를 분석하세요.
+```{r}
+ozone <- read.csv('gardens.csv', header = T, stringsAsFactors = F)
+summary(ozone)
+scale(ozone)
+
+# 오존의 평균은 A농장이 3 B,C농장이 5
+# 표준편차는 A와 B농장이 1.154로 같고, C농장이 3.771로 제일 높다.
+# A농장이 상대적으로 가장 낮은 농도의 오존상태를 비교적 균일하게 유지하고 있다
+# B농장은 편차가 크진 않지만 A농장보다 평균치가 높고, C농장은 상대적으로 오존농도의 편차가 크고 평균적인 농도가 높다.
+
+# plot 
+plot(1:NROW(ozone), ozone$gardenA, col=2, type='o', xlab='기간(일)', ylab='오존량(ppm)', ylim=c(0,15))
+lines(1:NROW(ozone), ozone$gardenB, col=4, type='o')
+lines(1:NROW(ozone), ozone$gardenC, col=3, type='o')
+legend(1, 15, c('A농장', 'B농장', 'C농장'), lwd=c(1, 1, 1), col=c('red', 'blue', 'green'))
+
+# ggplot
+library(ggplot2)
+ggplot(data = ozone, aes(x=1:10))+ggtitle('농장별 오존량 현황')+labs(x='기간(일)', y='오존량(ppm)')+geom_line(data = ozone, aes(x=1:10, y=ozone$gardenA, col='A농장'), lwd=1)+geom_line(data = ozone, aes(x=1:10, y=ozone$gardenB, col='B농장'), lwd=1)+geom_line(data = ozone, aes(x=1:10, y=ozone$gardenC, col='C농장'), lwd=1)
+```
+
+선생님답
+```{r}
+garden <- read.csv('gardens.csv')
+boxplot(garden)
+
+library(reshape2)
+gar <- melt(garden) # wide -> long
+
+library(plyr)
+ddply(gar, 'variable', summarise, mean=mean(value), var=var(value), sd=sd(value))
+
+names(gar) <- c('garden', 'Ozone')
+gar$day <- rep(1:10, 3)
+
+library(ggplot2)
+ggplot(gar, aes(x=day, y=Ozone, group=garden, color=garden))+geom_line(size=1)+geom_point()+labs(title='농장별 오존 측정량', subtitle='(단위: ppm)')+geom_abline(intercept=seq(0, 10, 1), slope=0, color='gray80')+theme(panel.background = element_rect(colour='gray50', fill='white'), panel.grid = element_blank())
+```
+
+[문제205] R의 점수입니다. 아래와 같은 성적 분류표를 이용해서 학생들의 학점에  과락, 과락아님 여부 현황 파악을 막대그래프로 표현하세요.
+
+
+범주   분류 기준     						                                  과락여부
+---   --------------------------------------------------------    -----------   
+A     점수 > 평균 + 1.5 * 표준편차		  		                      과락아님
+B     평균 + 0.5 * 표준편차 < 점수 <= 평균 + 1.5 * 표준편차	      과락아님
+C     평균 - 0.5 * 표준편차 < 점수 <= 평균 + 0.5 * 표준편차	      과락아님
+D     평균 - 1.5 * 표준편차 < 점수 <= 평균 - 0.5 * 표준편차	      과락
+F     점수 <= 평균 - 1.5 * 표준편차			                          과락
+```{r}
+rscore <- read.csv('rscore.csv')
+rscore <- unlist(rscore)
+
+m <- mean(rscore)
+s <- sd(rscore)
+
+judge <- cut(rscore, breaks=c(0, seq((m-1.5*s), (m+1.5*s),s), Inf), right=T, labels=c('F', 'D', 'C','B', 'A'))
+
+table(judge)
+
+# 과락 선 표기 / 색으로 구분
+barplot(table(judge), ylim=c(0, 20), col=c('red','red', 'skyblue', 'skyblue', 'skyblue'), main='R 시험 점수 현황', xlab='학점', ylab='인원(명)', border=F)
+legend(x=5.1, y=18, c('통과', '과락'), fill=c('skyblue', 'red'))
+text(bp, table(judge), table(judge), pos=3)
+abline(v=2.5, lty=2, lwd=2, col='red')
+axis(1, 2.5, '과락 기준', col='white', col.axis='red')
+```
+
+선생님 답
+```{r}
+score <- read.csv("c:/data/r점수.csv", header=F)
+avg <- mean(score[,1])
+std <- sd(score[,1])
+breaks <- c(0,avg-1.5*std, avg-0.5*std, avg+0.5*std, avg+1.5*std,100)
+lab <- c("F","D","C","B","A")
+r_cut <- cut(score[,1], breaks=breaks, right=T, labels=lab)
+r_spec <- as.data.frame(table(r_cut))
+names(r_spec) <- c("범주","빈도수")
+r_spec <- r_spec[sort(r_spec$범주,decreasing=T),]
+r_spec <- cbind(r_spec, 과락여부=ifelse(r_spec$범주%in%c("A","B","C"),"과락아님","과락"))
+
+library(ggplot2)
+ggplot(r_spec, aes(x=범주, y=빈도수, fill=과락여부))+
+  geom_bar(stat="identity",width=0.5)+	
+  labs(x="범주",y="빈도수",title="성적에 따른 과락여부")+
+  geom_text(aes(label=as.character(빈도수)), vjust=-0.3, size=3)
+```
+
+[문제206] survey_new.csv 데이터를 아래와 같이 생성하세요.
+         만족  보통 불만족 행의합 한계확률
+남        2.0  1.0    1.0      4      0.4
+여        0.0  4.0    2.0      6      0.6
+열의합    2.0  5.0    3.0     10      1.0
+한계확률  0.2  0.5    0.3      1      0.1
+```{r}
+survey <- read.csv('survey_new.csv', stringsAsFactors = T, header = F)
+survey
+
+# cross table
+library(gmodels)
+ct <- CrossTable(survey$V1,survey$V2, chisq = F)
+
+# table
+result <- table(survey)
+result <- cbind(result, apply(result, 1, sum))
+result <- rbind(result, apply(result, 2, sum))
+
+result <- cbind(result, result[,4]/NROW(survey))
+result <- rbind(result, result[3,]/NROW(survey))
+
+colnames(result)[c(4, 5)] <- c('행의합', '한계확률')
+rownames(result)[c(3, 4)] <- c('열의합', '한계확률')
+
+result
+```
+
+선생님답
+```{r}
+survey <- read.csv("c:/data/survey_new.csv",header=FALSE)
+
+result <- table(survey)
+result <- cbind(result, apply(result,1,sum))
+result <- rbind(result, apply(result,2,sum))
+result <- cbind(result,apply(result[,1:3],1,sum)/NROW(survey))
+result <- rbind(result,apply(result[1:2,],2,sum)/NROW(survey))
+result
+
+colnames(result)[4:5] <- c('행의합','한계확률')
+rownames(result)[3:4] <- c('열의합','한계확률')
+result
+
+```
+
+[문제207] 3명중 대표2명을 선출하여 반장, 부반장으로 임명할 수 있는 경우의 수?
+```{r}
+# 3P2
+factorial(3)/factorial(3-2)
+```
+
+[문제208] 3명중 공동대표 2명을 선출하는 경우의 수
+```{r}
+# 3C2
+factorial(3) / (factorial(2)*factorial(3-2))
+```
+
+
+**************************************************************************************
+
+# 표준값
+* (관측값-평균)/표준편차
+
+# 표준점수(t점수)
+* 표준값 * 10 + 50
+* 10: t점수의 표준편차, 50 t점수의 평균
+
+# 확률
+* 모집단 전체를 분석하는게 아니라 모집단으로부터 추출한 표본의 자료를 분석하기 때문에 모수를 추정하고 가설을 검정하는 확률이 중요하다.
+
+## 확률의 개념
+* 경험 혹은 실험결과로 특정한 사건이나 결과가 발생할 가능성
+* 내일 비가 올 확률?
+* 로또가 당첨될 확률?
+* 한국축구가 우승할 확률?
+
+## 주사위던지기(실험)
+* S(표본공간) = {1,2,3,4,5,6} -> 1/6
+* 실험: 어떤 행위의 결과를 관찰하고 측정하여 그 결과에 대해 구체적인 값을 부여하는 행위
+* 표본공간: 실험 결과로 발생할 수 있는 모든 가능한 결과의 집
+* 표본점: 한번의 실험결과 1
+
+## 주관적인 확률
+* 내일 비가 올 확률은 어느정도일까
+* 홍길동이 내일 지각할 확률
+
+## 객관적인 확률
+### 고전적 확률
+* 주사위를 던졌을 때 무조건 1/6
+* 예전부터 알려져 있는 확률
+### 상대도수 확률
+* 같은 실험을 수없이 많이 반복했을 때 특정 사건이 발생할 수 있는 상대적 가능성
+* 동전을 던지는 실험을 반복적으로 무수히 실행할 경우 앞면이 나올 확률 1/2
+
+## 확률의 종류
+
+        만족  보통  불만족  행의합  한계확률
+남성      2     1     1        4       4/10
+여성      0     4     2        6       6/10
+열의합    2     5     3        10      10/10
+한계확률  2/10  5/10  3/10    10/10
+
+### 1. 한계확률(marginal probability), 주변확률
+* 아무런 조건이 없는 상태에서 A라는 사건이 발생할 확률
+* P(A)
+* 행과 열의 합을 전체 빈도합으로 나누면 한계확률을 구할 수 있다
+* 10명 중에 한명을 뽑았을 때 남자일 확률 - 4/10
+* 10명 중에 한명을 뽑았을 때 불만족일 확률 - 3/10
+
+### 2. 결합확률(joint probability)
+* 두개 이상의 사건이 동시에 발생할 가능성을 나타내는 확률
+* 사건 A와 사건 B가 동시에 발생할 확률
+* P(A∩B)
+* 10명 중 남성이면서 만족할 확률은? - 2/10
+* 10명 중 여성이면서 불만족할 확률은? - 2/10
+
+### 3. 조건부확률(conditional probability)
+* 이미 하나의 사건이 발생한 상태에서 또 다른 사건이 발생할 가능성을 나타내는 확률
+* 남성이라는 전제 조건하에서 만족할 확률
+* P(A|B) = P(A∩B) / P(B) = B가 먼저 발생하고 A가 발생할 확률 
+* P(A∩B) = P(A|B) * P(B) = P(B|A) * P(A)
+* P(만족|남성) = 2/10 / 4/10 = 1/2
+
+## 확률의 덧셈법칙
+* P(A∪B) = P(A)+P(B) - P(A∩B)
+* S = {1,2,3,4,5,6}
+* 집합 A={1,2,3}, B={2,3,4} / A∪B = 3 + 3 - 2 = 4
+* 확률 P(A∪B) = 3/6 + 3/6 - 2/6 = 4/6
+
+## 배반사건
+* 사건 A와 사건 B가 서로 배반일 경우
+* P(A∪B) = 3/6 + 3/6 - 0 = 6/6
+
+## 확률의 곱셈법칙
+* 확률의 곱셈법칙은 조건부 확률을 이용하여 설명한다
+* 조건부확률은 하나의 사건이 발생한 상태에서 또 다른 사건이 발생할 가능성을 나타내는 확률
+* P(B|A): 사건 A가 발생한 조건하에서 사건 B가 발생할 조건부 확률 : P(A∩B) / P(A)
+
+          사과    딸기    행의합    한계확률
+남        4       3
+여        2       1
+열의합  
+한계확률
+
+* 결합확률: 남성이면서 사과를 좋아할 확률 / 남성∩사과
+* 조건부확률: 남학생 중에서 사과를 좋아하는 확률
+
+# 조합(combination)
+* 서로 다른 n개의 개체에서 k를 선택하는 경우의 수
+* nCk: n! / k!(n-k)!
+
+# 순열(permutation)
