@@ -1,0 +1,278 @@
+[문제 207] 주사위 1개를 던졌을 때 A를 4이하의 눈이 나오는 사건, B를 짝수의 눈이 나오는 사건이라고 할 때 사건A가 일어날 확률? 사건B가 일어날 확률?
+
+S = {1,2,3,4,5,6}
+A = {1,2,3,4}
+B = {2,4,6}
+
+P(A) = 4/6 = 2/3
+P(B) = 3/6 = 1/2
+
+
+[문제 208] 주사위 1개를 던졌을 때 A를 4이하의 눈이 나오는 사건,B를 짝수의 눈이 나오는 사건이라고 할 때 사건A와 사건B가 동시에 일어날 확률은?
+
+S = {1,2,3,4,5,6}
+A = {1,2,3,4}
+B = {2,4,6}
+A∩B = {2,4}
+
+P(A) = 4/6 = 2/3
+P(B) = 3/6 = 1/2
+
+P(A∩B) = 2/6 = 1/3
+P(A)*P(B) = (2*1)/(3*2) = 1/3
+
+[문제 209] 주사위 1개를 던졌을 때 A를 4 이하의 눈이 나오는 사건, B를 짝수의 눈이 나오는 사건이라고 할때, 사건 A가 일어났을 때 B는 짝수의 눈이 나오는 사건의 확률은?
+
+S = {1,2,3,4,5,6}
+A = {1,2,3,4}
+B = {2,4,6}
+
+P(A) = 4/6 = 2/3
+P(B) = 3/6 = 1/2
+
+P(A)*P(B) = 1/3
+P(B|A) = P(A)*P(B)/P(A) = (1/3)/(2/3) = 1/2
+
+
+[문제 210]  남성이라는 전제 조건하에 안경을 쓴 확률은?
+
+	안경(O)		안경(X)
+--------------------------------
+남	  5 		  6
+여	  6		    4
+
+S = 21
+남 = 11
+여 = 10
+안경 = 11
+안경(x) = 10
+
+P(남) = 11/21
+P(남∩안경) = 5/21
+
+P(안경|남) = (5/21)/(11/21)
+
+[문제211]20대 남성이면서 직업은 IT이고 결혼하지 않고 이성친구는 있는 사람의 영화 장르는?
+```{r}
+movie <- read.csv('movie.csv', header=T, stringsAsFactors = T)
+model <- naiveBayes(movie[1:5], movie$장르, laplace=0)
+movie[1:5]
+
+test <- c('20대', '남', 'IT', 'NO', 'YES', NA)
+test <- rbind(movie, test)[NROW(movie)+1,1:5]
+
+predict(model, test) 
+```
+
+[문제212] spam.csv 나이브베이즈를 이용해서 분류를 해보세요.
+```{r}
+
+spam <- read.csv('spam.csv', header=T)
+spam <- spam[,-1]
+spam[is.na(spam)] <- 0
+
+for(i in 1:length(spam)){
+  spam[i] <- factor(spam[[i]])
+}
+
+str(spam)
+naiveBayes(spam[, -13], spam[,13], laplace=0)
+naiveBayes(spam[, -13], spam[,13], laplace=1)
+
+model <- naiveBayes(spam[, -13], spam[,13], laplace=0)
+model
+result <- predict(model, spam[,-13])
+result
+spam[spam$메일종류!=result, ]
+```
+
+[문제213] 일반버섯(식용버섯(edible)) 과 독버섯 분류(먹을수없는버섯(poisonous)) 분류 
+이 주소에 가셔서 mushroom 데이터 셋의 정보를 분석한 후 변수들에 어떤 의미가 들어 있는지를 확인 하세요.
+https://archive.ics.uci.edu/ml/machine-learning-databases/mushroom/agaricus-lepiota.names
+
+     1. cap-shape:                bell=b,conical=c,convex=x,flat=f,
+                                  knobbed=k,sunken=s
+     2. cap-surface:              fibrous=f,grooves=g,scaly=y,smooth=s
+     3. cap-color:                brown=n,buff=b,cinnamon=c,gray=g,green=r,
+                                  pink=p,purple=u,red=e,white=w,yellow=y
+     4. bruises?:                 bruises=t,no=f
+     5. odor:                     almond=a,anise=l,creosote=c,fishy=y,foul=f,
+                                  musty=m,none=n,pungent=p,spicy=s
+     6. gill-attachment:          attached=a,descending=d,free=f,notched=n
+     7. gill-spacing:             close=c,crowded=w,distant=d
+     8. gill-size:                broad=b,narrow=n
+     9. gill-color:               black=k,brown=n,buff=b,chocolate=h,gray=g,
+                                  green=r,orange=o,pink=p,purple=u,red=e,
+                                  white=w,yellow=y
+    10. stalk-shape:              enlarging=e,tapering=t
+    11. stalk-root:               bulbous=b,club=c,cup=u,equal=e,
+                                  rhizomorphs=z,rooted=r,missing=?
+    12. stalk-surface-above-ring: fibrous=f,scaly=y,silky=k,smooth=s
+    13. stalk-surface-below-ring: fibrous=f,scaly=y,silky=k,smooth=s
+    14. stalk-color-above-ring:   brown=n,buff=b,cinnamon=c,gray=g,orange=o,
+                                  pink=p,red=e,white=w,yellow=y
+    15. stalk-color-below-ring:   brown=n,buff=b,cinnamon=c,gray=g,orange=o,
+                                  pink=p,red=e,white=w,yellow=y
+    16. veil-type:                partial=p,universal=u
+    17. veil-color:               brown=n,orange=o,white=w,yellow=y
+    18. ring-number:              none=n,one=o,two=t
+    19. ring-type:                cobwebby=c,evanescent=e,flaring=f,large=l,
+                                  none=n,pendant=p,sheathing=s,zone=z
+    20. spore-print-color:        black=k,brown=n,buff=b,chocolate=h,green=r,
+                                  orange=o,purple=u,white=w,yellow=y
+    21. population:               abundant=a,clustered=c,numerous=n,
+                                  scattered=s,several=v,solitary=y
+    22. habitat:                  grasses=g,leaves=l,meadows=m,paths=p,
+                                  urban=u,waste=w,woods=d
+
+
+'?'를 NA로 바꾼 모델
+```{r}
+library(gmodels)
+mush <- read.csv('mushroom.csv', header=F)
+
+temp <- mush$V12
+
+temp[temp=='?'] <- NA
+temp <- factor(as.character(temp))
+
+mush$V12 <- temp
+
+model <- naiveBayes(mush[,-1], mush[,1], laplace = 0.01)
+result <- predict(model, mush[,-1])
+
+(NROW(mush[result!=mush[,1],])/NROW(mush))*100 # 오차율 1.67%
+CrossTable(result, mush[,1])
+
+NROW(mush[result!=mush[,1],])
+```
+
+'?' 를 '?'이외의 데이터로 ?를 예측한 값을 넣은 모델
+```{r}
+# ?가 아닌 stalk-root를  label로 놓고 학습
+mush <- read.csv('mushroom.csv', header=F)
+str(mush)
+test <- mush[mush$V12=='?',]
+mush <- mush[mush$V12!='?',]
+
+mush$V12 <- factor(as.character(mush$V12))
+
+model <- naiveBayes(mush[, -12], mush[,12], laplace=0.1)
+result <- predict(model, mush[,-12])
+
+(NROW(mush[result!=mush[,12],])/NROW(mush))*100 #오차율 0.17%
+# ?를 예측하게 함
+test_result <- predict(model, test[,-12])
+test$V12 <- test_result
+final <- rbind(mush, test)
+# 예측값을 ?에 넣고 다시 학습
+final_model <- naiveBayes(final[,-1], final[,1], laplace=0.1)
+final_result <- predict(final_model, final[,-1])
+
+(NROW(final[final_result!=final[,1],])/NROW(final))*100 # 오차율 1.82%
+CrossTable(final_result, final[,1])
+
+NROW(final[final_result!=final[,1],])
+```
+
+'?' 가 포함된 row를 모두 제외한 모델
+```{r}
+mush <- read.csv('mushroom.csv', header=F)
+
+mush <- mush[mush$V12!='?',]
+
+model <- naiveBayes(mush[,-1], mush[,1], laplace = 0.1)
+result <- predict(model, mush[,-1])
+
+(NROW(mush[result!=mush[,1],])/NROW(mush))*  100 # 오차율 0.4%
+CrossTable(result, mush[,1])
+```
+
+
+***************************************************************************************
+
+# 베이지안 이론
+* 주어진 사전확률 정보를 이용하여 사후확률을 예측하는 이론
+* 사건이 발생하고 난 후 사건발생의 원인에 대한 사후확률을 사건 발생전에 이미 알고있는 사전확률(정보)를 이용하여 구하는 이론이다. 
+
+            생산비율          불량률
+A 공장    30% P(A)=0.3%     P(불량|A)=0.1
+B 공장    50% P(B)=0.5%     P(불량|B)=0.05
+C 공장    20% P(C)=0.2%     P(불량|C)=0.04
+
+* 사후확률
+P(불량) = P(A)*P(불량|A) + P(B)*P(불량|B) + P(C)*P(불량|C)
+
+(A|불량) = P(A∩불량) / P(불량)
+  P(A∩불량) = P(불량) * P(A|불량)
+  P(불량∩A) = P(A) * P(불량|A)
+  
+  P(A|불량) = P(A)*P(불량|A) / P(불량)
+
+(B|불량)
+(C|불량)
+
+```{r}
+p_A <- 0.3
+p_B <- 0.5
+p_C <- 0.2
+
+p_BadA <- 0.1
+p_BadB <- 0.05
+p_BadC <- 0.04
+
+p_Bad <- (p_A*p_BadA)+(p_B*p_BadB)+(p_C*p_BadC)
+
+(p_A*p_BadA)/p_Bad
+(p_B*p_BadB)/p_Bad
+(p_C*p_BadC)/p_Bad
+```
+
+## e1071
+* 통계, 확률 관련 함수를 모은 패키지
+* 최근거리 계산, SVM, 나이브 베이즈 등등
+```{r}
+install.packages('e1071')
+library('e1071')
+```
+
+## e1071
+### naiveBayes()
+* 나이브베이즈 분류/예측모델
+* naiveBayes(데이터, 라벨, laplace=라플라스값)
+* 라플라스값:
+* Laplace smoothing은 모든 경우의 수를 적어도 한번 이상은 봤다고 가정하는 것. 분자에는 모든 경우의 수에 1을 더해주었고 분모에는 모든 경우의 수를 더해준 것
+```{r}
+movie <- read.csv('movie.csv', header=T, stringsAsFactors = T)
+str(movie)
+model <- naiveBayes(movie[1:5], movie$장르, laplace=0) #laplace=숫자 : 가중치 관련 인자
+model
+
+result <- predict(model, movie[1:5]) #predict(모델, 데이터) : 모델을 통해 데이터를 예측한 결과 리턴
+result
+
+movie$result <- result
+
+movie
+
+movie[movie$result!=movie$장르,]
+```
+## e1071
+### predict()
+* 지정한 모델을 통해 데이터를 예측한 결과 리턴
+* predict(모델, 데이터)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
