@@ -107,7 +107,6 @@ dtm
 
 inspect(dtm)
 
-
 dtm_dict <- findFreqTerms(dtm, 2)
 dtm_train <- DocumentTermMatrix(corpus, list(dictionary = dtm_dict))
 inspect(dtm_train)
