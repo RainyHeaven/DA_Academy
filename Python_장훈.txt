@@ -113,3 +113,272 @@ print('*'*100)
 
 [문제16] 반복문을 사용하지 않고 * 를 세로 10개 출력
 print('*\n'*10)
+
+[문제17] day 변수에 20180905를 입력하세요. 화면 출력은 2018년 09월 05일 출력하세요.
+
+day = '20180905'
+print(day[0:4]+'년 '+day[4:6]+'월 '+day[6:]+'일')
+food 변수 아래와 같이 데이터가 들어 있습니다.food변수를 생성하시고 문제를 풀어보세요.
+
+>>> food[0]
+['김밥', '라면', '오뎅']
+>>> food[1]
+['비빔밥', '김치찌게']
+>>> food[2]
+['자장면', '짬뽕']
+[문제18] 1번 index에 청국장 추가 하세요
+
+food = [['김밥', '라면', '오뎅'], ['비빔밥', '김치찌게'], ['자장면','짬뽕']]
+food[1].append('청국장')
+[문제19] 2번 index에 탕수육 추가하세요.
+food[2].append('탕수육')
+
+[문제20] 0번 index에 있는 오뎅 삭제하세요.
+food[0].remove('오뎅')
+
+[문제21] 0번 index에 튀김, 튀김, 떡복이 한꺼번에 추가하세요
+food[0][2:2] = ['튀김', '튀김', '떡볶이']
+food[0].extend(['튀김', '튀김', '떡볶이'])
+
+[문제22] 2번 index에 2번 위치에 유산슬 추가하세요
+food[2].insert(2, '유산슬')
+
+[문제23] 튀김 갯수를 세어주세요
+food[0].count('튀김')
+
+[문제24] 0번 index만 정렬해주세요
+food[0].sort()
+
+[문제25] 0번 index에 마지막 데이터 삭제하세요
+food[0].pop()
+
+[문제26] 숫자를 입력값으로 받아서 짝수인지 홀수인지를 출력하는 프로그램을 만드세요.
+
+if int(input())%2:
+    print('홀수')
+else:
+    print('짝수')
+[문제27]한글, alphabet만 입력받아야 합니다. 만약에 다른 문자가 들어 오면 "한글, alphabet 이외의 문자가 포함되어 있습니다." 라는 문구가 출력해야 하고 아니면 입력받은 문자를 출력하세요.
+
+char = input()
+if char.isalpha():
+    print(char)
+else:
+    print('한글, alphabet 이외의 문자가 포함되어 있습니다')
+`
+[문제28] 숫자를 입력값으로 받습니다. 만약 숫자가 이외의 값이 들어 오면 "숫자 이외의 문자가 포함되어 있습니다." 아니면 숫자 출력하세요.
+
+char = input()
+if char.isnumeric():
+    print(char)
+else:
+    print('숫자 이외의 문자가 포함되어 있습니다')
+[문제29] 1부터 100까지 합을 구하세요.
+
+i = 1
+sum = 0
+while i <= 100:
+    sum += i
+    i += 1
+print(sum)
+[문제30] 단을 입력값으로 받아서 구구단을 출력하세요.
+
+# for문
+dan = int(input())
+print('구구단 '+str(dan)+'단 입니다.')
+for i in range(1,10):
+    print('{} x {} = {}'.format(dan, i, dan*i))
+
+# while문
+dan = int(input())
+print('구구단 '+str(dan)+'단 입니다.')
+i = 1
+while i <= 9:
+    print('{} x {} = {}'.format(dan, i, dan*i))
+    i += 1
+
+[문제30] 1부터 100까지의 3의 배수를 출력, 합을 구하세요. while문을 이용하세요.
+
+i = 0
+total = 0
+while True:
+    i += 1
+    if i%3 == 0:
+        print(i)
+        total += i
+    if i == 100:
+        print('1부터 100까지 3의 배수의 합은 {}입니다.'.format(total))
+        break   
+[문제31] 조건이 없는 상태에서 1부터 10까지 3,5를 제외한 합을 구하세요. continue문, break문을 이용하세요.
+
+i = 0
+total = 0
+while True:
+    i += 1
+    if i == 3 or i == 5:
+        continue
+    elif i > 10:
+        print(total)
+        break
+    else:
+        total += i
+[문제32] 리스트 변수에 18,2,3,1,4,5,7,8,9,10,11,15,16 값이 들어 있습니다. 짝수만 합을 구하세요.
+
+while문
+
+data = [18,2,3,1,4,5,7,8,9,10,11,15,16]
+i = 0
+total = 0
+while i < len(data):
+    if data[i]%2 == 0:
+        total += data[i]
+    i += 1
+print(total)
+for문
+
+data = [18,2,3,1,4,5,7,8,9,10,11,15,16]
+total = 0
+for i in data:
+    if i%2==0:
+        total+=i
+print(total)
+[문제33] 구구단을 생성하세요
+
+dan = 2
+while dan <= 9:
+    coef = 1
+    print('구구단 {}단 입니다.'.format(dan))
+    while coef <= 9:
+        print('{} x {} = {}'.format(dan, coef, dan*coef))
+        coef += 1
+    dan+=1
+[문제34] 리스트 변수에 12,3,21,4,5,7,33,2,18,9,10,31,15,16 값이 들어 있습니다. 최대값을 구하세요.
+
+data = [12,3,21,4,5,7,33,2,18,9,10,31,15,16]
+max(data)
+while문
+
+i = 0
+v_Max = data[0]
+while i < len(data):
+    i += 1
+    if v_Max < data[i]:
+        v_Max = data[i]
+print(v_Max)
+for문
+
+v_Max = data[0]
+for i in data:
+    if v_Max < i:
+        v_Max = i
+print(v_Max)
+[문제35] 리스트 변수에 12,3,21,4,5,7,33,2,18,9,10,31,15,16 값이 들어 있습니다. 최소값을 구하세요.
+
+data = [12,3,21,4,5,7,33,2,18,9,10,31,15,16]
+min(data)
+while문
+
+i = 1
+v_Min = data[0]
+while i < len(data):
+    if v_Min > data[i]:
+        v_Min = data[i]
+    i += 1
+print(v_Min)
+for문
+
+v_Min = data[0]
+for i in data:
+    if v_Min > i:
+        v_Min = i
+print(v_Min)
+[문제36] 학생들의 점수가 90,55,63,78,80 점이 있습니다. 60점 이상이면 합격, 60점 미만이면 불합격 출력해 주세요.
+
+scores = [90,55,63,78,80]
+for score in scores:
+    if score >= 60:
+        print(score, '점 합격')
+    else:
+        print(score, '점 불합격')
+[문제37] 1부터 100까지 합을 구하세요.(for 이용)
+
+total = 0
+for i in range(1, 101):
+    total += i
+print(total)
+[문제38] 1부터 10까지 출력하세요. 단 4, 8은 제외(for 이용)
+
+for i in range(1, 11):
+    if i == 4 or i == 8:
+        continue
+    else:
+        print(i)
+[문제39] 화면과 같이 출력하세요.(for 이용)
+
+가로의 숫자를 입력하세요 : 5 세로의 숫자를 입력하세요 : 5 ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★
+
+col = int(input('가로의 숫자를 입력하세요 :'))
+row = int(input('세로의 숫자를 입력하세요 :'))
+for i in range(row):
+    print('★'*col)
+[문제40] 구구단을 출력하세요.(for 이용)
+
+for i in range(2, 10):
+    print('구구단', i, '단 입니다.')
+    for j in range(1, 10):
+        print(i, 'x', j, '=', i*j)
+[문제41] 구구단을 만드세요. 2단에서 9단까지만 입력하세요, [0은 구구단 전부를 출력합니다.]:
+
+dan = int(input('2단에서 9단까지만 입력하세요, [0은 구구단 전부를 출력합니다]:'))
+if dan == 0:
+    for i in range(2, 10):
+        print('구구단', i, '단 입니다.')
+        for j in range(1, 10):
+            print(i, 'x', j, '=', i*j)
+elif 2 <= dan <= 9:
+    print('구구단', dan, '단 입니다.')
+    for j in range(1, 10):
+        print(dan, 'x', j, '=', dan*j)
+else:
+    print('올바른 단 수를 입력하세요.')
+[문제42]lst 변수에 a,b,c,d값이 있습니다. for문을 이용하여 아래화면과 같이 출력하세요. 0번 a값이 있습니다. 1번 b값이 있습니다. 2번 c값이 있습니다. 3번 d값이 있습니다.
+
+lst = ['a','b','c','d']
+for i in range(len(lst)):
+    print('{}번 {}값이 있습니다'.format(i, lst[i]))
+[문제43] 1부터 9까지 x 리스트 변수에 입력하세요. y변수는 x 변수의 값을 2곱한 값으로 입력해주세요.
+
+x = list(range(1,10))
+y = []
+for i in x:
+    y.append(i*2)
+print(y)
+[문제44] apple, banana, orange 리스트 변수에 값을 입력하시고 이 값들의 길이를 출력해주세요.
+
+lst = ['apple', 'banana','orange']
+for word in lst:
+    print(len(word))
+print([len(word) for word in lst])
+[문제45] 변수에 아래와 같이 들어 있습니다. 아래처럼 결과를 출력하세요.
+lst1 = [1,2,3]
+lst2 = [4,5,6]
+출력결과
+[4, 5, 6, 8, 10, 12, 12, 15, 18]
+
+lst1 = [1,2,3]
+lst2 = [4,5,6]
+result = []
+for i in lst1:
+    for j in lst2:
+        result.append(i*j)
+print(result)
+print([i*j for i in lst1 for j in lst2])
+[문제46] 1부터 100까지 값중에 짝수만 x변수에 입력해주세요.
+
+x = []
+for i in range(1, 101):
+    if i%2 == 0:
+        x.append(i)
+print(x)
+x = [i for i in range(1, 101) if i%2 == 0]
+print(x)
