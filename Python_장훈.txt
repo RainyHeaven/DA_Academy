@@ -382,3 +382,100 @@ for i in range(1, 101):
 print(x)
 x = [i for i in range(1, 101) if i%2 == 0]
 print(x)
+
+[문제47] 튜플변수에 사과, 귤, 오렌지, 배, 포도, 바나나, 자몽, 키위, 딸기, 블루베리, 망고를 입력하시고 과일이름중에 세글자 이상인 과일만 fruit_lst변수에 입력해주세요.
+
+fruits = ('사과', '귤', '오렌지', '배', '포도', '바나나', '자몽','키위', '딸기','블루베리', '망고')
+[fruit for fruit in fruits if len(fruit) >= 3]
+[문제48] 과일판매 현황을 dictionary 변수로 생성하세요. 과일 이름을 키로 하고 수량은 값으로 표현한후 과일이름만 대문자로 출력해주세요. apple 100 , banana 300, orange 300
+
+sales = {'apple':100, 'banana':300, 'orange':300}
+for name in sales.keys():
+    print(name.upper())
+[i.upper() for i in list(sale.keys())]
+
+for i in sale.keys():
+    print(i.upper(), end=',')
+
+for i,v in sale.items(): # items는 키와 값을 모두 불러와야 하므로 변수를 2개 지정해야 한다.
+    print(i.upper()+':'+str(v),end=',\0') # 값을 문자 숫자 붙이려 하면 str을 통해서 형변환 하여 붙인다.
+
+[i.upper() for i in sale.keys()]
+[[i.upper(),v] for i,v in sale.items()] # i,v 둘다 값을 불러야 하기 떄문에 [[]] 괄호를 두번해야 한다.
+[문제49] 함수에 두 개의 숫자를 입력 값으로 받아서 값을 비교 하는 프로그램을 작성하세요.
+
+def num_compare(a,b):
+    if a > b:
+        print('{}가 {}보다 큰 수 입니다.'.format(a,b))
+        return a
+    elif a < b:
+        print('{}가 {}보다 큰 수 입니다.'.format(b,a))
+        return b
+    elif a == b:
+        print('{}와 {}는 같은 수 입니다.'.format(a,b))
+        return a
+[문제50] 두 인수값을 받아서 합한 값을 리턴해주는 sum함수를 생성하세요.
+
+def sum(a, b):
+    return a+b
+[문제51] 다음과 같은 함수를 만드시오.
+
+cal("sum",1,2,3,4,5) - 15
+cal("multiply",1,2,3,4,5) - 120
+def cal(do, *nums):
+    if do == 'sum':
+        result = 0
+        for num in nums:
+            result += num
+        return result
+    elif do == 'multiply':
+        result = 1
+        for num in nums:
+            result *= num
+        return result
+[문제52] 여러 숫자를 인수값으로 받아서 합과 평균을 출력하는 aggF함수를 생성하세요.
+
+aggF(1,2,3,4,5,6,7,8,9,10)
+
+합 :  55
+평균 : 5.5 
+def aggF(*nums):
+    nsum = 0
+    for num in nums:
+        nsum += num
+    print('합 :', nsum,'\n평균 :', nsum/len(nums))
+    return nsum,nsum/len(nums)
+[문제53] 입력값을 누적해서 더하는 함수를 작성하세요.
+
+print(add(2))
+2
+
+print(add(8))
+10
+total = 0
+def add(n):
+    global total
+    total += n
+    return total
+[문제54] 아래와 같이 변수에 값이 들어 있습니다. exchang함수에 x변수에 값을 넣으면 y로 변환하는 함수를 만드세요.
+
+x = ["귀도","반","로섬"]
+y = ["Guido","van", "Rossum"]
+x = ["귀도","반","로섬"]
+y = ["Guido","van", "Rossum"]
+
+def exchang(x):
+    for i in range(len(x)):
+        x[i] = y[i]
+    print(x)
+[문제55]약수를 구하는 divisor 함수를 생성하세요.
+
+1이상의 숫자를 입력하세요: 100
+[100, 50, 25, 20, 10, 5, 4, 2, 1]
+def divisor(num):
+    result = []
+    num = int(input('1이상의 숫자를 입력하세요: '))
+    for i in range(num,0,-1):
+        if num%i == 0:
+            result.append(i)
+    return result
