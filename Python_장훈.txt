@@ -775,3 +775,446 @@ print('1에서 천만까지 짝수합:', even_sum)
 print('1에서 천만까지 홀수합:', odd_sum)
 print('처리시간 :', delta)
 print('처리시간 millisecond(1/1000) : {}ms'.format(round(delta.total_seconds()*1000)))
+
+[문제90] last_name, salary 출력해주세요
+
+import csv
+with open('c:/data/emp.csv', 'r') as file:
+    emp_csv = csv.reader(file)
+    for line in emp_csv:
+        print(line[2], line[7])
+[문제91] last_name, last_name 길이를 출력해주세요
+
+import csv
+with open('c:/data/emp.csv', 'r') as file:
+    emp_csv = csv.reader(file)
+    next(emp_csv)
+    for line in emp_csv:
+        print(line[2], len(line[2]))
+[문제92] employee_id, last_name, salary∗12 를 출력해주세요
+
+import csv
+with open('c:/data/emp.csv', 'r') as file:
+    emp_csv = csv.reader(file)
+    next(emp_csv)
+    for line in emp_csv:
+        print(line[0], line[2], int(line[7])*12)
+[문제93] last_name, commission_pct를 출력하되 commission_pct값이 ''이면 0으로 출력해주세요
+
+import csv
+with open('c:/data/emp.csv', 'r') as file:
+    emp_csv = csv.reader(file)
+    next(emp_csv)
+    for line in emp_csv:
+        comm = line[8]
+        if len(comm)==0:
+            comm = 0
+        print(line[2], comm)
+[문제94] last_name을 대문자로, job_id를 소문자로 출력해주세요
+
+import csv
+with open('c:/data/emp.csv', 'r') as file:
+    emp_csv = csv.reader(file)
+    next(emp_csv)
+    for line in emp_csv:
+        print(line[2].upper(), line[6].lower())
+[문제95] last_name을 첫글자만 추출해서 소문자로 출력해주세요.
+
+import csv
+with open('c:/data/emp.csv', 'r') as file:
+    emp_csv = csv.reader(file)
+    next(emp_csv)
+    for line in emp_csv:
+        print(line[2][0].lower())
+[문제96] last_name을 두번째부터 마지막까지만 추출해서 대문자로 출력해주세요.
+
+import csv
+with open('c:/data/emp.csv', 'r') as file:
+    emp_csv = csv.reader(file)
+    next(emp_csv)
+    for line in emp_csv:
+        print(line[2][1:-1].upper())
+[문제97] 이름을 입력하면 첫글자는 대문자 나머지는 소문자를 출력하는 initcap함수를 이용해 이름을 출력하세요
+
+def initcap(x):
+    return x[0].upper()+x[1:].lower()
+[문제98] 이름을 입력하면 제일 뒤에 있는 철자는 대문자, 앞의 문자는 소문자로 출력하는 tailcap 함수를 생성하세요.
+
+def tailcap(x):
+    return x[:-1].lower()+x[-1].upper()
+[문제99] 이름과 급여를 출력하는데 급여를 출력할 때 0 대신 ∗를 출력하세요
+
+import csv
+with open('c:/data/emp.csv', 'r') as file:
+    emp_csv = csv.reader(file)
+    next(emp_csv)
+    for line in emp_csv:
+        print(line[2], line[7].replace('0','*'))
+[문제100] 이름, salary * 12 + commission_pct 결과를 출력해주세요.
+
+import csv
+with open('c:/data/emp.csv', 'r') as file:
+    emp_csv = csv.reader(file)
+    next(emp_csv)
+    for line in emp_csv:
+        comm = line[8]
+        if len(comm)==0:
+            comm = 0
+        else:
+            comm = float(comm)
+        print(line[2], int(line[7])*(12+comm))
+[문제101] 이름, 입사한 요일(한글)을 출력해주세요
+
+import csv
+def whatday(date):
+    import datetime as dt
+    days = ['월','화','수','목','금','토','일']
+    day = dt.datetime.strptime(date, '%Y%m%d')
+    return days[day.weekday()]
+
+with open('c:/data/emp.csv', 'r') as file:
+    emp_csv = csv.reader(file)
+    next(emp_csv)
+    for line in emp_csv:        
+        print(line[2], whatday(line[5]))
+[문제102] 이름, 입사한 날짜부터 오늘까지 총 몇일 근부했는지 출력하세요
+
+import csv
+import datetime as dt
+with open('c:/data/emp.csv', 'r') as file:
+    emp_csv = csv.reader(file)
+    next(emp_csv)
+    for line in emp_csv:
+        today = dt.datetime.today()
+        hire = dt.datetime.strptime(line[5],'%Y%m%d')
+        print(line[2], (today-hire).days)
+import csv
+import datetime as dt
+with open('c:/data/emp.csv', 'r') as file:
+    emp_csv = csv.reader(file)
+    next(emp_csv)
+    for line in emp_csv:
+        today = dt.datetime.today()
+        hire = dt.datetime.strptime(line[5],'%Y%m%d')
+        print(line[2], (str(today-hire).split())[0]+'일')
+[문제103]오늘 부터 이번달 말일까지 몇일 남았는지 출력하세요
+
+import calendar as cld
+import datetime as dt
+today = dt.date.today()
+last = cld.monthrange(today.year, today.month)[1]
+print(last-today.day)
+[문제104] 사원번호가 100번 사원의 사원이름과 급여를 출력하세요.
+
+import csv
+with open('c:/data/emp.csv', 'r') as file:
+    emp_csv = csv.reader(file)
+    for line in emp_csv:
+        if line[0]=='100':
+            print(line[2], line[7])
+[문제105] 급여가 10000 이상인 사원들의 이름과 급여를 출력하세요.
+
+import csv
+with open('c:/data/emp.csv', 'r') as file:
+    emp_csv = csv.reader(file)
+    next(emp_csv)
+    for line in emp_csv:
+        if int(line[7])>=10000:
+            print(line[2], line[7])
+[문제106] 2001-01-13일에 입사한 사원의 이름과 입사일을 출력하세요
+
+import csv
+with open('c:/data/emp.csv', 'r') as file:
+    emp_csv = csv.reader(file)
+    next(emp_csv)
+    for line in emp_csv:
+        if line[5] == '20010113':
+            print(line[2], line[5])
+import csv
+import datetime as dt
+
+with open('c:/data/emp.csv', 'r') as file:
+    emp_csv = csv.reader(file)
+    next(emp_csv)
+    for line in emp_csv:
+        if dt.datetime.strptime(line[5],'%Y%m%d').year == dt.datetime.strptime('2001-01-13', '%Y-%m-%d').year:
+            print(line[2], line[5])
+[문제107] 2002 년도에 입사한 사원들의 이름과 입사일을 출력하세요.
+
+import csv
+with open('c:/data/emp.csv', 'r') as file:
+    emp_csv = csv.reader(file)
+    next(emp_csv)
+    for line in emp_csv:
+        if line[5][:4] == '2002':
+            print(line[2], line[5])
+import csv
+import datetime as dt
+
+with open('c:/data/emp.csv', 'r') as file:
+    emp_csv = csv.reader(file)
+    next(emp_csv)
+    for line in emp_csv:
+        if dt.datetime.strptime(line[5],'%Y%m%d').year == dt.datetime.strptime('2002', '%Y').year:
+            print(line[2], line[5])
+[문제108] job이 ST_CLERK 이고 월급 3000 이상인 사원들의 이름과 job, 급여 출력하세요
+
+import csv
+import datetime as dt
+total = 0
+with open('c:/data/emp.csv', 'r') as file:
+    emp_csv = csv.reader(file)
+    next(emp_csv)
+    for line in emp_csv:
+        if line[6] == 'ST_CLERK' and int(line[7]) >= 3000:
+            print(line[2], line[6], line[7])
+            total += 1
+print('결과는 총 {} 건 입니다.'.format(total))
+[문제109] 급여가 2500 에서 3000 사이인 사원들의 이름과 급여를 출력하세요
+
+import csv
+import datetime as dt
+total = 0
+with open('c:/data/emp.csv', 'r') as file:
+    emp_csv = csv.reader(file)
+    next(emp_csv)
+    for line in emp_csv:
+        if 2500 <= int(line[7]) <= 3000:
+            print(line[2], line[7])
+            total += 1
+print('결과는 총 {} 건 입니다.'.format(total))
+[문제110] job AD_VP , AD_PRES 인 사원들의 이름과 월급과 직업을 출력하세요
+
+import csv
+import datetime as dt
+total = 0
+with open('c:/data/emp.csv', 'r') as file:
+    emp_csv = csv.reader(file)
+    next(emp_csv)
+    for line in emp_csv:
+        if line[6] in ['AD_VP','AD_PRES']:
+            print(line[2], line[6], line[7])
+            total += 1
+print('결과는 총 {} 건 입니다.'.format(total))
+[문제111] 직업이 AD_VP , AD_PRES 이 아닌 사원들의 이름과 월급과 직업을 출력하세요
+
+import csv
+import datetime as dt
+total = 0
+with open('c:/data/emp.csv', 'r') as file:
+    emp_csv = csv.reader(file)
+    next(emp_csv)
+    for line in emp_csv:
+        if line[6] not in ['AD_VP','AD_PRES']:
+            print(line[2], line[6], line[7])
+            total += 1
+print('결과는 총 {} 건 입니다.'.format(total))
+
+[문제112] 커미션이 null 인 사원의 이름, 급여, 커미션을 출력하세요. 전체 인원수, 커미션 null의 수, 비율도 출력하세요.
+
+import csv
+with open('C:/Users/stu/git/DA_Academy/emp_new.csv', 'r') as file:
+    emp = csv.reader(file)
+    total = 0
+    comm_null = 0
+    next(emp)
+    for line in emp:
+        total += 1
+        if len(line[8]) == 0:
+            print('{} 사원 정보\n 급여: {}\n 커미션: {}%'.format(line[2], line[7], 0))
+            comm_null += 1
+
+    print('*'*50)
+    print('총 사원: {}명\n커미션이 없는 사원: {}명, (전체의 {}%)\n'.format(total, comm_null, round(((comm_null/total)*100), 2)))
+[문제113]커미션이 null 이 아닌 사원들의 이름,급여,커미션을 출력하세요. 전체 인원수, 커미션 null이 아닌 수, 비율도 출력하세요.
+
+import csv
+with open('C:/Users/stu/git/DA_Academy/emp_new.csv', 'r') as file:
+    emp = csv.reader(file)
+    total = 0
+    comm = 0
+    next(emp)
+    for line in emp:
+        total += 1
+        if len(line[8]) != 0:
+            print('{} 사원 정보\n 급여: {}\n 커미션: {}%'.format(line[2], line[7], line[8]))
+            comm += 1
+
+    print('*'*50)
+    print('총 사원: {}명\n커미션을 받는 사원: {}명, (전체의 {}%)\n'.format(total, comm, round(((comm/total)*100), 2)))
+[문제114] last_name의 첫번째 철자가 S 로 시작하는 사원들의 이름과 급여를 출력하세요. 전체 인원수, 조건의 수, 비율도 출력하세요.
+
+import csv
+with open('C:/Users/stu/git/DA_Academy/emp_new.csv', 'r') as file:
+    emp = csv.reader(file)
+    total = 0
+    first_S = 0
+    next(emp)
+    for line in emp:
+        total += 1
+        if line[2][0] == 'S':
+            print('{} 사원의 급여: {}'.format(line[2], line[7]))
+            first_S += 1
+
+    print('*'*50)
+    print('총 사원: {}명\n이름이 S로 시작하는 사원: {}명, (전체의 {}%)\n'.format(total, first_S, round(((first_S/total)*100), 2)))
+[문제115] last_name의 두번째 철자가 i 인 사원들의 이름과 월급을 출력하세요. 전체 인원수, 조건의 수, 비율도 출력하세요.
+
+import csv
+with open('C:/Users/stu/git/DA_Academy/emp_new.csv', 'r') as file:
+    emp = csv.reader(file)
+    total = 0
+    second_i = 0
+    next(emp)
+    for line in emp:
+        total += 1
+        if line[2][1] == 'i':
+            print('{} 사원의 급여: {}'.format(line[2], line[7]))
+            second_i += 1
+
+    print('*'*50)
+    print('총 사원: {}명\n이름의 두번째가 i인 사원: {}명, (전체의 {}%)\n'.format(total, second_i, round(((second_i/total)*100), 2)))
+[문제116] 50번부서 사원들의 이름, 급여 출력하는데 이름을 오름차순으로 출력하세요.
+
+import csv
+with open('C:/Users/stu/git/DA_Academy/emp_new.csv', 'r') as file:
+    emp = csv.reader(file)
+    dept_50 = {}
+    next(emp)
+    for line in emp:
+        if line[10] == '50':
+            if line[2] not in dept_50.keys():
+                dept_50[line[2]] = line[7]
+            else:
+                print('중복된 이름이 있습니다!!\n중복된 이름을 수정하여 추가합니다.')
+                dept_50[line[2]+'_1'] = line[7]
+
+for name in sorted(dept_50):
+    print('{} 사원의 급여는 {} 입니다.'.format(name, dept_50[name]))
+# 선생님 답
+import csv
+from operator import imtemgetter
+file = open('c:\data\emp.csv','r')
+emp_csv = csv.reader(file)
+next(emp_csv)
+emp_list = []
+for i in emp_csv:
+    if i[10] = '50':
+        emp_list.append(i)
+
+emp_list_sorted = sorted(emp_list, reverse=False, key=itemgetter(2))
+for i in emp_list_sorted:
+    print(i[2], i[5])
+[문제117] job이 ST_CLERK인 사원들의 이름과 입사일과 job을 출력하는데 가장 최근에 입사한 사원부터 출력하세요.
+
+import csv
+with open('C:/Users/stu/git/DA_Academy/emp_new.csv', 'r') as file:
+    emp = csv.reader(file)
+    job_ST_CLERK = {}
+    next(emp)
+    for line in emp:
+        if line[6] == 'ST_CLERK':
+            if line[2] not in job_ST_CLERK.keys():
+                job_ST_CLERK[line[2]] = [line[5], line[6]]
+            else:
+                print('중복된 이름이 있습니다!!\n중복된 이름을 수정하여 추가합니다.')
+                job_ST_CLERK[line[2]+'_1'] = [line[5], line[6]]
+
+for name in sorted(job_ST_CLERK, reverse=True, key=lambda x: job_ST_CLERK[x][0]):
+    hire = job_ST_CLERK[name][0]
+    print('{} 사원은 {}년 {}월 {}일에 {}으로 채용되었습니다.'.format(name, hire[:4], hire[4:6], hire[6:], job_ST_CLERK[name][1]))
+[문제118] 부서별 급여의 총액을 구하세요.
+
+import csv
+with open('C:/Users/stu/git/DA_Academy/emp_new.csv', 'r') as file:
+    emp = csv.reader(file)
+    dept_sal = {}
+    next(emp)
+    for line in emp:
+        sal = int(line[7])
+        if len(line[10]) ==0:
+            deptid = 0
+        else:
+            deptid = int(line[10])
+
+        if deptid not in dept_sal.keys():
+            dept_sal[deptid] = sal
+        else:
+            dept_sal[deptid] += sal
+for deptid in sorted(dept_sal):
+    print('{} 부서의 총 급여: {}'.format(deptid, dept_sal[deptid]))
+[문제119] 부서별 급여의 총액을 구하세요. 부서별로 오름차순 정렬하세요.
+
+10 4400
+20 19000
+30 24900
+40 6500
+50 156400
+60 28800
+70 10000
+80 304500
+90 63040
+100 51608
+110 20308
+non 7000
+import csv
+with open('C:/Users/stu/git/DA_Academy/emp_new.csv', 'r') as file:
+    emp = csv.reader(file)
+    dept_sal = {}
+    next(emp)
+    for line in emp:
+        sal = int(line[7])
+        if len(line[10]) ==0:
+            deptid = 999
+        else:
+            deptid = int(line[10])
+
+        if deptid not in dept_sal.keys():
+            dept_sal[deptid] = sal
+        else:
+            dept_sal[deptid] += sal
+
+for deptid in sorted(dept_sal):
+    if deptid == 999:
+        print('non 부서의 총 급여: {}'.format(dept_sal[deptid]))
+    else:
+        print('{} 부서의 총 급여: {}'.format(deptid, dept_sal[deptid]))
+[문제120] 단어, 알파벳을 입력값으로 넣어서 단어 안에 알파벳 수를 출력하세요
+
+<화면예>
+wordF('happy','p')
+2
+def wordF(word, char):
+    result = 0
+    for c in word:
+        if c == char:
+            result += 1
+    print(result)
+[문제121] 단어를 입력값으로 넣어서 알파벳을 출력하는데 중복되는 알파벳은 하나만 출력하세요.
+
+alphaF('happy')
+['h', 'a', 'p', 'y']
+
+alphaF('intelligence')
+['i', 'n', 't', 'e', 'l', 'g', 'c']
+def alphaF(word):
+    result = []
+    for c in word:
+        if c not in result:
+            result.append(c)
+    print(result)
+[문제122] 단어 철자의 빈도수를 출력하세요.
+
+alphaF('intelligence')
+{'i': 2, 'n': 2, 't': 1, 'e': 3, 'l': 2, 'g': 1, 'c': 1}
+
+alphaF('happy')
+{'h': 1, 'a': 1, 'p': 2, 'y': 1}
+def alphaF(word):
+    result = {}
+    for c in word:
+        if c not in result:
+            result[c] = 1
+        else:
+            result[c] += 1
+    print(result)
