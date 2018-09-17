@@ -1275,3 +1275,119 @@ ann_score[(ann_score['PYTHON']>=80)&(ann_score['SQL']>=90)]
 import pandas as pd
 emp = pd.read_csv('C:/Users/stu/git/DA_Academy/emp_new.csv')
 emp[emp.JOB_ID=='ST_CLERK'][['LAST_NAME', 'SALARY', 'JOB_ID']]
+
+[문제134] emp.csv 파일의 데이터를 판다스를 이용해서 읽어 들인 후 급여가 10000 이상인 사원들의 이름, 급여, 입사일을 출력해주세요.
+```python
+import pandas as pd
+file = pd.read_csv('C:/Users/stu/git/DA_Academy/emp_new.csv')
+file[file.SALARY >= 10000][['LAST_NAME', 'SALARY', 'HIRE_DATE']]
+```
+[문제135] 급여 10000 이상인 사원들의 이름과 급여, 입사일를 출력하세요. 급여를 기준으로 내림차순하세요.
+```python
+import pandas as pd
+file = pd.read_csv('C:/Users/stu/git/DA_Academy/emp_new.csv')
+file[file.SALARY >= 10000][['LAST_NAME', 'SALARY', 'HIRE_DATE']].sort_values(by='SALARY', axis=0, ascending=False)
+```
+[문제136] 급여를 많이 받는 순으로 10위 까지를 구하세요. 
+```python
+import pandas as pd
+import numpy as np
+file = pd.read_csv('C:/Users/stu/git/DA_Academy/emp_new.csv')
+# 정렬만 사용
+file.sort_values(by='SALARY', ascending=False)[:10]
+
+# rank로 구한 뒤 정렬
+file[file.SALARY.rank(ascending=False, method='first') <= 10].sort_values(by='SALARY', ascending=False)
+```
+```python
+# 선생님 답
+emp[emp['SALARY'].rank(ascending=False, method='dense')<=10][['EMPLOYEE_ID', 'LAST_NAME', 'SALARY']]
+
+emp['rank'] = emp['SALARY'].rank(ascending=False, method='dense')
+emp[emp['rank'] <= 10].sort_values('rank')
+```
+[문제137] 직업이 AD_VP, AD_PRES 인 사원들의 이름, 급여, 직업을 출력하세요.
+```python
+import pandas as pd
+import numpy as np
+file = pd.read_csv('C:/Users/stu/git/DA_Academy/emp_new.csv')
+
+file[file.JOB_ID.isin(['AD_VP', 'AD_PRES'])][['LAST_NAME', 'SALARY', 'JOB_ID']]
+```
+
+[문제138] 직업이 AD_VP ,AD_PRES 아닌 사원들의 이름, 급여, 직업을 출력하세요.
+```python
+import pandas as pd
+import numpy as np
+file = pd.read_csv('C:/Users/stu/git/DA_Academy/emp_new.csv')
+
+file[~file.JOB_ID.isin(['AD_VP', 'AD_PRES'])][['LAST_NAME', 'SALARY', 'JOB_ID']]
+```
+
+[문제139] 커미션이 null인 사원의 이름, 커미션을 출력하세요.
+```python
+import pandas as pd
+import numpy as np
+file = pd.read_csv('C:/Users/stu/git/DA_Academy/emp_new.csv')
+file[file.COMMISSION_PCT.isnull()][['LAST_NAME', 'COMMISSION_PCT']].fillna(0)
+```
+
+[문제140] 커미션이 null이 아닌 사원의 이름, 커미션을 출력하세요.
+```python
+import pandas as pd
+import numpy as np
+file = pd.read_csv('C:/Users/stu/git/DA_Academy/emp_new.csv')
+# notnull()
+file[file.COMMISSION_PCT.notnull()][['LAST_NAME', 'COMMISSION_PCT']]
+
+# ~ + isnull()
+file[~file.COMMISSION_PCT.isnull()][['LAST_NAME', 'COMMISSION_PCT']]
+```
+
+[문제141] last_name 첫 글자가 S로 시작되는 사원들의 last_name을 출력하세요
+```python
+import pandas as pd
+import numpy as np
+file = pd.read_csv('C:/Users/stu/git/DA_Academy/emp_new.csv')
+file[file.LAST_NAME.apply(lambda x: x.startswith('S'))].LAST_NAME
+```
+
+[문제142] last_name이 g로 끝나는 사원들의 이름, 급여 출력하세요.
+```python
+import pandas as pd
+import numpy as np
+file = pd.read_csv('C:/Users/stu/git/DA_Academy/emp_new.csv')
+file[file.LAST_NAME.apply(lambda x: x.endswith('g'))][['LAST_NAME', 'SALARY']]
+```
+
+[문제143] 110번 사원의 급여보다 많이 받는 사원들의 이름, 급여를 출력하세요.
+```python
+import pandas as pd
+import numpy as np
+file = pd.read_csv('C:/Users/stu/git/DA_Academy/emp_new.csv')
+file[file.SALARY > int(file[file.EMPLOYEE_ID == 110].SALARY)][['LAST_NAME', 'SALARY']]
+```
+
+[문제144] 관리자 사원의 이름, 입사일, 급여를 출력하세요.
+```python
+import pandas as pd
+import numpy as np
+file = pd.read_csv('C:/Users/stu/git/DA_Academy/emp_new.csv')
+file[file.EMPLOYEE_ID.isin(set(file.MANAGER_ID.dropna().apply(int)))][['LAST_NAME', 'HIRE_DATE','SALARY']]
+```
+```python
+with open('C:/Users/stu/git/DA_Academy/emp_new.csv', 'r') as emp:
+    mgr = []
+    next(emp)
+    for line in emp:
+        m_id = line.split(',')[9]
+        if len(m_id) > 0:
+            mgr.append(m_id)
+    mgr = list(set(mgr))
+    
+with open('C:/Users/stu/git/DA_Academy/emp_new.csv', 'r') as emp:    
+    for line in emp:
+        data = line.split(',')
+        if data[0] in mgr:
+            print('관리자 {}의 입사일은 {}, 급여는 {} 입니다.'.format(data[2], data[5], data[7]))
+```
