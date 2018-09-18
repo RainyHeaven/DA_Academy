@@ -1391,3 +1391,233 @@ with open('C:/Users/stu/git/DA_Academy/emp_new.csv', 'r') as emp:
         if data[0] in mgr:
             print('관리자 {}의 입사일은 {}, 급여는 {} 입니다.'.format(data[2], data[5], data[7]))
 ```
+
+[문제145] 101번 사원의 관리자 이름, 입사일, 급여정보를 출력하세요.
+
+pandas를 이용해서 해결
+import pandas as pd
+file = pd.read_csv('C:/Users/stu/git/DA_Academy/emp_new.csv')
+mgr, hire, salary = file[file.EMPLOYEE_ID == 101][['MANAGER_ID', 'HIRE_DATE','SALARY']].values[0]
+mgr = file[file.EMPLOYEE_ID == mgr].LAST_NAME
+pd.DataFrame({'사원번호':101, '관리자이름':mgr, '입사일':int(hire), '급여정보':int(salary)})
+일반적으로 csv 파일을 읽어서 해결
+with open('C:/Users/stu/git/DA_Academy/emp_new.csv', 'r') as file:
+    next(file)
+    for line in file:
+        data = line.split(',')
+        if data[0] == '101':
+            mgr = data[9]
+            hire = data[5]
+            salary = data[7]
+            break
+
+with open('C:/Users/stu/git/DA_Academy/emp_new.csv', 'r') as file:
+    next(file)
+    for line in file:
+        data = line.split(',')
+        if data[0] == mgr:
+            print('101번 사원의 입사일은 {}, 급여는 {}, 관리자는 {} 입니다.'.format(hire, salary, data[2]))  
+            break
+[문제146] 최고 급여, 최저 급여 출력하세요.
+
+# pandas
+import pandas as pd
+file = pd.read_csv('C:/Users/stu/git/DA_Academy/emp_new.csv')
+print('최고급여: {}\n최저급여: {}'.format(max(file.SALARY), min(file.SALARY)))
+# 
+maxsal = 0
+minsal = 99999
+with open('C:/Users/stu/git/DA_Academy/emp_new.csv', 'r') as file:
+    next(file)
+    for line in file:
+        sal = int(line.split(',')[7])
+        if  sal > maxsal:
+            maxsal = sal
+        if sal < minsal:
+            minsal = sal
+
+print('최고급여: {}\n최저급여: {}'.format(maxsal, minsal))
+[문제147] 20번 부서 사원들의 급여 합을 구하세요.
+
+# pandas
+import pandas as pd
+file = pd.read_csv('C:/data/emp_new.csv', names=['empid', 'name','job','mgr','hire_date', 'sal','comm','deptno'])
+print('20번 부서 급여합:',file[file.deptno == 20].sal.sum())
+d20_sumsal = 0
+with open('C:/data/emp_new.csv', 'r') as file:
+    for line in file:
+        if  line.split(',')[-1] == '20\n':
+            d20_sumsal += int(line.split(',')[5])
+print('20번 부서 급여합:', d20_sumsal)
+[문제148] 부서번호를 입력하면 그 부서의 급여 총액을 구하는 함수를 생성하세요.
+
+dept_sum_sal()
+부서번호를 입력하세요 :  20
+19000.0
+
+dept_sum_sal()
+부서번호를 입력하세요 :  30
+24900.0
+# pandas
+def dept_sum_sal():    
+    import pandas as pd
+    deptid = int(input('부서번호를 입력하세요 :'))
+    file = pd.read_csv('C:/Users/stu/git/DA_Academy/emp_new.csv')
+    print(file[file.DEPARTMENT_ID == deptid].SALARY.sum())
+def dept_sum_sal():
+    deptid = input('부서번호를 입력하세요 :')
+    dept_sumsal = 0
+    with open('C:/Users/stu/git/DA_Academy/emp_new.csv', 'r') as file:
+        for line in file:
+            if  line.split(',')[-1] == deptid+'\n':
+                dept_sumsal += int(line.split(',')[7])
+    print(dept_sumsal)
+[문제149] 직업을 물어보게하고 직업을 입력하면 해당 직업의 최고 급여를 출력되게하는데 아무것도 입력하지 않으면 계속 물어보게하는 프로그램을 작성하세요.
+
+job_max_sal()
+직업을 입력하세요 ?  ST_CLERK
+3600.0
+
+job_max_sal()
+직업을 입력하세요 ? sa_rep
+11500.0
+
+job_max_sal()
+직업을 입력하세요 ? 
+직업을 입력하세요 ? 
+직업을 입력하세요 ? 
+
+job_max_sal()
+직업을 입력하세요 ? sales
+해당 직업의 사원은 없습니다.
+def job_max_sal():
+    import pandas as pd
+
+    j_id = ''
+    while not len(j_id):
+        j_id = input('직업을 입력하세요:').upper()    
+
+    file = pd.read_csv('C:/Users/stu/git/DA_Academy/emp_new.csv')
+    try:
+        result = max(file[file.JOB_ID==j_id].SALARY)
+    except ValueError:
+        print('해당 직업의 사원은 없습니다.')
+    except Exception as error:
+        print(error)
+    else:
+        return result
+[문제150]부서번호,급여를 기준으로 내림차순 정렬해서 아래 화면처럼 컬럼정보를 출력하세요.
+
+     deptno  empid         name      sal
+105   110.0    205      Higgins  12008.0
+106   110.0    206        Gietz   8300.0
+8     100.0    108    Greenberg  13208.8
+9     100.0    109       Faviet   9900.0
+10    100.0    110         Chen   8200.0
+12    100.0    112        Urman   7800.0
+11    100.0    111      Sciarra   7700.0
+13    100.0    113         Popp   6900.0
+import pandas as pd
+file = pd.read_csv('C:/Users/stu/git/DA_Academy/emp_new.csv')
+file[['DEPARTMENT_ID', 'EMPLOYEE_ID', 'LAST_NAME', 'SALARY']].sort_values(by=['DEPARTMENT_ID', 'SALARY'],ascending=False)
+[문제151] index 번호 0부터 50까지 부서번호, 급여를 기준으로 내림차순 정렬한 후 아래결과처럼 출력하세요.
+
+    deptno  empid         name      sal
+8    100.0    108    Greenberg  13208.8
+9    100.0    109       Faviet   9900.0
+10   100.0    110         Chen   8200.0
+12   100.0    112        Urman   7800.0
+11   100.0    111      Sciarra   7700.0
+13   100.0    113         Popp   6900.0
+import pandas as pd
+file = pd.read_csv('C:/Users/stu/git/DA_Academy/emp_new.csv')
+file[['DEPARTMENT_ID', 'EMPLOYEE_ID', 'LAST_NAME', 'SALARY']][0:51].sort_values(by=['DEPARTMENT_ID', 'SALARY'],ascending=False)
+[문제152] 50번 부서 사원들의 정보를 급여를 기준으로 내림차순 정렬해서 해서 아래 화면처럼 컬럼정보를 출력하세요.
+
+   empid         name  deptno     sal
+21    121        Fripp    50.0  8200.0
+20    120        Weiss    50.0  8000.0
+22    122     Kaufling    50.0  7900.0
+23    123      Vollman    50.0  6500.0
+24    124      Mourgos    50.0  5800.0
+84    184     Sarchand    50.0  4200.0
+import pandas as pd
+file = pd.read_csv('C:/Users/stu/git/DA_Academy/emp_new.csv')
+file[file.DEPARTMENT_ID==50][['EMPLOYEE_ID', 'LAST_NAME','DEPARTMENT_ID', 'SALARY']].sort_values(by='SALARY',ascending=False)
+[문제153] 10,20,30,40,50번 부서 사원들의 급여의 총액을 출력하세요.
+
+<화면출력>
+10 4400.0
+20 19000.0
+30 24900.0
+40 6500.0
+50 156400.0
+import pandas as pd
+file = pd.read_csv('C:/Users/stu/git/DA_Academy/emp_new.csv')
+for deptid in range(10, 51, 10):
+    print(deptid, sum(file[file.DEPARTMENT_ID == deptid].SALARY))
+[문제154] s 변수에 값들 중에 unique한 값만 s_unique 변수에 넣어주세요. s = [1,2,3,4,1,2,3,4,5,1,2,3,4,5,6,'']
+
+# Null 포함
+s_unique = []
+s = [1,2,3,4,1,2,3,4,5,1,2,3,4,5,6,'']
+for n in s:
+    if n not in s_unique:
+        s_unique.append(n)
+# Null 제외
+s_unique = []
+s = [1,2,3,4,1,2,3,4,5,1,2,3,4,5,6,'']
+for n in s:
+    if n != '' and n not in s_unique:
+        s_unique.append(n)   
+# 빈도수 체크 / Null 포함
+s_unique = {}
+s = [1,2,3,4,1,2,3,4,5,1,2,3,4,5,6,'']
+for n in s:
+    if n not in s_unique:
+        s_unique[n] = 1
+    else:
+        s_unique[n] += 1
+# 빈도수 체크 / Null 제외
+s_unique = {}
+s = [1,2,3,4,1,2,3,4,5,1,2,3,4,5,6,'']
+for n in s:
+    if n == '':
+        continue
+    elif n not in s_unique:
+        s_unique[n] = 1
+    else:
+        s_unique[n] += 1
+# 빈도수의 상대비율 / Null 제외
+s_unique = {}
+s = [1,2,3,4,1,2,3,4,5,1,2,3,4,5,6,'']
+for n in s:
+    if n == '':
+        continue
+    elif n not in s_unique:
+        s_unique[n] = 1
+    else:
+        s_unique[n] += 1
+
+total = sum(s_unique.values())        
+for i in s_unique:
+    print(i, s_unique[i]/total)    
+[문제155] 부서별로 급여 총액을 출력하세요.
+
+<화면 출력>
+10 4400.0
+20 19000.0
+30 24900.0
+40 6500.0
+50 156400.0
+60 28800.0
+70 10000.0
+80 304500.0
+90 58000.0
+100 53708.8
+110 20308.0
+import pandas as pd
+file = pd.read_csv('C:/data/emp_new.csv', names=['empid', 'name','job','mgr','hire_date', 'sal','comm','deptno'])
+deptids = sorted(list(file.deptno.dropna().unique()))
+for deptid in deptids:
+    print(deptid, sum(file[file.deptno == deptid].sal))
