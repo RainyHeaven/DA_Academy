@@ -1621,3 +1621,238 @@ file = pd.read_csv('C:/data/emp_new.csv', names=['empid', 'name','job','mgr','hi
 deptids = sorted(list(file.deptno.dropna().unique()))
 for deptid in deptids:
     print(deptid, sum(file[file.deptno == deptid].sal))
+
+[문제156]부서별로 급여 총액을 출력하세요.
+
+<화면 출력>
+10 4400.0
+20 19000.0
+30 24900.0
+40 6500.0
+50 156400.0
+60 28800.0
+70 10000.0
+80 304500.0
+90 58000.0
+100 53708.8
+110 20308.0
+nan 7000.0
+import pandas as pd
+file = pd.read_csv('C:/Users/stu/git/DA_Academy/emp_new.csv')
+for deptid in sorted(file.DEPARTMENT_ID.unique()):
+    if pd.isnull(deptid):
+        print(deptid, sum(file[pd.isnull(file.DEPARTMENT_ID)].SALARY))
+    else:
+        print(deptid, sum(file[file.DEPARTMENT_ID==deptid].SALARY))
+[문제157] 년도별로 입사한 인원수 결과를 출력해주세요.
+
+import pandas as pd
+file = pd.read_csv('C:/Users/stu/git/DA_Academy/emp_new.csv')
+file.HIRE_DATE.groupby(file.HIRE_DATE.apply(lambda x: str(x)[0:4])).count()
+# 선생님 답
+from pandas import Series, DataFrame
+import pandas as pd
+import numpy as np
+
+emp = pd.read_csv("c:\data\emp_new.csv", names = ['empid','name','job','mgr','hire_date','sal','comm','deptno'])
+emp.dtypes
+print(emp.groupby(emp['hire_date'].str.slice(0,4))['empid'].count())
+print(emp.groupby(pd.to_datetime(emp['hire_date']).dt.year)['empid'].count())
+pd.to_datetime(emp['hire_date']).dt
+pd.to_datetime(emp['hire_date']).dt.year
+pd.to_datetime(emp['hire_date']).dt.month
+pd.to_datetime(emp['hire_date']).dt.day
+pd.to_datetime(emp['hire_date']).apply(lambda x: x.year)
+pd.to_datetime(emp['hire_date']).apply(lambda x: x.month)
+
+pd.to_datetime(Series('2018-09-19 11:01:30')).dt.year
+pd.to_datetime(Series('2018-09-19 11:01:30')).dt.month
+pd.to_datetime(Series('2018-09-19 11:01:30')).dt.day
+pd.to_datetime(Series('2018-09-19 11:01:30')).dt.hour
+pd.to_datetime(Series('2018-09-19 11:01:30')).dt.minute
+pd.to_datetime(Series('2018-09-19 11:01:30')).dt.second
+pd.to_datetime(Series('2018-09-19 11:01:30')).dt.quarter
+pd.to_datetime(Series('2018-09-19 11:01:30')).dt.dayofweek #(월요일=0, 일요일=6)
+pd.to_datetime(Series('2018-09-19 11:01:30')).dt.dayofyear
+pd.to_datetime(Series('2018-09-19 11:01:30')).dt.date
+pd.to_datetime(Series('2018-09-19 11:01:30')).dt.time
+pd.to_datetime(Series('2018-09-19 11:01:30')).dt.week
+pd.to_datetime(Series('2018-09-19 11:01:30')).dt.days_in_month
+[문제158] emp_new.csv 를 emp리스트 변수안에 아래 모양과 같은 딕셔너리 데이터 유형에 데이트를 입력한 후 출력하세요.
+
+{'empno': 100, 'ename': King, 'job': AD_PRES, 'mgr': '', 'hiredate': 2003-06-17, 'sal': 24000, 'comm': '', 'deptno': 90}
+
+100 King AD_PRES  2003-06-17 24000  90
+101 Kochhar AD_VP 100 2005-09-21 17000  90
+102 De Haan AD_VP 100 2001-01-13 17000  90
+103 Hunold IT_PROG 102 2006-01-03 9000  60
+104 Ernst IT_PROG 103 2007-05-21 6000  60
+with open('c:/data/emp_new.csv','r') as file:
+    emp = []
+    for line in file:
+        data = line.strip().split(',')
+        emp.append({'empno':data[0], 'ename':data[1], 'job':data[2], 'mgr':data[3], 
+                'hiredate':data[4], 'sal':data[5], 'comm':data[6], 'deptno':data[7]})
+
+for line in emp:
+    print((' '.join(line.values())).replace('"','')) 
+[문제159] emp_new.csv, dept_new.csv 파일을 읽어서 사원의 이름, 부서 이름을 출력하세요.
+
+with open('C:/Users/stu/git/DA_Academy/emp_new_1.csv','r') as file:
+    emp = []
+    for line in file:
+        data = line.strip().split(',')
+        emp.append({'empno':data[0], 'ename':data[1], 'job':data[2], 'mgr':data[3], 
+                'hiredate':data[4], 'sal':data[5], 'comm':data[6], 'deptno':data[7]})
+
+with open('C:/Users/stu/git/DA_Academy/dept_new.csv','r') as file:
+    dept = {}
+    for line in file:
+        data = line.strip().split(',')
+        dept[data[0]] = data[1]
+
+for data in emp:
+    if data['deptno'] == '':
+        print('{} 사원은 소속 부서가 없습니다.'.format(data['ename']))
+    else:
+        print('{} 사원은 {} 부서에 속해있습니다.'.format(data['ename'], dept[data['deptno']]))
+# 선생님답
+import  csv
+empfile = open("c:\data\emp_new.csv",'r')
+deptfile = open("c:\data\dept_new.csv",'r')
+emp_csv = csv.reader(empfile)
+dept_csv = csv.reader(deptfile)
+
+emp =[]  
+dept =[]
+
+for i in  dept_csv:
+    dept.append({'deptno':i[0],'dname':i[1],'mgr':i[2],'loc':i[3]})
+
+for j in emp_csv:
+    emp.append({'empno':j[0],'ename':j[1],'job':j[2],'mgr':j[3], 'hiredate':j[4],'sal':j[5],'comm':j[6],'deptno':j[7]})
+
+
+for d in dept:
+   for e in emp:
+        if e['deptno'] == d['deptno']:
+            print ( e['ename'], d['dname'])
+
+
+empfile.close()
+deptfile.close()
+[문제160] 사원들의 이름, 부서 이름을 출력하면서 소속부서가 없는 사원도 출력해주세요. 마지막에는 총건수도 출력하세요.
+
+select  e.last_name, d.department_name from employees e left outer join departments d on e.department_id = d.department_id
+select e.last_name, d.department_name from employees e, departments d where e.department_id = d.department_id(+)
+with open('C:/Users/stu/git/DA_Academy/emp_new_1.csv','r') as file:
+    emp = []
+    for line in file:
+        data = line.strip().split(',')
+        emp.append({'empno':data[0], 'ename':data[1], 'job':data[2], 'mgr':data[3], 
+                'hiredate':data[4], 'sal':data[5], 'comm':data[6], 'deptno':data[7]})
+
+with open('C:/Users/stu/git/DA_Academy/dept_new.csv','r') as file:
+    dept = {}
+    for line in file:
+        data = line.strip().split(',')
+        dept[data[0]] = data[1]
+
+for data in emp:
+    if data['deptno'] == '':
+        print('{} 사원은 소속 부서가 없습니다.'.format(data['ename']))
+    else:
+        print('{} 사원은 {} 부서에 속해있습니다.'.format(data['ename'], dept[data['deptno']]))
+
+print('총 사원수:', len(emp))        
+# 선생님답
+import  csv
+empfile = open("c:\data\emp_new.csv",'r')
+deptfile = open("c:\data\dept_new.csv",'r')
+emp_csv = csv.reader(empfile)
+dept_csv = csv.reader(deptfile)
+
+emp = []  
+dept =[]
+
+for i in  dept_csv:
+    dept.append({'deptno':i[0],'dname':i[1],'mgr':i[2],'loc':i[3]})
+
+for j in emp_csv:
+    emp.append({'empno':j[0],'ename':j[1],'job':j[2],'mgr':j[3], 'hiredate':j[4],'sal':j[5],'comm':j[6],'deptno':j[7]})
+
+cn = 0
+for e in emp:
+    if e['deptno'] == '':
+        print(e['ename'])
+        cn += 1
+    else:
+        for d in dept:
+            if e['deptno'] == d['deptno']:
+               print ( e['ename'], d['dname'])
+               cn += 1
+
+print(cn)
+
+empfile.close()
+deptfile.close()
+[문제161] emp_new.csv, dept_new.csv 파일 데이터에서 50번 부서 사원의 중에 급여가 5000 이상인 사원의 이름, 부서 이름을 출력하세요.
+
+import pandas as pd
+from pandas import Series, DataFrame
+
+emp=pd.read_csv('C:/Users/stu/git/DA_Academy/emp_new_1.csv', 
+                names=['empid','name','job','mgr','hire_date','sal','comm', 'deptno'])
+
+dept = pd.read_csv('C:/Users/stu/git/DA_Academy/dept_new.csv', 
+                  names=['deptno','dname','mgr','loc'])
+
+pd.merge(emp[(emp.deptno == 50)&(emp.sal >= 5000)], dept, on='deptno')[['name', 'dname']]
+[문제162] 2002년도에 근무한 사원들의 이름, 급여, 입사일, 부서코드,부서이름을 출력하세요.
+
+import pandas as pd
+from pandas import Series, DataFrame
+
+emp=pd.read_csv('C:/Users/stu/git/DA_Academy/emp_new_1.csv', 
+                names=['empid','name','job','mgr','hire_date','sal','comm', 'deptno'])
+
+dept = pd.read_csv('C:/Users/stu/git/DA_Academy/dept_new.csv', 
+                  names=['deptno','dname','mgr','loc'])
+
+pd.merge(emp[emp.hire_date.apply(lambda x: x[0:4]) == '2002'], dept, 
+         on='deptno')[['name','sal','hire_date','deptno', 'dname']]
+# 선생님 답
+pd.merge(emp[emp.hire_date.str.slice(0,4) == '2002'], dept, 
+         on='deptno')[['name','sal','hire_date','deptno', 'dname']]
+
+from datetime import datetime
+pd.merge(emp[pd.to_datetime(emp.hire_date).dt.year == datetime.strptime('2002', '%Y').year], dept, 
+         on='deptno')[['name','sal','hire_date','deptno', 'dname']]
+[문제163] 직업이 AD_VP, AD_PRES 인 사원들의 이름, 급여, 직업, 부서코드, 부서이름 을 출력하세요.
+
+import pandas as pd
+from pandas import Series, DataFrame
+
+emp=pd.read_csv('C:/Users/stu/git/DA_Academy/emp_new_1.csv', 
+                names=['empid','name','job','mgr','hire_date','sal','comm', 'deptno'])
+
+dept = pd.read_csv('C:/Users/stu/git/DA_Academy/dept_new.csv', 
+                  names=['deptno','dname','mgr','loc'])
+
+pd.merge(emp[emp.job.isin(['AD_VP', 'AD_PRES'])], dept, 
+         on='deptno')[['name','sal','job','deptno', 'dname']]
+[문제164] 부서이름별 총액 급여를 출력하세요.
+
+import pandas as pd
+from pandas import Series, DataFrame
+
+emp=pd.read_csv('C:/Users/stu/git/DA_Academy/emp_new_1.csv', 
+                names=['empid','name','job','mgr','hire_date','sal','comm', 'deptno'])
+
+dept = pd.read_csv('C:/Users/stu/git/DA_Academy/dept_new.csv', 
+                  names=['deptno','dname','mgr','loc'])
+
+total = emp.sal.groupby(emp.deptno).sum()
+df = DataFrame({'deptno':total.index, 'sumsal':total.values})
+
+pd.merge(df, dept[['deptno', 'dname']], on='deptno')[['dname', 'sumsal']]
