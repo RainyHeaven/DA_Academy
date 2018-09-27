@@ -1856,3 +1856,321 @@ total = emp.sal.groupby(emp.deptno).sum()
 df = DataFrame({'deptno':total.index, 'sumsal':total.values})
 
 pd.merge(df, dept[['deptno', 'dname']], on='deptno')[['dname', 'sumsal']]
+
+[문제165] emp_new.csv 파일 데이터에 커미션 정보를 분석하려 합니다. 커미션에 null값들의 수, null이 아닌값들의 수를 구하세요.
+
+일반적으로 csv file을 읽어서 해결
+
+with open('C:/Users/stu/git/DA_Academy/emp_new_1.csv', 'r') as emp:
+ comm = 0
+ nocomm = 0
+ for line in emp:
+     data = line.split(',')
+     if len(data[6]) > 0:
+         comm += 1
+     else:
+         nocomm += 1
+
+ print('커미션을 받는 사원: {}명\n커미션을 받지 않는 사원: {}명'.format(comm, nocomm))
+pandas를 이용해서 해결
+import pandas as pd
+emp = pd.read_csv('C:/Users/stu/git/DA_Academy/emp_new_1.csv', 
+               names=['empid','lname','jobid','mgrid','hiredate','salary', 'commpct', 'deptid'])
+nocomm = len(emp[emp.commpct.isnull()])
+print('커미션을 받는 사원: {}명\n커미션을 받지 않는 사원: {}명'.format(len(emp)-nocomm, nocomm))
+[문제166] emp_new.csv, dept_new.csv 파일 데이터를 이용해서 조인된 결과를 보려고 합니다. 조인 함수를 생성하세요.
+
+join(emp,'deptno','ename', dept,'deptno','dname')
+join(emp,'mgr','ename', emp,'empno','ename')
+# join(테이블1, 키컬럼, 출력컬럼, 테이블2, 키컬럼, 출력컬럼)
+import pandas as pd
+emp = pd.read_csv('C:/Users/stu/git/DA_Academy/emp_new_1.csv', 
+                  names=['empno', 'ename','jobid','mgr','hiredate','salary','commpct','deptno'])
+dept = pd.read_csv('C:/Users/stu/git/DA_Academy/dept_new.csv', 
+                  names=['deptno','dname','mgrid','loc'])
+
+def join(table_1, key_1, column_1, table_2, key_2, column_2):
+    print(pd.merge(table_1[[key_1, column_1]], table_2[[key_2, column_2]], left_on=key_1, right_on=key_2).iloc[:,[1,-1]])
+# 선생님 답
+import  csv
+empfile = open("c:\data\emp_new.csv",'r')
+deptfile = open("c:\data\dept_new.csv",'r')
+emp_csv = csv.reader(empfile)
+dept_csv = csv.reader(deptfile)
+
+emp = []  
+dept =[]
+
+for i in  dept_csv:
+    dept.append({'deptno':i[0],'dname':i[1],'mgr':i[2],'loc':i[3]})
+
+for j in emp_csv:
+    emp.append({'empno':j[0],'ename':j[1],'job':j[2],'mgr':j[3], 'hiredate':j[4],'sal':j[5],'comm':j[6],'deptno':j[7]})
+
+def join(outer_table,outer_column1,outer_column2,inner_table,inner_column1,inner_column2):
+   for  o  in  outer_table:
+      for  i  in  inner_table:
+         if o[outer_column1] == i[inner_column1]:
+             print (o[outer_column2], i[inner_column2]) 
+
+
+join(emp,'deptno','ename', dept,'deptno','dname')
+
+join(emp,'mgr','ename', emp,'empno','ename')
+
+
+
+import  pandas  as  pd
+
+emp = pd.read_csv("c:\data\emp_new.csv", names = ['empid','ename','job','mgr','hire_date','sal','comm','deptno'])
+dept = pd.read_csv("c:\data\dept_new.csv",names = ['deptno','dname','mgr','loc'])
+
+def join(outer_table,outer_column1,outer_column2,inner_table,inner_column1,inner_column2):
+    print(pd.merge(outer_table[[outer_column1,outer_column2]],inner_table[[inner_column1,inner_column2]],left_on=outer_column1,right_on=inner_column1))
+
+join(emp,'deptno','ename', dept,'deptno','dname')
+
+join(emp,'mgr','ename', emp,'empid','ename')    
+[문제167] x변수에는 1,2,3,4,5 y변수에는 6,7,8,9,10 들어 있다. f(x,y) = x2 + y 를 구하세요.(lambda, map 함수를 이용하세요)
+
+x = [1,2,3,4,5]
+y = [6,7,8,9,10]
+
+def f(x,y):
+    return list(map(lambda x,y:2*x+y, x,y))
+[문제168] emp_new.csv는 pandas로 읽고 dept_new.csv는 일반 csv로 읽어들인 후 조인을 수행하세요.
+
+import pandas as pd
+from pandas import Series, DataFrame
+emp = pd.read_csv('C:/Users/stu/git/DA_Academy/emp_new_1.csv', 
+                  names=['empno', 'ename','jobid','mgr','hiredate','salary','commpct','deptno'])
+
+dept = {}
+with open('C:/Users/stu/git/DA_Academy/dept_new.csv', 'r') as file:
+    for line in file:
+        data = line.strip().split(',')
+        dept[float(data[0])] = data[1]
+
+emp['dname'] = emp.deptno.map(dept)
+[문제169] happiness 변수에 문장이 있습니다. 행복이란 단어가 몇개 나오는지 분석하시고, 위치정보도 출력해주세요.
+
+happiness = '우리나라 「헌법」 제10조는 “모든 국민은 인간으로서의 존엄과 가치를 가지며, 행복을 추구할 권리를 가진다”라고 규정하고 있다.행복추구권은 근대 입헌민주주의의 핵심인 개인주의·자유주의를 그 사상적 기반으로 하고 있다. 행복추구권에 있어서 행복은 다의적인 개념으로, 각자의 생활조건이나 가치관에 따라 다르게 이해될 수 있으나, 최소한 인간적인 고통이 없는 상태 내지 만족감을 느낄 수 있는 행복한 상태를 의미한다.'
+happiness = '우리나라 「헌법」 제10조는 “모든 국민은 인간으로서의 존엄과 가치를 가지며, 행복을 추구할 권리를 가진다”라고 규정하고 있다.행복추구권은 근대 입헌민주주의의 핵심인 개인주의·자유주의를 그 사상적 기반으로 하고 있다. 행복추구권에 있어서 행복은 다의적인 개념으로, 각자의 생활조건이나 가치관에 따라 다르게 이해될 수 있으나, 최소한 인간적인 고통이 없는 상태 내지 만족감을 느낄 수 있는 행복한 상태를 의미한다.'
+result = []
+start = 0
+try:
+    while True:
+        i = happiness.index('행복', start)
+        result.append(i)
+        start = i+1
+
+except ValueError:
+    num = len(result)
+    print('"행복"은 총 {}회 발견되었습니다.'.format(num))
+    if num:
+        print('위치:', result)
+
+except Exception as error:
+    print('에러가 발생했습니다! ',error)
+[문제170] emp1.csv, emp2.csv파일을 읽어서 부서별 총액급여를 구하세요.
+
+import pandas as pd
+from pandas import Series, DataFrame
+emp = pd.DataFrame()
+for i in range(1, 3):
+    temp = pd.read_csv('C:/Users/stu/git/DA_Academy/emp{}.csv'.format(i), 
+                      names=['empid', 'lname','hiredate','salary','deptid'])
+    emp = emp.append(temp)
+print(emp.salary.groupby(emp.deptid).sum())    
+[문제171] 2016년도에 태어난 아이들의 정보가 들어 있는 year2016파일을 분석해야 합니다. 총 출생수를 출력해주세요.
+
+total = 0
+with open('C:/Users/stu/git/DA_Academy/yob2016.txt', 'r') as file:
+    for line in file:
+        data = line.split(',')
+        total += int(data[2])
+print('2016년 총 출생수:', total)        
+# pandas
+import pandas as pd
+yob = pd.read_csv('C:/Users/stu/git/DA_Academy/yob2016.txt', names=['name','gender','num'])
+print('2016년 총 출생수:', yob.num.sum())        
+# 선생님 답
+import csv
+import os
+
+count=0
+file = 'c:\data\yob2016.txt'
+name = os.path.basename('c:\data\yob2016.txt') # os.path.basename: 경로를 제거하고 파일명만 리턴하는 함수
+name = name.split('.')[0]
+with open(file,'r') as f:
+    data=csv.reader(f)
+    for d in data:
+        count += int(d[2])
+print(name,count)
+
+import csv
+import os
+
+count=0
+file = 'c:\data\yob2016.txt'
+name = os.path.basename('c:\data\yob2016.txt')
+name = name.split('.')[0]
+with open(file,'r') as f:
+    data=f.readlines()
+    for d in data:
+        birth = d.split(',')[2]
+        count += int(birth)
+print(name,count)
+
+
+
+import pandas as pd 
+import os
+
+file = 'c:/data/yob2016.txt'
+name = os.path.basename(file)
+name = name.split('.')[0]
+
+yob = pd.read_csv('c:\data\yob2016.txt', names=['name','gender','birth'])
+
+
+print(name,yob['birth'].sum())
+[문제172] 2016년도에 태어난 아이 이름 상위 10까지 보여주세요. 성별 상위 5까지 보여주세요.
+
+import pandas as pd
+yob = pd.read_csv('C:/Users/stu/git/DA_Academy/yob2016.txt', names=['name','gender','num'])
+# 상위 10위
+## sort 사용
+yob.sort_values(ascending=False, by='num')[0:10]
+## rank 사용
+yob[yob.num.rank(ascending=False, method='dense', na_option='bottom')<=10].sort_values(ascending=False, by='num')
+
+# 성별 상위 5위
+## sort 사용
+female = yob[yob.gender == 'F'].sort_values(ascending=False, by='num')[0:5]
+male = yob[yob.gender == 'M'].sort_values(ascending=False, by='num')[0:5]
+pd.concat([female, male])
+## rank 사용
+yob[yob.groupby('gender').num.rank(ascending=False, method='dense', na_option='bottom')<=5].sort_values(ascending=False, by='gender')
+# 선생님답
+import pandas as pd 
+
+yob2016 = pd.read_csv('c:\data\yob2016.txt', names=['name','gender','birth'])
+
+def top(df, n=5, column='birth'):
+    return df.sort_values(by=column, ascending=False)[:n]
+
+print(top(yob2016 , n=10))
+
+print(yob2016.groupby('gender').apply(top))
+
+[문제173] emp1.csv 데이터를 이용해서 급여를 많이 받는 순으로 10위까지 구하세요.
+
+import pandas as pd
+emp = pd.read_csv('C:/Users/Rainy/Documents/git/DA_Academy\emp1.csv', 
+                  names=['empid', 'lname','hiredate','salary','deptid'])
+# sort_values
+emp.sort_values('salary', ascending=False)[:10]
+
+# rank
+emp[emp.salary.rank(ascending=False, method='first') <= 10].sort_values(ascending=False, by='salary')
+[문제174] emp1.csv 데이터를 이용해서 부서별로 급여를 많이 받는 순으로 5위까지 구하세요.
+
+import pandas as pd
+emp = pd.read_csv('C:/Users/Rainy/Documents/git/DA_Academy\emp1.csv', 
+                  names=['empid', 'lname','hiredate','salary','deptid'])
+emp[emp.salary.groupby(emp.deptid).rank(ascending=False) <= 5].sort_values(ascending=[True, False], by=['deptid','salary'])
+[문제175] yob2016.txt 데이터를 이용해서 아기 이름 순위 10위까지 구하세요.
+
+import pandas as pd
+yob = pd.read_csv('C:/Users/Rainy/Documents/git/DA_Academy\yob2016.txt', 
+                  names=['name','gender','num'])
+# sort_values
+yob.sort_values(by='num', ascending=False)[:10]
+
+# rank
+yob[yob.num.rank(ascending=False, method='first') <= 10].sort_values(by='num', ascending=False)
+[문제176] yob2016.txt 데이터를 이용해서 성별 아기 이름 순위 5위까지 구하세요.
+
+import pandas as pd
+yob = pd.read_csv('C:/Users/Rainy/Documents/git/DA_Academy\yob2016.txt', 
+                  names=['name','gender','num'])
+
+yob[yob.num.groupby(yob.gender).rank(ascending=False, method='first') <= 5].sort_values(by=['gender', 'num'], ascending=False)
+[문제177] 2000 ~ 2016년도 년도별 출생수
+
+https://catalog.data.gov/dataset/baby-names-from-social-security-card-applications-national-level-data
+2000 3777666
+2001 3741011
+2002 3735651
+2003 3799547
+2004 3817903
+2005 3841440
+2006 3952231
+2007 3993206
+2008 3925486
+2009 3814539
+2010 3689517
+2011 3650434
+2012 3648441
+2013 3634744
+2014 3692930
+2015 3683749
+2016 3637321 
+# pandas 
+import pandas as pd
+
+for i in range(17):
+    year = 2000+i
+    file = 'C:/Users/stu/git/DA_Academy/yob{}.txt'.format(year)
+    yob = pd.read_csv(file, names=['name', 'gender','num'])
+    print(year, yob.num.sum())
+
+# pandas 없이
+for i in range(17):
+    year = 2000+i
+    file = 'C:/Users/stu/git/DA_Academy/yob{}.txt'.format(year)
+    total = 0
+    with open(file, 'r') as yob:
+        for line in yob:
+            data = line.split(',')
+            total += int(data[2])
+        print(year, total)
+[문제178] 2000 ~ 2016년도 년도별 출생수 결과를 year.txt 파일에 저장하세요.
+
+import pandas as pd
+
+for i in range(17):
+    year = 2000+i
+    file = 'C:/Users/stu/git/DA_Academy/yob{}.txt'.format(year)
+    yob = pd.read_csv(file, names=['name', 'gender','num'])
+    with open('C:/Users/stu/git/DA_Academy/year.txt', 'a+') as file:
+        file.write(str(year)+','+str(yob.num.sum())+'\n')
+[문제179] 2010 ~ 2016 년도까지 성별 출생 현황을 year_gender_total.csv 파일로 생성해주세요.
+
+import pandas as pd
+
+for i in range(17):
+    year = 2000+i
+    file = 'C:/Users/stu/git/DA_Academy/yob{}.txt'.format(year)
+    yob = pd.read_csv(file, names=['name', 'gender','num'])
+    with open('C:/Users/stu/git/DA_Academy/year_gender_total.csv', 'a+') as file:
+        file.write('{},F,{}\n'.format(year, yob[yob.gender=='F'].num.sum()))
+        file.write('{},M,{}\n'.format(year, yob[yob.gender=='M'].num.sum()))
+
+[문제180] 2010 ~ 2016 년도까지 성별 출생 현황을 그래프를 그리세요.
+
+import pandas as pd
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+
+file = pd.read_csv('C:/Users/stu/git/DA_Academy/year_gender_total.csv', names=['year','gender', 'num'])
+file = file.set_index('year')
+plt.plot(file[file.gender=='F'].num, label='여성')
+plt.plot(file[file.gender=='M'].num, label='남성')
+plt.grid()
+plt.title('연도별 남녀 출생',fontsize=15)
+
+plt.xlabel('년도',fontsize=10)
+plt.ylabel('출생수',fontsize=10)
+plt.legend()

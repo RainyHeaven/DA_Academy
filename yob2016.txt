@@ -1,4 +1,4 @@
-﻿Emma,F,19414
+Emma,F,19414
 Olivia,F,19246
 Ava,F,16237
 Sophia,F,16070
