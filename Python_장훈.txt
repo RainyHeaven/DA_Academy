@@ -2174,3 +2174,152 @@ plt.title('연도별 남녀 출생',fontsize=15)
 plt.xlabel('년도',fontsize=10)
 plt.ylabel('출생수',fontsize=10)
 plt.legend()
+
+[문제181] 이 주소로 접속하셔서 게시글을 출력하세요.
+http://home.ebs.co.kr/ladybug/board/6/10059819/oneBoardList?hmpMnuId=106
+
+import urllib.request as req
+from bs4 import BeautifulSoup as bs
+
+url = 'http://home.ebs.co.kr/ladybug/board/6/10059819/oneBoardList?hmpMnuId=106'
+html = req.urlopen(url)
+soup = bs(html, 'html.parser')
+articles = soup.findAll('p', class_='con')
+
+for i, article in enumerate(articles):
+    print('{}번째 댓글: {}'.format(i+1, article.string.strip()))
+# 선생님답
+from bs4 import BeautifulSoup
+import urllib.request as req
+
+url = "http://home.ebs.co.kr/ladybug/board/6/10059819/oneBoardList?hmpMnuId=106"
+res = req.urlopen(url)
+soup = BeautifulSoup(res,"html.parser")
+result = soup.find_all('p', class_="con")
+for i in result:
+    print(i.get_text(strip=True))
+
+
+
+url = "http://home.ebs.co.kr/ladybug/board/6/10059819/oneBoardList?hmpMnuId=106"
+res = req.urlopen(url).read().decode("utf-8")
+soup = BeautifulSoup(res,"html.parser")
+result = soup.find_all('p', class_="con")
+for i in result:
+    print(i.get_text(strip=True))
+[문제182] 게시글 뿐만 아니라 게시날짜 정보도 같이 출력하시오 !
+
+2017.04.12 19:48 레이디버그 3기나오면 좋은사람 손~~
+import urllib.request as req
+from bs4 import BeautifulSoup as bs
+
+url = 'http://home.ebs.co.kr/ladybug/board/6/10059819/oneBoardList?hmpMnuId=106'
+html = req.urlopen(url)
+soup = bs(html, 'html.parser')
+articles = soup.findAll('li', class_='spot_')
+
+for article in articles:
+    date = article.find('span', class_='date').string
+    reply = article.find('p', class_='con').string.strip()
+    print(date, reply)
+# 선생님 답
+from bs4 import BeautifulSoup
+import urllib.request as req
+url = "http://home.ebs.co.kr/ladybug/board/6/10059819/oneBoardList?hmpMnuId=106"
+res = req.urlopen(url)
+soup= BeautifulSoup(res, "html.parser")
+a = soup.find_all('p',class_="con")
+b = soup.find_all('span',class_="date")
+print(b[0].get_text())
+print(b[0].text)
+
+cnt= 0
+for i in a:
+    print(b[cnt].text,i.get_text(strip=True))
+    cnt += 1
+
+print(cnt)
+[문제183] 게시판에 게시글 전부를 수집해주세요.
+
+import urllib.request as req
+from bs4 import BeautifulSoup as bs
+result = []
+for i in range(1, 17):
+    url = 'http://home.ebs.co.kr/ladybug/board/6/10059819/oneBoardList?c.page={}&hmpMnuId=106&searchKeywordValue=0&bbsId=10059819&searchKeyword=&searchCondition=&searchConditionValue=0&'.format(i)
+    html = req.urlopen(url)
+    soup = bs(html, 'html.parser')
+    articles = soup.findAll('li', class_='spot_')
+    for article in articles:
+        date = article.find('span', class_='date').string
+        reply = article.find('p', class_='con').string.strip()
+        result.append([str(date), str(reply)])
+# 선생님 답
+for i in range(1,16):
+    url = "http://home.ebs.co.kr/ladybug/board/6/10059819/oneBoardList?c.page=" +str(i)+ "&hmpMnuId=106&searchKeywordValue=0&bbsId=10059819&searchKeyword=&searchCondition=&searchConditionValue=0&"
+
+    res = req.urlopen(url)
+    soup= BeautifulSoup(res, "html.parser")
+    a = soup.find_all('p',class_="con")
+    b = soup.find_all('span',class_="date")
+    cnt= 0
+    content =[]
+    for i in a:
+        content.append(b[cnt].text + i.get_text(strip=True))
+        cnt += 1
+
+    for j in content:
+        print(j)
+[문제184] 동아일보에서 인공지능에 기사 스크롤링 해주세요.
+
+import urllib.request as req
+from bs4 import BeautifulSoup as bs
+
+result = []
+for i in range(1, 3):
+    main_url = 'http://news.donga.com/search?p={}&query=%EC%9D%B8%EA%B3%B5%EC%A7%80%EB%8A%A5&check_news=1&more=1&sorting=1&search_date=1&v1=&v2=&range=1'.format(i)
+    main_html = req.urlopen(main_url)
+    main_soup = bs(main_html, 'html.parser')
+    links = main_soup.findAll('p', class_='tit')
+    for link in links:
+        article_html = req.urlopen(link.a.attrs['href'])
+        article_soup = bs(article_html, 'html.parser')
+        article = article_soup.find('div', class_='article_txt').text
+        result.append(article.split('@donga.com')[0])
+#선생님답
+import urllib.request
+from bs4 import BeautifulSoup
+
+params = []
+
+for i in range(1,20,15):
+    list_url = "http://news.donga.com/search?p="+str(i)+"&query=%EC%9D%B8%EA%B3%B5%EC%A7%80%EB%8A%A5&check_news=1&more=1&sorting=1&search_date=1&v1=&v2=&range=1"
+
+    url = urllib.request.Request(list_url)
+    res = urllib.request.urlopen(url, timeout=100).read().decode("utf-8")
+    soup= BeautifulSoup(res, "html.parser")
+    for link in soup.findAll('p', {'class':'tit'}):
+        params.append(link.find('a').get('href'))
+
+print(params)
+
+
+cn = 0
+txt= []
+for i in params:
+    print(i)
+    url = urllib.request.Request(i)
+    res = urllib.request.urlopen(url).read().decode("utf-8")
+    soup= BeautifulSoup(res, "html.parser")
+    result = soup.find_all('div',class_='article_txt')
+
+
+    for i in result:
+        #print(i.text)
+       txt.append(i.text)
+
+txt[0]
+
+txt[0][0:txt[0].find('Copyright')]
+
+for i in range(0,30):
+    print(txt[i][0:txt[i].find('Copyright')])
