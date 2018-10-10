@@ -2323,3 +2323,218 @@ txt[0][0:txt[0].find('Copyright')]
 
 for i in range(0,30):
     print(txt[i][0:txt[i].find('Copyright')])
+
+[문제185] 동아일보에서 인공지능에 기사 스크롤링 하셔서 단어의 빈도수를 체크하시고 워드클라우드를 그리세요.
+
+import requests as req
+from bs4 import BeautifulSoup as bs
+from konlpy.tag import *
+import matplotlib.pyplot as plt
+import nltk
+from wordcloud import WordCloud as wc
+
+user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_4) " +\
+"AppleWebKit/537.36 (KHTML, like Gecko) " + \
+"Chrome/37.0.2062.94 Safari/537.36"
+headers = {"User-Agent": user_agent}
+articles = []
+for page in range(1, 32, 15):
+    main_url = '''
+        http://news.donga.com/search?p={}&query=%EB%B9%85%EB%8D%B0%EC%9D%B4%ED%84%B0&
+        check_news=1&more=1&sorting=1&search_date=1&v1=&v2=&range=1
+        '''.format(page)
+    main_html = req.get(main_url, headers=headers).text
+    main_soup = bs(main_html, 'html.parser')
+    links = main_soup.select('div.searchCont > div > div.p > a')
+
+    for link in links:
+        url = link.attrs['href']
+        html = req.get(url, headers=headers).text
+        soup = bs(html, 'html.parser')
+        try:
+            article = soup.select_one('#contents > div.article_view > div.article_txt').text
+        except:
+            pass
+        else:
+            articles.append(article)    
+
+kkm = Kkma()
+fulltxt = '\n'.join(articles)
+tokens_ko = kkm.nouns(fulltxt)            
+ko = nltk.Text(tokens_ko)
+ko = [word for word in ko if len(word)>1]
+ko = nltk.Text(ko)
+data = ko.vocab().most_common(50)
+wordcloud = wc(font_path='c:/Windows/Fonts/malgunbd.ttf', background_color='white',
+              width=1000, height=800).generate_from_frequencies(dict(data))
+plt.figure(figsize=(10,10))
+plt.imshow(wordcloud)
+plt.axis('off')
+
+[문제186] http://www.skwyverns.com/Wyverns/Players/picther/picther_list.asp 이미지를 다운로드하세요.
+
+import urllib.request as req
+from bs4 import BeautifulSoup as bs
+
+url = 'http://www.skwyverns.com/Wyverns/Players/picther/picther_list.asp'
+html = req.urlopen(url)
+soup = bs(html, 'html.parser')
+
+imgs = soup.select('#content > div > div.entrie_list > div > div > div.sum > a > img')
+
+for img in imgs:
+    req.urlretrieve(('http://www.skwyverns.com'+img.get('src')), 'c:/data/{}.jpg'.format(img.get('alt')))
+
+[문제 187] 생성자에 이름, 핸드폰번호, 메일, 주소 변수를 생성합니다. print_info 메소드를 생성한 후 출력하는 Contact 클래스를 생성하세요. 인스턴스는 set_contact 함수를 이용해서 만드시고 이름, 핸드폰번호,메일, 주소는 입력값으로 받아서 출력하세요.
+
+이름을 입력하세요 : 홍길동
+핸드폰번호를 입력하세요 : 010-1000-1004
+메일을 입력하세요 : hong@aaa.com
+주소를 입력하세요 : 서울시 강남구 삼성로
+
+이름 : 홍길동
+핸드폰번호 : 010-1000-1004
+메일 : hong@aaa.com
+주소 : 서울시 강남구 삼성로
+class Contact(object):
+    def __init__(self):
+        self.name = ''
+        self.mobile = ''
+        self.email = ''
+        self.address = ''
+
+    def set_contact(self):
+        self.name = input('이름을 입력하세요 :')
+        self.mobile = input('핸드폰번호를 입력하세요 :')
+        self.email = input('메일을 입력하세요 :')
+        self.address = input('주소를 입력하세요 :')
+
+    def print_info(self):
+        print('이름 :', self.name)
+        print('핸드폰번호 :', self.mobile)
+        print('메일 :', self.email)
+        print('주소 :', self.address)
+
+hong = Contact()
+hong.set_contact()
+hong.print_info()
+# 선생님 답
+class Contact:
+    def __init__(self,name, pn, email, addr):
+        self.name = name
+        self.pn = pn
+        self.email = email
+        self.addr = addr
+
+    def print_info(self):
+        print("이름 : {} ".format(self.name))
+        print("핸드폰번호 : {} ".format(self.pn))
+        print("메일 : {} ".format(self.email))
+        print("주소 : {} ".format(self.addr))
+
+
+def set_contact():
+    name = input("이름을 입력하세요 : ")
+    pn = input("핸드폰번호를 입력하세요 : ")
+    email = input("메일을 입력하세요 : ")
+    addr = input("주소를 입력하세요 : ")
+    conIns = Contact(name, pn, email, addr)
+    conIns.print_info()
+
+set_contact()
+[문제188] Contact 클래스 이용해서 입력 들어 온 값들을 c:/data/contact.db 에 저장해서 관리하세요.
+
+import sqlite3
+# conn = sqlite3.connect('C:/Users/Rainy/Documents/git/DA_Academy/contact.db')
+# c = conn.cursor()
+# c.execute('create table contact(name text, phone text, email text, address text)')
+# conn.commit()
+# c.close()
+# conn.close()
+
+class Contact(object):
+    def __init__(self, name, mobile, email, address):
+        self.name = name
+        self.mobile = mobile
+        self.email = email
+        self.address = address
+
+    def print_info(self):
+        print('이름 :', self.name)
+        print('핸드폰번호 :', self.mobile)
+        print('메일 :', self.email)
+        print('주소 :', self.address)
+
+    def insert_db(self):
+        self.conn = sqlite3.connect('C:/Users/Rainy/Documents/git/DA_Academy/contact.db')
+        self.c = self.conn.cursor()
+        self.c.execute('insert into contact(name, phone, email, address) values(?, ?, ?, ?)', 
+                       (self.name, self.mobile, self.email, self.address))
+
+    def commit_db(self):
+        self.conn.commit()
+
+    def rollback_db(self):
+        self.conn.rollback()
+
+    def close_db(self):
+        self.c.close()
+        self.conn.close()
+
+def set_contact():
+    name = input("이름을 입력하세요 : ")
+    mobile = input("핸드폰번호를 입력하세요 : ")
+    email = input("메일을 입력하세요 : ")
+    address = input("주소를 입력하세요 : ")
+    contact = Contact(name, mobile, email, address)
+    contact.print_info()
+    contact.insert_db()
+    contact.commit_db()
+    contact.close_db()
+
+set_contact()
+
+[문제189]초기 생성자에는 이름, 주소, 급여를 입력값으로 받고 아래와 같이 출력되는 클래스를 생성하세요. 인스턴스 생성될때 마다 건수를 출력해주세요.
+
+사원수 : 1
+이름 : 홍길동 , 주소 : 덴마크,  급여 : 1000
+
+사원수 : 2
+이름 : 홍아들 , 주소 : 노르웨이,  급여 : 2000
+class Employee(object):
+    total = 0
+    def __init__(self, name, address, salary):
+        self.name = name
+        self.address = address
+        self.salary = salary
+        Employee.total += 1 
+        if __name__ == '__main__':
+            print('사원수 :', Employee.total)
+            print('이름 : {}, 주소 : {}, 급여 : {}'.format(self.name, self.address, self.salary))
+
+e1 = Employee('홍길동', '덴마크', 1000)
+e2 = Employee('홍아들', '노르웨이', 2000)
+[문제190]
+
+id_number1 = '010101-3234567'
+id_number2 = '990202-2123456'
+
+2001 01 01 남성
+1999 02 02 여성
+class IdNumber(object):
+    def __init__(self, idnum):
+        self.idnum = idnum
+        if self.idnum[7]=='1':
+            print('19{} {} {} 남성'.format(idnum[0:2], idnum[2:4], idnum[4:6]))
+        elif self.idnum[7]=='2':
+            print('19{} {} {} 여성'.format(idnum[0:2], idnum[2:4], idnum[4:6]))
+        elif self.idnum[7]=='3':
+            print('20{} {} {} 남성'.format(idnum[0:2], idnum[2:4], idnum[4:6]))
+        elif self.idnum[7]=='4':
+            print('20{} {} {} 여성'.format(idnum[0:2], idnum[2:4], idnum[4:6]))
+
+id_number1 = '010101-3234567'
+id_number2 = '990202-2123456'
+
+id1 = IdNumber(id_number1)
+id2 = IdNumber(id_number2)
