@@ -2538,3 +2538,58 @@ id_number2 = '990202-2123456'
 
 id1 = IdNumber(id_number1)
 id2 = IdNumber(id_number2)
+
+[문제191] Person 클래스를 생성하세요. 생성자는 이름, 나이, 성별을 만드세요. Person 클래스 에는 printMe 메소드를 생성하셔서 이름, 나이 성별을 출력합니다.
+
+Employees클래스를 생성한후 Person상속받습니다. 생성자는 이름, 나이, 성별, 주소, 생일입니다. 단 이름, 나이, 성별은 person에서 상속받으세요. Employees 클래스에 printMe를 재구성하셔서 주소, 생일을 출력하세요.
+
+myPerson = Person("홍길동","10", "남")
+myPerson.printMe()
+
+myEmployee = Employee("송준기", "2", "남", "서울", "2016년 01월 01일")
+myEmployee.printMe()
+
+이름은 홍길동 ,  나이는 10살 이고, 성별은 남 입니다.
+이름은 송준기 ,  나이는 2살 이고, 성별은 남 입니다.
+집 주소는  서울  생일은  2016년 01월 01일 입니다. 
+class Person(object):
+    def __init__(self, name, age, gender):
+        self.name = name
+        self.age = age
+        self.gender = gender
+
+    def printMe(self):
+        print('이름은 {}, 나이는 {}살 이고, 성별은 {}입니다.'.format(self.name, self.age, self.gender))
+
+class Employee(Person):
+    def __init__(self, name, age, gender, address, bday):
+        Person.__init__(self, name, age, gender)
+        self.address = address
+        self.bday = bday
+
+    def printMe(self):
+        Person.printMe(self)
+        print('집 주소는 {}, 생일은 {} 입니다. '.format(self.address, self.bday))
+
+myPerson = Person("홍길동","10", "남")
+myPerson.printMe()
+myEmployee = Employee("송준기", "2", "남", "서울", "2016년 01월 01일")
+myEmployee.printMe()
+
+[문제192] Add 클래스에 두수를 더하는 값을 리턴하는 add 메소드 생성 Multiply 클래스에 두수를 곱한값을 리턴하는 multiply 메소드 생성 Divide 클래스에 두수를 나눈값을 리턴하는 divide메소드 생성 Calculator클래스에는 Add, Multiply, Divide 상속받고 두수를 뺀값을 리턴하는 sub 메소드 생성하세요.
+
+class Add(object):
+     def add(self, a, b):
+        return a+b
+
+class Multiply(object):
+    def multiply(self, a, b):
+        return a*b
+
+class Divide(object):
+    def divide(self, a, b):
+        return a/b
+
+class Calculator(Add, Multiply, Divide):
+    def sub(self, a, b):
+        return a-b
