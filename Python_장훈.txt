@@ -2593,3 +2593,138 @@ class Divide(object):
 class Calculator(Add, Multiply, Divide):
     def sub(self, a, b):
         return a-b
+
+[문제193] 양의 정수값만 입력 받아서 나누기를 수행하는 positive_divide 함수를 생성하세요.
+
+print(positive_divide())
+
+분자 숫자를 입력하세요 : 10
+분모 숫자를 입력하세요 : 2
+5.0
+
+print(positive_divide()) 
+
+분자 숫자를 입력하세요 : 10
+분모 숫자를 입력하세요 : -2
+오류  - 음수로 나눌수 없습니다. -2
+
+
+print(positive_divide())
+분자 숫자를 입력하세요 : 10
+분모 숫자를 입력하세요 : 0
+오류 -  0으로 나눌수 없습니다. division by zero
+def positive_divide():
+    a = int(input('분자 숫자를 입력하세요 : '))
+    b = int(input('분모 숫자를 입력하세요 : '))
+    if b < 0:
+        return '오류 - 음수로 나눌 수 없습니다. {}'.format(b)
+
+    elif b == 0:
+        return '오류 - 0으로로 나눌 수 없습니다. division by zero'
+
+    else:
+        return a/b 
+def positive_divide():
+    a = int(input('분자 숫자를 입력하세요 : '))
+    b = int(input('분모 숫자를 입력하세요 : '))
+
+    try:
+        result = a/b
+    except ZeroDivisionError as e:
+        return '오류 - 0으로로 나눌 수 없습니다. '+str(e)
+    except Exception as error:
+        return error
+    else:
+        if b < 0:
+            return '오류 - 음수로 나눌 수 없습니다. {}'.format(b)
+        else:
+            return result
+class MinusError(Exception):
+    def __init__(self, msg):
+        self.msg = msg
+
+    def __str__(self):
+        return self.msg
+
+def positive_divide():
+    a = int(input('분자 숫자를 입력하세요 : '))
+    b = int(input('분모 숫자를 입력하세요 : '))
+
+    try:
+        result = a/b
+    except ZeroDivisionError as e:
+        return '오류 - 0으로로 나눌 수 없습니다. '+str(e)
+    except Exception as error:
+        return error
+    else:
+        if b < 0:
+            raise MinusError('오류 - 음수로 나눌 수 없습니다. {}'.format(b))
+        else:
+            return result
+[문제194] 한주간동안 걸음수를 요일별로 그래프를 그리세요. 단 막대그래프 함수를 생성해서 인수값으로 걸음수, 요일을 입력하면 그래프가 그려지도록하세요.
+
+import matplotlib.pyplot as plt
+from matplotlib import font_manager, rc
+font_name = font_manager.FontProperties(fname="c:/Windows/Fonts/malgun.ttf").get_name()
+rc('font', family=font_name)
+
+def create_bar_chart(data, labels,bar):
+
+    num_bars = len(data)
+
+    positions = range(1, num_bars+1)
+    if bar == 1:        
+        plt.bar(positions, data, align='center')
+        plt.xticks(positions, labels)
+        plt.xlabel('요일')
+        plt.ylabel('걸음수')
+
+    else:
+         plt.barh(positions, data, align='center')
+         plt.yticks(positions, labels)
+         plt.xlabel('걸음수')
+         plt.ylabel('요일')
+
+
+    plt.title('한주간 동안 걸음수') 
+    plt.grid()
+    plt.show()
+
+if __name__=='__main__':
+    step = [1090,2000,3000,4000,10000,50000,2000]
+    labels = ['월','화','수','목','금','토','일']
+    create_bar_chart(step,labels,2)
+[문제195]
+
+class Walk(object):
+    import matplotlib.pyplot as plt
+    from matplotlib import font_manager, rc
+    font_name = font_manager.FontProperties(fname="c:/Windows/Fonts/malgun.ttf").get_name()
+    rc('font', family=font_name)
+
+    def __init__(self):
+        if __name__=='__main__':
+            step = [1090,2000,3000,4000,10000,50000,2000]
+            labels = ['월','화','수','목','금','토','일']
+            self.create_bar_chart(step,labels,1)
+
+    def create_bar_chart(self, data, labels, bar):
+        num_bars = len(data)
+
+        positions = range(1, num_bars+1)
+        if bar == 1:        
+            self.plt.bar(positions, data, align='center')
+            self.plt.xticks(positions, labels)
+            self.plt.xlabel('요일')
+            self.plt.ylabel('걸음수')
+
+        else:
+            self.plt.barh(positions, data, align='center')
+            self.plt.yticks(positions, labels)
+            self.plt.xlabel('걸음수')
+            self.plt.ylabel('요일')
+
+
+        self.plt.title('한주간 동안 걸음수') 
+        self.plt.grid()
+        self.plt.show()
