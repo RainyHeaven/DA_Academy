@@ -1,0 +1,163 @@
+```{r}
+iris = read.csv('C:/Users/stu/git/DA_Academy/iris.csv')
+str(iris) #의사결정트리에서 문자열은 factor 형으로 사용하는게 좋
+```
+
+```{r}
+summary(iris)
+```
+
+정규화 함수
+```{r}
+normalize <- function(x) {
+  return(((x-min(x))/(max(x)-min(x))))
+}
+
+normalize(c(1,2,3,4,5))
+normalize(c(10,20,30,40,50))
+```
+
+```{r}
+iris_n <- as.data.frame(lapply(iris[1:4], normalize))
+summary(iris_n)
+```
+
+```{r}
+table(iris$Name)
+set.seed(1234)
+sample(2, nrow(iris), replace=T, prob=c(0.7, 0.3))
+```
+
+```{r}
+iris_sample <- sample(2, nrow(iris), replace=T, prob=c(0.7,0.3))
+iris_training <- iris[iris_sample==1, 1:5]
+iris_test <- iris[iris_sample==2, 1:5]
+
+nrow(iris_training)
+table(iris_training$Name)
+table(iris_test$Name)
+```
+
+```{r}
+install.packages('tree')
+library(tree)
+help(tree)
+```
+
+step1 : tree 형성(Growing Trees), 독립변수들로 키워나가는 작업. 너무 많이 키울 시 과적합 발생
+
+tree(종속변수 ~ x1 + x2 + x3 + x4, data=변수)
+```{r}
+treemodel <- tree(Name~., data=iris_training)
+treemodel
+```
+
+```{r}
+plot(treemodel)
+text(treemodel)
+```
+
+step2: tree 가지치기(pruning tree), 과적합을 해결하기 위한 작업
+cv(cost complexity parameter, 복잡도계수) 값이 최소가 되는 노드수를 선택
+
+
+```{r}
+cv <- cv.tree(treemodel, FUN=prune.misclass)
+plot(cv)
+```
+
+step3: 최종모형
+
+```{r}
+p <- prune.misclass(treemodel, best=3)
+plot(p)
+text(p)
+```
+
+```{r}
+tree_pred <- predict(p, iris_test, type='class')
+actual <- iris_test$Name
+expect <-  tree_pred
+
+data.frame(actual, expect)
+
+install.packages('caret')
+library(caret)
+```
+
+```{r}
+confusionMatrix(expect, actual)
+```
+
+```{r}
+str(iris)
+levels(iris$Name)
+```
+
+```{r}
+iris_idx <- createDataPartition(iris$Name, p=0.8, list=F) #데이터를 균일하게 분리
+train <- iris[iris_idx, ]
+str(train)
+nrow(train)
+table(train$Name)
+```
+
+```{r}
+test <- iris[-iris_idx,]
+str(test)
+nrow(test)
+table(test$Name)
+summary(test)
+```
+
+```{r}
+library(rpart)
+iris_rpart <- rpart(Name~., data=train, control=rpart.control(minsplit=2))
+iris_rpart
+```
+
+```{r}
+install.packages('rpart.plot')
+library(rpart.plot)
+rpart.plot(iris_rpart)
+```
+
+```{r}
+iris_rpart$cptable #error 가 가장 작은 CP값을 찾아보자
+```
+
+```{r}
+iris_prune <- prune(iris_rpart, cp=0.0125)
+rpart.plot(iris_prune)
+```
+
+```{r}
+expect <- predict(iris_prune, test, type='class')
+actual <- test$Name
+
+confusionMatrix(expect, actual)
+```
+
+```{r}
+install.packages('rattle')
+library(rattle)
+rpart <- rpart(Name~., data=iris, method='class')
+fancyRpartPlot(rpart, main='iris')
+```
+
+```{r}
+install.packages('party')
+library(party)
+```
+
+```{r}
+partymodel <-  ctree(Name~., data=train) # party패키지의 ctree 사
+plot(partymodel)
+```
+
+```{r}
+expect <- predict(partymodel, test[1:4])
+actual <- test$Name
+confusionMatrix(expect, actual)
+```
+
