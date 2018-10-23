@@ -1,0 +1,266 @@
+```{r}
+credit <- read.csv('C:/Users/stu/git/DA_Academy/data/credit.csv')
+str(credit)
+```
+
+checking_balance: 예금계좌
+savings_balance: 적금계좌
+default: yes(상환안함) / no(상환)
+
+대출 신청자의 예금계좌, 적금계좌의 잔액을 확인해 잔액이 많을수록 대출이 안전하다고 가정할 수 있다.
+
+```{r}
+table(credit$checking_balance)
+table(credit$savings_balance)
+```
+
+```{r}
+summary(credit$months_loan_duration)
+```
+대출 기간은 4개월에서 72개월까지
+
+```{r}
+summary(credit$amount)
+```
+
+```{r}
+table(credit$default)
+```
+
+비율로 확인하기
+```{r}
+prop.table(table(credit$default))
+```
+
+```{r}
+set.seed(12345)
+train_idx <- sample(2, nrow(credit), prob=c(0.9, 0.1), replace=T)
+credit_train <-  credit[train_idx==1,]
+credit_test <- credit[train_idx==2,]
+```
+
+```{r}
+prop.table(table(credit_train$default))
+prop.table(table(credit_test$default))
+```
+
+
+```{r}
+install.packages('C50')
+library(C50)
+```
+
+```{r}
+dim(credit_train)
+```
+
+
+```{r}
+credit_model <- C5.0(credit_train[,-17], credit_train[,17])
+credit_model
+```
+
+```{r}
+summary(credit_model)
+```
+
+```{r}
+credit_result <- predict(credit_model, credit_test[,-17])
+```
+
+```{r}
+library(gmodels)
+CrossTable(credit_test[,17], credit_result)
+```
+
+```{r}
+credit_model <- C5.0(credit_train[,-17], credit_train[,17])
+credit_result <- predict(credit_model, credit_test[,-17])
+```
+
+```{r}
+credit_model
+summary(credit_model)
+```
+
+```{r}
+credit_model2 <- C5.0(credit_train[,-17], credit_train[,17], trials=10)
+credit_result2 <- predict(credit_model2, credit_test[,-17])
+CrossTable(credit_test[,17], credit_result2)
+```
+
+앙상블(ensembles)
+-  다양한 전문가로 팀을 만드는 것과 유사한 방법을 사용하는 메타학습 접근법
+-  앙상블 기법은 다수의 약한 학습기를 합해 강한 하나의 학습기로 만드는 개념
+-  훈련데이터 -> 할당함수(allocation function) -> 다양한 모델 생성 -> 조합함수(combination function) ->> 앙상블 모델
+
+배깅(bagging) bootstrap aggregating
+-  트레이닝 데이터를 반복추출하여 표본을 여러개 만든 후에 각 표본에 맞는 분류 모델을 표본수만큼 생성한 후에 각각의 분류 모델을 앙상블 하는 방법
+
+```{r}
+install.packages('ipred')
+library(ipred)
+mybag <-  bagging(default~., data=credit_train, nbagg=25)
+```
+
+```{r}
+credit_pred <- predict(mybag, credit_test[,-17])
+table(credit_pred, credit_test$default)
+```
+
+# 연관규칙
+-  연관성분석(association analysis)이란 대량의 데이터에 숨겨진 항목간의 연관규칙을 찾아내는 기법으로 장바구니 분석(market basket analysis)라고 한다.
+-  월마트, 아마존 등 여러 기업에서 다양한 마케팅 활동에 활용하고 있으며 나아가 사회 네트워크 분석에도 활용할 수 있다.
+
+# support(지지도): 전체 거래(transaction) 중 연관성 규칙을 구성하는 항목들이 포함된 거래의 비율 
+  -  support(x) = x거래갯수 / 전체거래건수
+# confidence(신뢰도): 조건이 발생했을 때 결과가 동시에 일어날 확률을 의미하며 신뢰도가 1에 가까울수록 의미 있는 연관성을 가지고 있다
+-  confidence(x -> y) = support(x,y) / support(x)
+
+s(x -> y) = n(x^y) / N
+c(x -> y) = n(x^y) / n(x)
+
+s(우유 -> 시리얼) : 우유와 시리얼을 동시에 구매할 확률
+c(우유 -> 시리얼) : 우유를 구매할 때 시리얼도 같이 구매할 조건부 확률
+
+거래번호      구매물품
+-----------------------
+1         우유, 버터, 시리얼
+2         우유, 시리얼
+3         우유, 빵
+4         버터, 맥주, 오징어
+
+전체 구매물품에서 우유와 시리얼을 동시에 구매할 확률은?
+-  50% (2/4)
+
+우유를 샀을 때 시리얼을 살 조건부확률은?
+-  66.6% (2/3)
+
+시리얼을 샀을 때 우유를 살 조건부확률은?
+-  100% (2/2)
+
+우유 -> 시리얼(50%, 66.6%)
+시리얼 -> 우유(50%, 100%)
+
+# lift(향상도): 지지도와 신뢰도를 동시에 고려
+-  lift(시리얼, 우유) = 신뢰도(시리얼 -> 우유) / 지지도(우유)
+
+거래도  아이템
+1       A C D
+2       B C E
+3       A B C E
+4       B E
+
+아이템  지지도
+A       2
+B       3
+C       3
+D       1 
+E       3
+
+아이템목록  지지도
+A B         1
+A C         2
+A E         1
+B C         2
+B E         3
+C E         2
+
+지지도가 2 이상인 것만 추출하여 다시 정리
+아이템  지지도
+A       2
+B       3
+C       3
+E       3
+
+아이템목록  지지도
+A C         2
+B C         2
+B E         3
+C E         2
+
+아이템목록  지지도
+B C E       2
+
+# apriori algorithm
+-  집합의 조합을 크기가 1인 집합부터 차례대로 늘려가면서 계산한다
+-  k개인 빈도 높은 항목을 구했다면 그 다음에는 k+1인 항목의 집합을 계산한다
+-  최대 개수를 가진 빈도항목까지 반복한다
+
+```{r}
+install.packages('arules')
+library(arules)
+```
+
+```{r}
+buylist <- list(c('우유', '버터', '시리얼'),
+                c('우유', '시리얼'),
+                c('우유', '빵'),
+                c('버터', '맥주','오징어'))
+
+buylist <- as(buylist, 'transactions')
+inspect(buylist)
+```
+
+```{r}
+buylist <- as(buylist, 'matrix')
+buylist
+```
+
+```{r}
+buyresult <- apriori(buylist)
+inspect(buyresult)
+```
+
+```{r}
+inspect(subset(buyresult, subset=support>=0.5))
+
+inspect(subset(buyresult, subset=lhs %in%c('버터','시리얼'))) # 이것들이 포함
+
+inspect(subset(buyresult, subset=lhs %ain%c('버터','시리얼'))) # 이것들이 모두포함
+
+inspect(subset(buyresult, subset=lhs %oin%c('버터','시리얼'))) # 이것들만 포함
+
+inspect(subset(buyresult, subset=lhs %pin% '우')) # 글자 포함
+```
+
+```{r}
+itemFrequencyPlot(buylist)
+
+itemFrequencyPlot(buylist, support=0.2)
+```
+
+
+```{r}
+build <- read.csv('C:/Users/stu/git/DA_Academy/data/building.csv',header=T)
+build[is.na(build)] <- 0
+build <- build[-1]
+build
+```
+
+```{r}
+trans <- as.matrix(build, 'transactions')
+rules <- apriori(trans, parameter=list(supp=0.2, conf=0.6))
+inspect(rules)
+```
+
+```{r}
+install.packages('arulesViz')
+library(arulesViz)
+plot(rules, method='graph')
+```
+
+
+```{r}
+plot(rules, method='grouped')
+```
+
+
+```{r}
+a <- subset(rules, subset=rhs %in% '편의점' & confidence > 0.7)
+plot(a, method='graph')
+plot(a, method='grouped')
+```
+
+
+
