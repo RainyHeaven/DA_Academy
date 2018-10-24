@@ -1,0 +1,76 @@
+# 군집화
+-  ## 개요
+  -  데이터 클러스터(cluster, 유사한 아이템의 그룹)로 자동 분리하는 비지도학습의 머신러닝
+  -  군집화는 데이터 안에서 발견되는 자연스런 그룹에 대한 통찰력 제공
+  -  클러스터 안에 있는 아이템들은 서로 아주 비슷해야 하지만 클러스터 밖에 있는 아이템과는 아주 달라야 한다
+
+-  ## 군집화 활용 범위
+  -  마케팅 캠페인을 위해 유사한 인구통계나 구매패턴을 가진 그룹으로 고객을 세분화
+  -  알고 있는 클러스터 밖의 사용패턴을 찾아 무단 네트워크 침입과 같은 이상 행동을 탐지
+  
+-  ## kNN
+-  ## k-means algorithm
+  -  n개의 예시를 k개의 클러스터 중 하나에 할당하는데 이때 k는 사전에 결정됨
+  -  클러스터 내의 차이를 최소화 하고 클러스터 간의 차이는 최대화
+  -  적당한 k값은? k = sqrt(n/2)
+  
+```{r}
+c <- c(3,4,1,5,7,9,5,4,6,8,4,5,9,8,7,8,6,7,2,1)
+row <- c('A','B','C','D','E','F','G','H','I','J')
+col <-  c('X','Y')
+data <- matrix(c, nrow=10, ncol=2, byrow=T, dimnames=list(row,col))
+plot(data)
+```
+
+```{r}
+library(stats)
+km <- kmeans(data,2)
+km
+```
+
+```{r}
+km$centers
+km$cluster
+cbind(data,km$cluster)
+```
+
+```{r}
+c <- c(3,4,1,5,7,9,5,4,6,8,4,5,9,8,7,8,6,7,2,1)
+row <- c('A','B','C','D','E','F','G','H','I','J')
+col <-  c('X','Y')
+data <- matrix(c, nrow=10, ncol=2, byrow=T, dimnames=list(row,col))
+plot(data)
+points(km$centers[,1], km$centers[,2], pch=3, cex=1.5,lwd=2)
+temp <- cbind(data,km$cluster)
+text(x=temp[,1], y=temp[,2]+0.3, label=temp[,3], col='red')
+```
+
+```{r}
+data <- read.csv('C:/Users/stu/git/DA_Academy/data/academy.csv')
+sub <- data[,c(3,4)]
+km <- kmeans(sub,4)
+plot(sub)
+points(km$centers[,1], km$centers[,2], pch=3, cex=1.5,lwd=2)
+temp <- cbind(sub,km$cluster)
+text(x=temp[,1], y=temp[,2]+3, label=temp[,3], col='red')
+```
+
+
+```{r}
+sub <- as.matrix(data[c('국어점수','과학점수')])
+km <- kmeans(sub,2)
+plot(sub)
+points(km$centers[,1], km$centers[,2], pch=3, cex=1.5,lwd=2)
+temp <- cbind(sub,km$cluster)
+text(x=temp[,1], y=temp[,2]+3, label=temp[,3], col='red')
+```
+
+```{r}
+install.packages('factoextra')
+library(factoextra)
+```
+
+```{r}
+fviz_cluster(km, data=sub, stand=F, ellipce.type='t')
+```
+
