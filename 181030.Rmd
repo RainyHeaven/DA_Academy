@@ -1,0 +1,45 @@
+```{r}
+help(cars)
+str(cars)
+# speed: 속도
+# dist: 제동거리
+```
+
+```{r}
+lmresult <- lm(dist ~ speed, data=cars)
+lmresult
+```
+
+```{r}
+summary(lmresult)
+```
+
+```{r}
+coef(lmresult)
+```
+
+```{r}
+plot(cars$speed, cars$dist)
+abline(lmresult)
+```
+
+
+점추정
+```{r}
+speed <- seq(50, 100, 10)
+df <- data.frame(speed)
+point_estimation <- predict(lmresult, df)
+cbind(df, point_estimation)
+```
+
+구간 추정
+```{r}
+interval_estimation <- predict(lmresult, df, interval='confidence', level=0.95)
+cbind(df, interval_estimation)
+# fit: 점추정, lwr: 구간최소값, upr: 구간최대
+```
+
+60mi/h 속도의 제동거리를 예측하면
+점추정: 218.3654
+구간추정: 180.8489 ~ 255.8820 사이일 확률이 95%
+
