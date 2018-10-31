@@ -1,0 +1,42 @@
+```{r}
+data <- read.csv('data/insurance.csv')
+attach(data)
+head(data)
+```
+
+```{r}
+lm(charges ~ age+sex+bmi+children+smoker+region, data=data)
+```
+
+```{r}
+lm(charges ~ age+bmi+children, data=data)
+```
+
+```{r}
+insurance <- read.csv('data/insurance.csv', header=T)
+str(insurance)
+cor(insurance[c('age','bmi','children','charges')])
+```
+
+```{r}
+install.packages('psych')
+library(psych)
+```
+
+```{r}
+pairs.panels(insurance[c('age','bmi','children','charges')])
+```
+
+```{r}
+ins_model = lm(charges ~ ., data=insurance)
+ins_model
+```
+
+```{r}
+insurance$bmi30 <- ifelse(insurance$bmi >= 30, 1, 0)
+ins_model2 = lm(charges ~ age+children+bmi+sex+smoker+bmi30*smoker+region, data=insurance)
+ins_model2
+```
+
+
+
