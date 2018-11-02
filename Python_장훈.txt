@@ -2728,3 +2728,168 @@ class Walk(object):
         self.plt.title('한주간 동안 걸음수') 
         self.plt.grid()
         self.plt.show()
+
+[문제196] knn 프로그램을 작성하세요.
+
+pointlist[(1,1),(1,0),(2,0),(0,1),(2,2),(1,5),(2,3)]
+
+<수행>
+knn([2,1],2,pointlist)
+
+<결과>
+[(1, 1), (2, 0)]
+def knn(test, k, train):
+    import math
+    dist_list = []
+    for i in range(len(train)):
+        dist = 0
+        item = train[i]
+        for j in range(len(item)):
+            dist += (test[j]-item[j])**2
+        dist = math.sqrt(dist)
+        dist_list.append([dist, i])
+    sorted_dist = sorted(dist_list)
+    result = []
+    for i in range(k):
+        idx = sorted_dist[i][1]
+        result.append(train[idx])
+    return result   
+[문제197] 키, 몸무게에 따른 성별을 분류해주세요.
+
+키, 몸무게 데이터
+[[158, 64],
+[170, 86],
+[183, 84],
+[191, 80],
+[155, 49],
+[163, 59],
+[180, 67],
+[158, 54],
+[170, 67]]
+
+성별 레벨
+['male', 'male', 'male', 'male', 'female', 'female', 'female', 'female', 'female']
+
+[155, 70] 성별을 분류하세요.
+'female'
+train = [[158, 64],[170, 86],[183, 84],[191, 80],[155, 49],[163, 59],[180, 67],[158, 54],[170, 67]]
+label = ['male', 'male', 'male', 'male', 'female', 'female', 'female', 'female', 'female']
+y = np.array([[155,70]])
+distances = np.sqrt(np.sum(pow(train-y,2), axis=1))
+indices = distances.argsort()[:3]
+nn = np.take(label, indices)
+c = Counter(nn)
+c.most_common(1)[0][0]
+
+[문제198] 상품구매여부를 knn으로 분류해주세요.
+
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.preprocessing import scale
+import pandas  as  pd
+import numpy as np
+
+df = pd.read_csv("c:/data/buy.csv")
+
+x_train = np.array([scale(df['나이']),scale(df['월수입'])]).T
+label = list(df['상품구매여부'])
+age_mean = np.mean(df['나이'])
+age_std = np.std(df['나이'])
+
+pay_mean = np.mean(df['월수입'])
+pay_std = np.std(df['월수입'])
+
+K = 3
+clf = KNeighborsClassifier(n_neighbors=K)
+clf.fit(x_train,label)
+prediction_label = clf.predict(np.array([[(40-age_mean)/age_std, (500-pay_mean)/pay_std]]))[0]
+prediction_label
+
+[문제199] 보험데이터를 이용해서 보험료에 가장 영향을 주는 독립변수가 무엇인지 확인하세요.
+
+import pandas as pd
+import statsmodels.api as sm
+from sklearn.preprocessing import minmax_scale
+
+data = pd.read_csv('data/insurance.csv')
+data.head() # 데이터 확인
+data.isnull().sum() # null값 존재 확인
+
+lr = LogisticRegression()
+cols = ['sex', 'smoker', 'region']
+train_data = data.loc[:, ['age', 'bmi', 'children']].copy()
+train_label = minmax_scale(data.iloc[:,-1].copy()) # 라벨값을 0-1로 스케일링
+for i in cols:
+    temp = pd.get_dummies(data.loc[:,i], prefix=i)
+    train_data = train_data.join(temp)
+
+logit = sm.Logit(train_label, train_data)
+result = logit.fit()
+result.summary2() #smoke_no / 비흡연 여부가 가장 큰 영향을 줌
+Optimization terminated successfully.
+         Current function value: 0.291203
+         Iterations 6
+Model:    Logit    Pseudo R-squared:    -0.233
+Dependent Variable:    y    AIC:    797.2596
+Date:    2018-10-31 10:04    BIC:    844.0500
+No. Observations:    1338    Log-Likelihood:    -389.63
+Df Model:    8    LL-Null:    -316.07
+Df Residuals:    1329    LLR p-value:    1.0000
+Converged:    1.0000    Scale:    1.0000
+No. Iterations:    6.0000        
+Coef.    Std.Err.    z    P>|z|    [0.025    0.975]
+age    0.0328    0.0057    5.7351    0.0000    0.0216    0.0440
+bmi    0.0426    0.0131    3.2476    0.0012    0.0169    0.0683
+children    0.0683    0.0632    1.0814    0.2795    -0.0555    0.1922
+sex_female    -1.4781    69213589.8710    -0.0000    1.0000    -135656144.8659    135656141.9097
+sex_male    -1.5119    69213589.8710    -0.0000    1.0000    -135656144.8998    135656141.8759
+smoker_no    -2.5688    24098438.0315    -0.0000    1.0000    -47232073.1942    47232068.0566
+smoker_yes    -0.4212    24098438.0315    -0.0000    1.0000    -47232071.0466    47232070.2042
+region_northeast    -0.6673    93768132.3561    -0.0000    1.0000    -183782162.9828    183782161.6482
+region_northwest    -0.7228    93768132.3561    -0.0000    1.0000    -183782163.0383    183782161.5928
+region_southeast    -0.8151    93768132.3561    -0.0000    1.0000    -183782163.1306    183782161.5005
+region_southwest    -0.7849    93768132.3561    -0.0000    1.0000    -183782163.1004    183782161.5307
+
+[문제 200] tensorflow 상수를 이용해서 아래와 같이 결과를 출력하는 프로그램을 만드세요.
+```
+a + b = 6
+a * b = 8
+```
+```python
+import tensorflow as tf
+with tf.Session() as sess:
+    a = tf.constant(4)
+    b = tf.constant(2)
+    print('a + b =',sess.run(a+b))
+    print('a * b =',sess.run(a*b))
+```
+
+[문제 201] tensorflow 상수를 이용해서 아래와 같이 결과를 출력하는 프로그램을 만드세요. 
+단 두 변수의 입력값을 실행시에 넣도록 하는 변수를 이용하세요.
+```
+Add : 6
+Multiply : 8
+```
+```python
+import tensorflow as tf
+with tf.Session() as sess:
+    a = tf.placeholder('int32')
+    b = tf.placeholder('int32')
+    add = tf.add(a,b)
+    mul = tf.multiply(a,b)
+    print('Add :',sess.run(add, feed_dict={a:4, b:2}))
+    print('Multiply :',sess.run(mul, feed_dict={a:4, b:2}))
+```    
+
+[문제202]
+x 변수는 1행 3열 모양의 1,2,3
+w 변수는 3행 1열 모양의 2,2,2
+y 변수는 x와 w를 행렬곱을 이용한 결과를 수행하는 프로그램을 작성하세요.
+```python
+import tensorflow as tf
+import numpy as np
+x = tf.placeholder(tf.float32, shape=(1,3))
+w = tf.placeholder(tf.float32, shape=(3,1))
+y = tf.matmul(x,y)
+with tf.Session() as sess:
+    print(sess.run(y, feed_dict={x:[[1,2,3]], 
+                           w:[[2],[2],[2]]}))
