@@ -1,0 +1,156 @@
+콘크리트의 내구력 추정은 매우 중요하다. 
+모든 건축현장에서 사용된다고 하더라도 복합적으로 상호작용하는 매우 다양한 구성요소때문에 콘크리트 성능은 다양하다.
+
+```{r}
+concrete <- read.csv('C:/Users/stu/git/DA_Academy/data/concrete.csv')
+str(concrete)
+```
+
+cement: 콘크리트 총량, 입방미터당 킬로그램
+slag: 시멘트
+ash: 분
+water: 물
+superplastic: 고성능감수재(콘크리트 강도를 높이는 첨가제)
+coarseagg: 굵은 자갈
+fineagg: 잔 자갈
+age: 숙성시간
+strength: 압축내구력
+```{r}
+# 정규화 함수
+normalize <- function(x){
+  return ((x-min(x))/(max(x)-min(x)))
+}
+
+# 전체 데이터 프레임에 정규화 적용
+concrete_norm <- as.data.frame(lapply(concrete, normalize))
+
+# 확인
+summary(concrete$strength)
+summary(concrete_norm$strength)
+```
+
+```{r}
+# 훈련, 테스트 데이터 생성
+concrete_train <- concrete_norm[1:773,]
+concrete_test <- concrete_norm[774:1030,]
+```
+
+```{r}
+install.packages('neuralnet')
+library(neuralnet)
+```
+
+```{r}
+# 데이터모델 훈련
+?neuralnet
+concrete_model <- neuralnet(formula=strength~cement+slag+ash+water+superplastic+coarseagg+fineagg+age, data=concrete_train)
+```
+
+```{r}
+# 시각화
+plot(concrete_model)
+```
+
+```{r}
+# 모델 결과
+model_results <- compute(concrete_model, concrete_test[1:8])
+
+# 강도 예측
+predicted_strength <- model_results$net.result
+
+# 예측값과 실제값간의 상관관계
+cor(predicted_strength, concrete_test$strength)
+```
+
+```{r}
+# 은닉뉴런
+concrete_model2 <- neuralnet(formula=strength~cement+slag+ash+water+superplastic+coarseagg+fineagg+age, data=concrete_train, hidden=c(5, 2))
+
+plot(concrete_model2)
+model_results <- compute(concrete_model2, concrete_test[1:8])
+predicted_strength <- model_results$net.result
+cor(predicted_strength, concrete_test$strength)
+```
+
+
+```{r}
+# 은닉뉴런
+concrete_model2 <- neuralnet(formula=strength~cement+slag+ash+water+superplastic+coarseagg+fineagg+age, data=concrete_train, hidden=c(5, 4, 3, 2))
+
+plot(concrete_model2)
+model_results <- compute(concrete_model2, concrete_test[1:8])
+predicted_strength <- model_results$net.result
+cor(predicted_strength, concrete_test$strength)
+```
+
+```{r}
+# 은닉뉴런
+concrete_model2 <- neuralnet(formula=strength~cement+slag+ash+water, data=concrete_train, hidden=c(5, 2))
+
+plot(concrete_model2)
+model_results <- compute(concrete_model2, concrete_test[1:8])
+predicted_strength <- model_results$net.result
+cor(predicted_strength, concrete_test$strength)
+```
+
+```{r}
+library(nnet)
+iris <- read.csv('data/iris.csv')
+str(iris)
+```
+
+```{r}
+iris <- cbind(iris, class.ind(iris$Name)) # 해당 컬럼의 값으로 one-hot-encoding
+```
+
+```{r}
+set.seed(12345)
+idx <- sample(2, nrow(iris), prob=c(0.8, 0.2), replace=T)
+iris_train <-  iris[idx==1, ]
+iris_test <- iris[idx==2, ]
+prop.table(table(iris_train$Name))
+```
+
+```{r}
+iris_model <- nnet(Name~SepalLength+SepalWidth+PetalWidth, data=iris_train, size=10)
+iris_pred <- predict(iris_model, iris_test[, c(1:4)], type='class')
+```
+ 
+```{r}
+iris_model <- nnet(x=iris_train[, c(1:4)], y=iris_train[,c(6:8)],
+  data=iris_train, size=10, softmax=T)
+```
+ 
+ 
+ 
+```{r}
+table(iris_pred, iris_test$Name)
+```
+
+```{r}
+library(devtools)
+library(reshape2)
+plot.nnet(iris_model)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
