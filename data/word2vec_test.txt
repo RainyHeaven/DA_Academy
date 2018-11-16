@@ -1,0 +1,107 @@
+from konlpy.tag import Komoran
+tagger = Komoran()  # 형태소 분석기
+from urllib.parse import quote_plus
+from bs4 import BeautifulSoup
+import requests
+import lxml.html
+import codecs
+
+
+articles = []
+fp = codecs.open("c:/data/미술관옆동물원.txt", "r")
+soup = BeautifulSoup(fp, "html.parser")
+body = soup.select_one("body")
+text = body.getText()
+articles = text.split("\n")
+len(articles)
+fp.close()
+
+
+
+from sklearn.feature_extraction.text import TfidfVectorizer
+
+def get_noun(text):
+    nouns = tagger.nouns(text)
+    return [n for n in nouns if len(n) > 1] 
+
+
+cv = TfidfVectorizer(tokenizer=get_noun, max_features=100)
+tdm = cv.fit_transform(articles)
+print(cv.get_feature_names())
+print(tdm.toarray())
+print(tdm) 
+
+
+import numpy as np
+import operator
+words = cv.get_feature_names()
+
+count_mat = tdm.sum(axis=0)
+count_mat.shape
+count = np.squeeze(np.asarray(count_mat))
+count.shape
+word_count = list(zip(words, count))
+word_count = sorted(word_count, key=operator.itemgetter(1), reverse=True)
+word_count
+
+hot_key = list(dict(word_count[:50]).keys())
+hot_key
+
+
+%matplotlib inline
+from matplotlib import pyplot
+from wordcloud import WordCloud
+wc = WordCloud(font_path='C:\\Windows\\Fonts\\NGULIM.ttf', background_color='white', width=400, height=300)
+cloud = wc.fit_words(dict(word_count))
+pyplot.figure(figsize=(12, 9))
+pyplot.imshow(cloud)
+pyplot.axis("off")
+pyplot.show()
+
+import codecs
+from konlpy.tag import Twitter
+from sklearn.cluster import DBSCAN
+from sklearn import metrics
+from sklearn.preprocessing import StandardScaler
+
+def sigmoid(x):
+    return 1 / (1 + math.e ** -x)
+
+
+twitter = Twitter()
+results = []
+lines = articles
+words_all = []
+
+for line in lines:
+    # 형태소 분석하기
+    malist = twitter.pos(line, norm=True, stem=True)
+    r = []
+    for word in malist:
+        # 명사/동사/부사만 걸러내기 
+        if word[1] in ['Noun','Verb','Adjective']:
+            r.append(word[0])
+            words_all.append(word[0])
+    rl = (" ".join(r)).strip()
+    results.append(rl)
+    #print(rl)
+
+
+from gensim.models import word2vec
+yang_file = 'c:/data/yang.model'
+with open(yang_file, 'w', encoding='utf-8') as fp2:
+    fp2.write("\n".join(results))
+    
+fp2.close() 
+
+data = word2vec.LineSentence(yang_file)
+model = word2vec.Word2Vec(data,size=200, window=10, hs=1, min_count=2, sg=1) 
+
+model.save("c:/data/yang_w2v.model")
+
+
+model.most_similar(positive=["춘희"])
+model.most_similar(positive=["철수"])
+model["결혼"]
+model["사람"]
+model.most_similar(positive=["미술관","여자"] , negative=["여자"])
