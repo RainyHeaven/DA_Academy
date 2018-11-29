@@ -2893,3 +2893,211 @@ y = tf.matmul(x,y)
 with tf.Session() as sess:
     print(sess.run(y, feed_dict={x:[[1,2,3]], 
                            w:[[2],[2],[2]]}))
+
+문제 linear regression 학습을 통해서 입력값에 대한 예측값을 출력하세요
+x1 x2 x3 y
+73 80 75 152
+93 88 93 185
+89 91 90 180
+96 98 100 196
+73 66 70 142
+
+x1_data = [73, 93, 89, 96, 73]
+x2_data = [80, 88, 91, 98, 66]
+x3_data = [75, 93, 90, 100, 70]
+y_data = [152, 185, 180, 196, 142]
+
+x1 = tf.placeholder(tf.float32)
+x2 = tf.placeholder(tf.float32)
+x3 = tf.placeholder(tf.float32)
+y = tf.placeholder(tf.float32)
+w1 = tf.Variable(tf.random_normal([1], seed=0), name='weight1')
+w2 = tf.Variable(tf.random_normal([1], seed=0), name='weight2')
+w3 = tf.Variable(tf.random_normal([1], seed=0), name='weight3')
+b = tf.Variable(tf.random_normal([1], seed=0), name='bias')
+
+hp = w1*x1 + w2*x2 + w3*x3 + b
+cost = tf.sqrt(tf.reduce_mean(tf.square(hp - y)))
+optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.000057)
+
+train = optimizer.minimize(cost)
+sess = tf.Session()
+sess.run(tf.global_variables_initializer())
+
+for step in range(2001): # 학습
+    cost_v, w1_v, w2_v, w3_v, b_v, _ = sess.run([cost, w1, w2, w3, b, train], 
+                                                feed_dict={x1:x1_data, x2:x2_data, x3:x3_data, y:y_data})
+    if step%20==0: print(step, cost_v, w1_v, w2_v, w3_v, b_v)
+
+print('당신의 점수는', sess.run(hp, feed_dict={x1:100, x2:70, x3:60}))     
+
+[문제] xor를 logistic regression classifier를 이용해서 프로그램을 생성하세요.
+
+000
+011
+101
+110
+
+import tensorflow as tf
+import numpy as np
+
+x_data = np.array([[0,0], [0,1], [1,0], [1,1]], dtype=np.float32)
+y_data = np.array([[0], [1], [1], [0]],dtype=np.float32)
+
+x = tf.placeholder(tf.float32, shape=[None, 2])
+y = tf.placeholder(tf.float32, shape=[None, 1])
+
+# input
+w_1 = tf.Variable(tf.random_normal([2, 2]), name='weight1')
+b_1 = tf.Variable(tf.random_normal([1]), name='bias1')
+hp_1 = tf.sigmoid(tf.matmul(x, w_1)+b_1)
+
+# hidden layer
+w_2 = tf.Variable(tf.random_normal([2, 1]), name='weight2')
+b_2 = tf.Variable(tf.random_normal([1]), name='bias2')
+hp_2 = tf.sigmoid(tf.matmul(hp_1,w_2)+b_2)
+
+cost = -tf.reduce_mean(y*tf.log(hp_2)+(1-y)*tf.log(1-hp_2)) # cross entropy cost function
+
+train = tf.train.GradientDescentOptimizer(learning_rate=0.1).minimize(cost)
+predict = tf.cast(hp_2 > 0.5, dtype=tf.float32)
+accuracy = tf.reduce_mean(tf.cast(tf.equal(predict, y), dtype=tf.float32))
+
+with tf.Session() as sess:
+    sess.run(tf.global_variables_initializer())
+    for step in range(20001):
+        cost_val,_ = sess.run([cost, train], feed_dict={x:x_data, y:y_data})
+        if step%1000 == 0:
+            print(step, cost_val)
+    h,c,a = sess.run([hp_2, predict, accuracy], feed_dict={x:x_data, y:y_data})
+    print("hypothesis:", h)
+    print("predict:", h)
+    print("acuraccy:", a)
+
+[문제] zoo data set을 이용해서 분류프로그램을 만드세요.
+import tensorflow as tf
+import pandas as pd
+import numpy as np
+raw = np.loadtxt('data/zoo_data.txt', delimiter=',', usecols=range(1,18))
+x_data = raw[:, :-1]
+y_data = raw[:, [-1]]
+y_data = y_data-1
+
+x = tf.placeholder(tf.float32, [None, 16])
+y = tf.placeholder(tf.int32, [None, 1])
+
+y_one_hot = tf.one_hot(y, 7)
+y_one_hot = tf.reshape(y_one_hot, [-1, 7])
+
+w = tf.Variable(tf.random_normal([16, 7], seed=0), name='weight')
+b = tf.Variable(tf.random_normal([7], seed=0), name='bias')
+
+logits = tf.matmul(x, w) + b
+hp = tf.nn.softmax(logits)
+
+cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=y_one_hot))
+train = tf.train.GradientDescentOptimizer(learning_rate=0.05).minimize(cost)
+prediction = tf.argmax(hp, 1)
+correct_prediction = tf.equal(prediction, tf.argmax(y_one_hot, 1))
+accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+
+sess = tf.Session()
+sess.run(tf.global_variables_initializer())
+for step in range(2001):
+    sess.run(train, feed_dict={x:x_data, y:y_data})
+    if step%200==0:
+        loss, acc = sess.run([cost, accuracy], feed_dict={x:x_data, y:y_data})
+        print('Step:', step)
+        print('Loss:', loss)
+        print('Acc:', acc)
+
+[문제] bmi.csv 내용을 신경망을 이용해서 분류해 보세요.
+
+#BMI
+
+BMI = 몸무게 / (키(m)*키(m))
+18.5 이상 25미만이면 표준
+#label : thin(저체중), normal(정상), fat(비만)
+
+import pandas as pd
+import tensorflow as tf
+from sklearn.preprocessing import MinMaxScaler
+
+data = pd.read_csv('data/bmi.csv')
+data['label'] = data.label.apply(lambda x: 0 if x=='thin' else (1 if x == 'normal' else 2))
+x_data = data.iloc[:,:2]
+y_data = data.iloc[:, [2]]
+
+x = tf.placeholder(tf.float32, [None, 2])
+y = tf.placeholder(tf.int32, [None, 1])
+
+y_one_hot = tf.one_hot(y, 3)
+y_one_hot = tf.reshape(y_one_hot, [-1, 3])
+
+w = tf.Variable(tf.random_normal([2, 3], seed=0), name='weight')
+b = tf.Variable(tf.random_normal([3], seed=0), name='bias')
+
+logits = tf.matmul(x, w) + b
+hp = tf.nn.softmax(logits)
+
+cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=y_one_hot))
+train = tf.train.GradientDescentOptimizer(learning_rate=0.00005).minimize(cost)
+prediction = tf.argmax(hp, 1)
+correct_prediction = tf.equal(prediction, tf.argmax(y_one_hot, 1))
+accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+
+sess = tf.Session()
+sess.run(tf.global_variables_initializer())
+for step in range(10001):
+    sess.run(train, feed_dict={x:x_data, y:y_data})
+    if step%1000==0:
+        loss, acc = sess.run([cost, accuracy], feed_dict={x:x_data, y:y_data})
+        print('Step:', step)
+        print('Loss:', loss)
+        print('Acc:', acc)
+        print('\n')
+
+[문제] 0부터 143까지의 원소로 이루어진 12x12 행렬을 만들고 4x4필터(단위행렬)를 이용해서 합성곱을 수행하세요. 
+단, 스트라이드는 1입니다.
+
+x_data=np.arange(144).reshape(12,12)
+y_data=np.eye(4,4)
+
+np.cumsum(x_data[0:4,0:4] * y_data)[-1]
+
+f=[]
+a=0
+b=4   
+c=0
+d=4
+
+while 1 :
+    ab=np.cumsum(x_data[a:b,c:d] * y_data)[-1]
+    a=a+1
+    b=b+1
+    f.append(ab)
+    if a>8:
+        a=0
+        b=4
+        c=c+1
+        d=d+1
+    if c>8:
+        break
+    
+total=np.array(f).reshape(9,-1)
+end=total.T    
+
+# 합성곱 계층 : feature map을 만들고 그 feature map을 선명하게 해주는 층
+# 합성곱 연산 : 이미지 3차원(세로,가로,색상) 데이터의 형상을 유지하면서 연산하는 작업
+# 합성곱 : 입력데이터에 필터를 적용 한것이 합성곱연산이다.
+
+a = np.arange(144).reshape(12,12)
+filter = np.eye(4,4)
+
+result = []
+for r in range(len(a)-3):
+    for c in range(len(a)-3):
+      result.append(np.sum(a[r:r+4,c:c+4]*filter))
+
+result=np.array(result).reshape(9,9)
+print(result)    
